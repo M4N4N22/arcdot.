@@ -22,7 +22,10 @@ export type GatewayErrorCode =
   | "UPSTREAM_FAILED"
   | "GATEWAY_NOT_CONFIGURED"
   | "AMOUNT_MISMATCH"
-  | "SERVICE_NOT_FOUND";
+  | "SERVICE_NOT_FOUND"
+  | "SERVICE_PAUSED"
+  | "RATE_LIMITED"
+  | "SELLER_MISMATCH";
 
 export interface GatewayTargetPayload {
   service: string;

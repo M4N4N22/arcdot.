@@ -107,6 +107,7 @@ export async function POST(request: Request) {
       price_usdc: body.price_usdc,
       system_prompt: body.system_prompt,
       status: "published",
+      paused: false,
     });
 
     return NextResponse.json({ service }, { status: 201 });

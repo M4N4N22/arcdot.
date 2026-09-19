@@ -22,10 +22,10 @@ export default function Home() {
             Browse services
           </Link>
           <Link
-            href="/create"
+            href="/studio"
             className="inline-flex h-11 items-center justify-center border border-line bg-surface/60 px-5 text-sm font-medium text-foreground backdrop-blur-sm transition-colors hover:bg-surface"
           >
-            Create a service
+            For sellers → Studio
           </Link>
         </div>
       </section>

@@ -258,7 +258,9 @@ Open:
 - [http://localhost:3000](http://localhost:3000) — landing  
 - [http://localhost:3000/services](http://localhost:3000/services) — catalog  
 - [http://localhost:3000/create](http://localhost:3000/create) — publish  
-- [http://localhost:3000/activity](http://localhost:3000/activity) — history  
+- [http://localhost:3000/studio](http://localhost:3000/studio) — seller earnings & manage  
+- [http://localhost:3000/activity](http://localhost:3000/activity) — buyer history  
+- [http://localhost:3000/api/health](http://localhost:3000/api/health) — ops health  
 
 Connect a wallet on **Arc Mainnet**, open a service, pay, and unlock.
 
@@ -272,22 +274,34 @@ From `next-app/`, import the project in [Vercel](https://vercel.com) (root direc
 
 | Milestone | Status | Deliverable |
 |---|---|---|
-| **M1 — Gateway contract** | Code ready · redeploy for `minFee` | `PromptGateway` accepts `msg.value >= minFee` |
-| **M2 — Settlement API** | Done | `/api/gateway` verifies catalog price + Arc payment |
-| **M3 — Platform UI** | Done | Browse / Create / Pay / Activity + wallet connect |
-| **M4 — Persistence** | Done (schema) | Supabase schema + seed; wire your project keys |
+| **M1 — Gateway V2** | Code ready · redeploy | Seller/platform split + `minFee` |
+| **M2 — Settlement API** | Done | Price check, durable spent tx, pause, rate limit |
+| **M3 — Platform UI** | Done | Browse / Create / Pay / Activity / Studio |
+| **M4 — Persistence** | Done | Supabase schema + `schema_v2.sql` |
 | **M5 — Live submission** | Next | Arc deploy + Vercel + README live links |
+
+### Production checklist
+
+- [ ] Supabase: run [`schema.sql`](next-app/supabase/schema.sql) then [`schema_v2.sql`](next-app/supabase/schema_v2.sql)
+- [ ] Deploy **PromptGateway V2** (`npm run deploy:arc`) — constructor `(minFee, platformFeeBps)`
+- [ ] Set `PROMPT_GATEWAY_ADDRESS` + `NEXT_PUBLIC_PROMPT_GATEWAY_ADDRESS`
+- [ ] Set `PLATFORM_FEE_BPS` (default `1000` = 10%)
+- [ ] `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` from WalletConnect Cloud
+- [ ] `GEMINI_API_KEY`, `MOCK_MODE=false`
+- [ ] `ALLOW_DEMO_UNLOCK=false` / empty `DEMO_AGENT_SECRET` in production
+- [ ] `GET /api/health` returns `ok: true` on Vercel
+- [ ] Seller can withdraw from **Studio**; platform uses `withdrawPlatform`
 
 ### Your next actions (submission)
 
-1. Create Supabase project → run `schema.sql` → paste keys into `.env.local` / Vercel  
-2. Fund deployer → `cd contracts && npm run deploy:arc` (minFee build)  
-3. Paste `PROMPT_GATEWAY_ADDRESS` + `NEXT_PUBLIC_PROMPT_GATEWAY_ADDRESS`  
-4. Set `GEMINI_API_KEY`, `MOCK_MODE=false`  
+1. Supabase project → `schema.sql` + `schema_v2.sql` → paste keys  
+2. `cd contracts && npm run deploy:arc` (V2 with fee bps)  
+3. Paste gateway addresses into env  
+4. Gemini key + production flags above  
 5. Deploy `next-app` to Vercel; update README live links  
 6. Submit to [Arc Microgrants](#arc-microgrants--what-you-must-have-to-qualify)
 
-**v1 note:** Platform owner withdraws escrow via `withdrawFees`. Per-seller splits are not in this release.
+Sellers earn on-chain via `withdrawSeller`. Platform share via `withdrawPlatform` (owner).
 
 ## Arc Microgrants — what you must have to qualify
 

@@ -5,10 +5,14 @@ import {
   PaymentVerificationError,
   verifyArcPayment,
 } from "@/lib/arc/verifyPayment";
-import { hasConsumedTx, markConsumedTx } from "@/lib/arc/spentStore";
 import { hashGatewayInput } from "@/lib/auth/inputHash";
 import { verifyGatewaySignature } from "@/lib/auth/verifySignature";
-import { getServiceBySlug, insertRequest } from "@/lib/catalog/store";
+import {
+  getServiceBySlug,
+  insertRequest,
+  tryMarkSpentPayment,
+} from "@/lib/catalog/store";
+import { checkRateLimit, clientIp } from "@/lib/gateway/rateLimit";
 import {
   gatewayBodySchema,
   gatewayHeadersSchema,
@@ -32,19 +36,31 @@ const ZERO_ADDR =
 const ZERO_HASH =
   "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 
+function demoUnlockAllowed(): boolean {
+  if (process.env.ALLOW_DEMO_UNLOCK === "true") return true;
+  if (process.env.NODE_ENV === "production") return false;
+  return Boolean(process.env.DEMO_AGENT_SECRET);
+}
+
+function isDemoUnlock(request: Request): boolean {
+  if (!demoUnlockAllowed()) return false;
+  const secret = process.env.DEMO_AGENT_SECRET;
+  if (!secret) return false;
+  const provided = request.headers.get("x-arc-demo-secret");
+  return Boolean(provided && provided === secret);
+}
+
 function paymentInstructions(
   service?: ServiceRow | null,
 ): GatewayPaymentInstructions {
-  const feeWei = service?.price_wei ?? ARC.feeWei.toString();
-  const feeUsdc = service?.price_usdc ?? GATEWAY_FEE_USDC;
   return {
     chainId: ARC.chainId,
     gateway: ARC.gatewayAddress || ZERO_ADDR,
-    feeWei,
-    feeUsdc,
+    feeWei: service?.price_wei ?? ARC.feeWei.toString(),
+    feeUsdc: service?.price_usdc ?? GATEWAY_FEE_USDC,
     method: "depositPayment",
     paymentIdHint:
-      "bytes32 unique id, e.g. keccak256(abi.encode(payer, service, nonce))",
+      "bytes32 unique id + seller address for V2 depositPayment(paymentId, seller)",
     rpcUrl: ARC.rpcUrl,
     explorerTxBase: ARC.explorerTxBase,
   };
@@ -81,23 +97,20 @@ function extractPrompt(input: unknown): string {
   return JSON.stringify(input ?? "");
 }
 
-function isDemoUnlock(request: Request): boolean {
-  const secret = process.env.DEMO_AGENT_SECRET;
-  if (!secret) return false;
-  const provided = request.headers.get("x-arc-demo-secret");
-  return Boolean(provided && provided === secret);
+function splitAmounts(amountWei: bigint): {
+  sellerAmountWei: bigint;
+  platformAmountWei: bigint;
+} {
+  const platformAmountWei =
+    (amountWei * BigInt(ARC.platformFeeBps)) / BigInt(10_000);
+  return {
+    platformAmountWei,
+    sellerAmountWei: amountWei - platformAmountWei,
+  };
 }
 
-function demoSettlement(priceWei: string): GatewaySettlement {
-  return {
-    txHash: ZERO_HASH,
-    payer: ZERO_ADDR,
-    amountWei: priceWei,
-    amountUsdc: GATEWAY_FEE_USDC,
-    paymentId: ZERO_HASH,
-    blockNumber: 0,
-    verifiedAt: new Date().toISOString(),
-  };
+function logGateway(event: Record<string, unknown>) {
+  console.log(JSON.stringify({ scope: "arcdot.gateway", ...event }));
 }
 
 async function fulfillUpstream(params: {
@@ -108,7 +121,11 @@ async function fulfillUpstream(params: {
   started: number;
   settlement: GatewaySettlement;
   demo: boolean;
-  payer?: string;
+  payer: string;
+  seller?: string;
+  amountWei?: string;
+  sellerAmountWei?: string;
+  platformAmountWei?: string;
 }): Promise<NextResponse> {
   const prompt = extractPrompt(params.input);
   try {
@@ -117,30 +134,43 @@ async function fulfillUpstream(params: {
       params.serviceRow?.system_prompt,
     );
 
-    if (params.serviceRow && params.payer) {
+    if (params.serviceRow) {
       await insertRequest({
         service_id: params.serviceRow.id,
         service_slug: params.serviceRow.slug,
         payer_address: params.payer,
+        seller_address:
+          params.seller ?? params.serviceRow.owner_address,
         tx_hash: params.settlement.txHash,
         payment_id: params.settlement.paymentId,
         status: "fulfilled",
         prompt,
         response_preview: text.slice(0, 500),
+        amount_wei: params.amountWei ?? params.settlement.amountWei,
+        seller_amount_wei: params.sellerAmountWei ?? null,
+        platform_amount_wei: params.platformAmountWei ?? null,
       }).catch((err) => console.error("insertRequest failed", err));
     }
+
+    logGateway({
+      outcome: "ok",
+      requestId: params.requestId,
+      service: params.serviceKey,
+      payer: params.payer,
+      demo: params.demo,
+      mock,
+      latencyMs: Date.now() - params.started,
+    });
 
     const response: Gateway200Body = {
       ok: true,
       status: 200,
       settlement: {
         ...params.settlement,
-        amountUsdc: params.serviceRow?.price_usdc ?? params.settlement.amountUsdc,
+        amountUsdc:
+          params.serviceRow?.price_usdc ?? params.settlement.amountUsdc,
       },
-      result: {
-        text,
-        service: params.serviceKey,
-      },
+      result: { text, service: params.serviceKey },
       meta: {
         requestId: params.requestId,
         service: params.serviceKey,
@@ -149,22 +179,32 @@ async function fulfillUpstream(params: {
         demo: params.demo,
       },
     };
-
     return NextResponse.json(response, { status: 200 });
   } catch (err) {
     console.error(err);
-    if (params.serviceRow && params.payer) {
+    if (params.serviceRow) {
       await insertRequest({
         service_id: params.serviceRow.id,
         service_slug: params.serviceRow.slug,
         payer_address: params.payer,
+        seller_address:
+          params.seller ?? params.serviceRow.owner_address,
         tx_hash: params.settlement.txHash,
         payment_id: params.settlement.paymentId,
         status: "failed",
         prompt,
         response_preview: null,
+        amount_wei: params.amountWei ?? params.settlement.amountWei,
+        seller_amount_wei: params.sellerAmountWei ?? null,
+        platform_amount_wei: params.platformAmountWei ?? null,
       }).catch(() => undefined);
     }
+    logGateway({
+      outcome: "upstream_failed",
+      requestId: params.requestId,
+      service: params.serviceKey,
+      latencyMs: Date.now() - params.started,
+    });
     return NextResponse.json(
       {
         ok: false,
@@ -185,6 +225,28 @@ async function fulfillUpstream(params: {
 export async function POST(request: Request) {
   const requestId = crypto.randomUUID();
   const started = Date.now();
+
+  const rl = checkRateLimit({ key: `gw:${clientIp(request)}` });
+  if (!rl.ok) {
+    logGateway({ outcome: "rate_limited", requestId });
+    return NextResponse.json(
+      {
+        ok: false,
+        status: 429,
+        error: {
+          code: "RATE_LIMITED" as GatewayErrorCode,
+          message: "Too many requests. Please wait and try again.",
+        },
+        requestId,
+        timestamp: new Date().toISOString(),
+      },
+      {
+        status: 429,
+        headers: { "Retry-After": String(Math.ceil(rl.retryAfterMs / 1000)) },
+      },
+    );
+  }
+
   const demo = isDemoUnlock(request);
 
   let json: unknown;
@@ -210,17 +272,29 @@ export async function POST(request: Request) {
   const serviceRow = await getServiceBySlug(body.data.service).catch(() => null);
 
   if (demo) {
+    const amount = serviceRow?.price_wei ?? ARC.feeWei.toString();
+    const split = splitAmounts(BigInt(amount));
     return fulfillUpstream({
       serviceRow,
       serviceKey: body.data.service,
       input: body.data.input,
       requestId,
       started,
-      settlement: demoSettlement(
-        serviceRow?.price_wei ?? ARC.feeWei.toString(),
-      ),
+      settlement: {
+        txHash: ZERO_HASH,
+        payer: ZERO_ADDR,
+        amountWei: amount,
+        amountUsdc: serviceRow?.price_usdc ?? GATEWAY_FEE_USDC,
+        paymentId: ZERO_HASH,
+        blockNumber: 0,
+        verifiedAt: new Date().toISOString(),
+      },
       demo: true,
       payer: "demo",
+      seller: serviceRow?.owner_address,
+      amountWei: amount,
+      sellerAmountWei: split.sellerAmountWei.toString(),
+      platformAmountWei: split.platformAmountWei.toString(),
     });
   }
 
@@ -229,6 +303,15 @@ export async function POST(request: Request) {
       "SERVICE_NOT_FOUND",
       "This service is not available",
       requestId,
+    );
+  }
+
+  if (serviceRow.paused) {
+    return paymentRequired(
+      "SERVICE_PAUSED",
+      "This service is temporarily unavailable",
+      requestId,
+      serviceRow,
     );
   }
 
@@ -289,29 +372,22 @@ export async function POST(request: Request) {
     );
   }
 
-  if (hasConsumedTx(txHash)) {
-    return paymentRequired(
-      "TX_ALREADY_CONSUMED",
-      "This payment was already used",
-      requestId,
-      serviceRow,
-    );
-  }
-
   let verified;
   try {
     verified = await verifyArcPayment({
       txHash,
       expectedPayer: address,
+      expectedSeller: serviceRow.owner_address as `0x${string}`,
       expectedAmount,
     });
   } catch (err) {
     if (err instanceof PaymentVerificationError) {
-      const code =
-        err.code === "AMOUNT_MISMATCH"
-          ? "AMOUNT_MISMATCH"
-          : (err.code as GatewayErrorCode);
-      return paymentRequired(code, err.message, requestId, serviceRow);
+      return paymentRequired(
+        err.code as GatewayErrorCode,
+        err.message,
+        requestId,
+        serviceRow,
+      );
     }
     console.error(err);
     return paymentRequired(
@@ -322,7 +398,20 @@ export async function POST(request: Request) {
     );
   }
 
-  markConsumedTx(txHash);
+  const marked = await tryMarkSpentPayment({
+    txHash,
+    paymentId: verified.paymentId,
+    payerAddress: address,
+    serviceId: serviceRow.id,
+  });
+  if (!marked) {
+    return paymentRequired(
+      "TX_ALREADY_CONSUMED",
+      "This payment was already used",
+      requestId,
+      serviceRow,
+    );
+  }
 
   return fulfillUpstream({
     serviceRow,
@@ -341,16 +430,22 @@ export async function POST(request: Request) {
     },
     demo: false,
     payer: address,
+    seller: verified.seller,
+    amountWei: verified.amountWei.toString(),
+    sellerAmountWei: verified.sellerAmountWei.toString(),
+    platformAmountWei: verified.platformAmountWei.toString(),
   });
 }
 
 export async function GET() {
   return NextResponse.json({
     name: "arcdot.gateway",
+    version: 2,
     minFeeWei: ARC.feeWei.toString(),
+    platformFeeBps: ARC.platformFeeBps,
     feeUsdc: GATEWAY_FEE_USDC,
     chainId: ARC.chainId,
     gateway: ARC.gatewayAddress || null,
-    demoUnlockConfigured: Boolean(process.env.DEMO_AGENT_SECRET),
+    demoUnlockAllowed: demoUnlockAllowed(),
   });
 }

@@ -33,7 +33,8 @@ export class PaymentVerificationError extends Error {
       | "WRONG_RECIPIENT"
       | "INSUFFICIENT_AMOUNT"
       | "PAYMENT_ID_UNUSED"
-      | "AMOUNT_MISMATCH",
+      | "AMOUNT_MISMATCH"
+      | "SELLER_MISMATCH",
     message: string,
   ) {
     super(message);
@@ -41,10 +42,19 @@ export class PaymentVerificationError extends Error {
   }
 }
 
+export type VerifiedV2Payment = VerifiedArcPayment & {
+  seller: `0x${string}`;
+  sellerAmountWei: bigint;
+  platformAmountWei: bigint;
+};
+
 function parsePaymentDeposited(log: Log): {
   payer: `0x${string}`;
+  seller: `0x${string}`;
   paymentId: `0x${string}`;
   amount: bigint;
+  sellerAmount: bigint;
+  platformAmount: bigint;
 } | null {
   try {
     const decoded = decodeEventLog({
@@ -55,8 +65,11 @@ function parsePaymentDeposited(log: Log): {
     if (decoded.eventName !== "PaymentDeposited") return null;
     const args = decoded.args as {
       payer: `0x${string}`;
+      seller: `0x${string}`;
       paymentId: `0x${string}`;
       amount: bigint;
+      sellerAmount: bigint;
+      platformAmount: bigint;
     };
     return args;
   } catch {
@@ -64,15 +77,12 @@ function parsePaymentDeposited(log: Log): {
   }
 }
 
-/**
- * Verify a deposit receipt on Arc against PromptGateway.
- * @param expectedAmount Exact catalog price in native wei (18 decimals).
- */
 export async function verifyArcPayment(params: {
   txHash: Hex;
   expectedPayer: `0x${string}`;
+  expectedSeller: `0x${string}`;
   expectedAmount: bigint;
-}): Promise<VerifiedArcPayment> {
+}): Promise<VerifiedV2Payment> {
   if (!ARC.gatewayAddress || ARC.gatewayAddress.length !== 42) {
     throw new PaymentVerificationError(
       "GATEWAY_NOT_CONFIGURED",
@@ -96,7 +106,7 @@ export async function verifyArcPayment(params: {
   }
 
   const gateway = ARC.gatewayAddress.toLowerCase();
-  let matched: VerifiedArcPayment | null = null;
+  let matched: VerifiedV2Payment | null = null;
 
   for (let i = 0; i < receipt.logs.length; i++) {
     const log = receipt.logs[i];
@@ -107,6 +117,12 @@ export async function verifyArcPayment(params: {
 
     if (parsed.payer.toLowerCase() !== params.expectedPayer.toLowerCase()) {
       continue;
+    }
+    if (parsed.seller.toLowerCase() !== params.expectedSeller.toLowerCase()) {
+      throw new PaymentVerificationError(
+        "SELLER_MISMATCH",
+        "Payment seller does not match this service",
+      );
     }
     if (parsed.amount < ARC.feeWei) {
       throw new PaymentVerificationError(
@@ -124,8 +140,11 @@ export async function verifyArcPayment(params: {
     matched = {
       txHash: params.txHash,
       payer: parsed.payer,
+      seller: parsed.seller,
       paymentId: parsed.paymentId,
       amountWei: parsed.amount,
+      sellerAmountWei: parsed.sellerAmount,
+      platformAmountWei: parsed.platformAmount,
       blockNumber: receipt.blockNumber,
       logIndex: i,
     };

@@ -23,6 +23,7 @@ create table if not exists public.services (
   system_prompt text not null default '',
   status text not null default 'published'
     check (status in ('draft', 'published')),
+  paused boolean not null default false,
   created_at timestamptz not null default now()
 );
 

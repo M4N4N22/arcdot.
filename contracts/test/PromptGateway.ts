@@ -3,80 +3,112 @@ import { ethers } from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 
 const MIN_FEE = 10_000_000_000_000_000n;
+const FEE_BPS = 1000n; // 10%
 
-describe("PromptGateway", () => {
+describe("PromptGateway V2", () => {
   async function deployFixture() {
-    const [owner, payer, other] = await ethers.getSigners();
-    const gateway = await ethers.deployContract("PromptGateway", [MIN_FEE]);
-    return { gateway, owner, payer, other };
+    const [owner, payer, seller, other] = await ethers.getSigners();
+    const gateway = await ethers.deployContract("PromptGateway", [
+      MIN_FEE,
+      FEE_BPS,
+    ]);
+    return { gateway, owner, payer, seller, other };
   }
 
-  it("sets owner and minFee", async () => {
+  it("sets owner, minFee, and platformFeeBps", async () => {
     const { gateway, owner } = await loadFixture(deployFixture);
     expect(await gateway.owner()).to.equal(owner.address);
     expect(await gateway.minFee()).to.equal(MIN_FEE);
-    expect(await gateway.feeAmount()).to.equal(MIN_FEE);
+    expect(await gateway.platformFeeBps()).to.equal(FEE_BPS);
   });
 
-  it("accepts min fee and marks payment id used", async () => {
-    const { gateway, payer } = await loadFixture(deployFixture);
-    const paymentId = ethers.id("payment-1");
+  it("splits payment between seller and platform", async () => {
+    const { gateway, payer, seller } = await loadFixture(deployFixture);
+    const paymentId = ethers.id("pay-1");
+    const amount = MIN_FEE * 2n;
+    const platformAmount = (amount * FEE_BPS) / 10_000n;
+    const sellerAmount = amount - platformAmount;
 
     await expect(
-      gateway.connect(payer).depositPayment(paymentId, { value: MIN_FEE }),
+      gateway
+        .connect(payer)
+        .depositPayment(paymentId, seller.address, { value: amount }),
     )
       .to.emit(gateway, "PaymentDeposited")
-      .withArgs(payer.address, paymentId, MIN_FEE);
+      .withArgs(
+        payer.address,
+        seller.address,
+        paymentId,
+        amount,
+        sellerAmount,
+        platformAmount,
+      );
 
+    expect(await gateway.pendingSeller(seller.address)).to.equal(sellerAmount);
+    expect(await gateway.pendingPlatform()).to.equal(platformAmount);
     expect(await gateway.isUsed(paymentId)).to.equal(true);
   });
 
-  it("accepts amounts above minFee", async () => {
-    const { gateway, payer } = await loadFixture(deployFixture);
-    const paymentId = ethers.id("payment-above");
-    const amount = MIN_FEE * 2n;
+  it("rejects below min, zero id, zero seller, replay", async () => {
+    const { gateway, payer, seller } = await loadFixture(deployFixture);
+    const paymentId = ethers.id("pay-2");
 
     await expect(
-      gateway.connect(payer).depositPayment(paymentId, { value: amount }),
-    )
-      .to.emit(gateway, "PaymentDeposited")
-      .withArgs(payer.address, paymentId, amount);
-  });
-
-  it("rejects below min fee, zero id, and replay", async () => {
-    const { gateway, payer } = await loadFixture(deployFixture);
-    const paymentId = ethers.id("payment-2");
-
-    await expect(
-      gateway.connect(payer).depositPayment(paymentId, { value: MIN_FEE - 1n }),
+      gateway
+        .connect(payer)
+        .depositPayment(paymentId, seller.address, { value: MIN_FEE - 1n }),
     ).to.be.revertedWithCustomError(gateway, "BelowMinFee");
 
     await expect(
-      gateway.connect(payer).depositPayment(ethers.ZeroHash, { value: MIN_FEE }),
+      gateway
+        .connect(payer)
+        .depositPayment(ethers.ZeroHash, seller.address, { value: MIN_FEE }),
     ).to.be.revertedWithCustomError(gateway, "InvalidPaymentId");
 
-    await gateway.connect(payer).depositPayment(paymentId, { value: MIN_FEE });
     await expect(
-      gateway.connect(payer).depositPayment(paymentId, { value: MIN_FEE }),
+      gateway
+        .connect(payer)
+        .depositPayment(paymentId, ethers.ZeroAddress, { value: MIN_FEE }),
+    ).to.be.revertedWithCustomError(gateway, "InvalidSeller");
+
+    await gateway
+      .connect(payer)
+      .depositPayment(paymentId, seller.address, { value: MIN_FEE });
+    await expect(
+      gateway
+        .connect(payer)
+        .depositPayment(paymentId, seller.address, { value: MIN_FEE }),
     ).to.be.revertedWithCustomError(gateway, "PaymentAlreadyUsed");
   });
 
-  it("only owner can withdraw fees", async () => {
-    const { gateway, owner, payer, other } = await loadFixture(deployFixture);
-    const paymentId = ethers.id("payment-3");
+  it("lets seller and platform withdraw", async () => {
+    const { gateway, owner, payer, seller, other } =
+      await loadFixture(deployFixture);
+    const paymentId = ethers.id("pay-3");
     const amount = MIN_FEE * 2n;
-    await gateway.connect(payer).depositPayment(paymentId, { value: amount });
+    const platformAmount = (amount * FEE_BPS) / 10_000n;
+    const sellerAmount = amount - platformAmount;
+
+    await gateway
+      .connect(payer)
+      .depositPayment(paymentId, seller.address, { value: amount });
 
     await expect(
-      gateway.connect(other).withdrawFees(),
+      gateway.connect(other).withdrawSeller(),
+    ).to.be.revertedWithCustomError(gateway, "NothingToWithdraw");
+
+    await expect(gateway.connect(seller).withdrawSeller())
+      .to.emit(gateway, "SellerWithdrawn")
+      .withArgs(seller.address, sellerAmount);
+    expect(await gateway.pendingSeller(seller.address)).to.equal(0n);
+
+    await expect(
+      gateway.connect(other).withdrawPlatform(),
     ).to.be.revertedWithCustomError(gateway, "OnlyOwner");
 
-    await expect(gateway.connect(owner).withdrawFees())
-      .to.emit(gateway, "FeesWithdrawn")
-      .withArgs(owner.address, amount);
-
-    expect(await ethers.provider.getBalance(await gateway.getAddress())).to.equal(
-      0n,
-    );
+    await expect(gateway.connect(owner).withdrawPlatform())
+      .to.emit(gateway, "PlatformWithdrawn")
+      .withArgs(owner.address, platformAmount);
+    expect(await gateway.pendingPlatform()).to.equal(0n);
   });
 });

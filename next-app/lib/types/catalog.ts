@@ -10,6 +10,7 @@ export interface ServiceRow {
   price_usdc: string;
   system_prompt: string;
   status: ServiceStatus;
+  paused: boolean;
   created_at: string;
 }
 
@@ -25,11 +26,23 @@ export interface RequestRow {
   service_id: string | null;
   service_slug: string | null;
   payer_address: string;
+  seller_address: string | null;
   tx_hash: string | null;
   payment_id: string | null;
   status: "paid" | "fulfilled" | "failed";
   prompt: string | null;
   response_preview: string | null;
+  amount_wei: string | null;
+  seller_amount_wei: string | null;
+  platform_amount_wei: string | null;
+  created_at: string;
+}
+
+export interface SpentPaymentRow {
+  tx_hash: string;
+  payment_id: string | null;
+  payer_address: string;
+  service_id: string | null;
   created_at: string;
 }
 
@@ -46,6 +59,7 @@ export const LOCAL_SEED_SERVICES: ServiceRow[] = [
     system_prompt:
       "You are a concise briefing assistant. Reply in exactly two short sentences.",
     status: "published",
+    paused: false,
     created_at: new Date().toISOString(),
   },
   {
@@ -59,6 +73,7 @@ export const LOCAL_SEED_SERVICES: ServiceRow[] = [
     system_prompt:
       "You rewrite user text to be calm, clear, and professional. Return only the rewritten text.",
     status: "published",
+    paused: false,
     created_at: new Date().toISOString(),
   },
   {
@@ -73,6 +88,7 @@ export const LOCAL_SEED_SERVICES: ServiceRow[] = [
     system_prompt:
       "You produce a short actionable checklist (5 bullets max) for the agent task described by the user.",
     status: "published",
+    paused: false,
     created_at: new Date().toISOString(),
   },
 ];

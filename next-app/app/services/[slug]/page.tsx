@@ -110,7 +110,7 @@ export default function ServiceDetailPage() {
         address: gateway,
         abi: promptGatewayAbi,
         functionName: "depositPayment",
-        args: [paymentId],
+        args: [paymentId, service.owner_address as `0x${string}`],
         value: priceWei,
         chainId: ARC_CHAIN_ID,
       });
@@ -168,6 +168,10 @@ export default function ServiceDetailPage() {
           : JSON.stringify(body.result);
       setReply(text);
       setStatus("Done — your reply is ready.");
+      // soft cue toward Activity
+      setTimeout(() => {
+        setStatus("Done — your reply is ready. See Activity for history.");
+      }, 800);
     } catch (err) {
       console.error(err);
       setStatus(
