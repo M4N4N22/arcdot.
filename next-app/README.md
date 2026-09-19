@@ -25,14 +25,15 @@ npm run dev
 
 Buyer client lives in [`../packages/arcdot-agent`](../packages/arcdot-agent) (`@arcdot/agent`).
 
-## Agents (no clone required)
+## Agents (GitHub install)
 
 ```bash
-npx @arcdot/agent wallet create
+npx --yes --package="github:M4N4N22/arcdot.#path:packages/arcdot-agent" arcdot wallet create
 # fund address on Arc (5042), then:
-npx @arcdot/agent unlock --origin "$ORIGIN" --service quick-brief --prompt "Hi"
+npx --yes --package="github:M4N4N22/arcdot.#path:packages/arcdot-agent" arcdot unlock \
+  --origin "$ORIGIN" --service quick-brief --prompt "Hi"
 
-# Cursor: use Hub mcp.json (npx @arcdot/agent mcp --origin …)
+# Cursor: copy mcp.json from /hub (GitHub-backed npx)
 ```
 
 Keys stay on the buyer machine. The arcdot. server never auto-pays.

@@ -140,6 +140,10 @@ body {
   animation: fade-up 0.7s ease-out both;
 }
 
+.animate-drawer-in {
+  animation: drawer-in 0.22s ease-out both;
+}
+
 .animate-pulse-line {
   animation: pulse-line 2.4s ease-in-out infinite;
 }

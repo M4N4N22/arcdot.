@@ -1,24 +1,18 @@
 /** Client-safe MCP config snippets for the Integration Hub. */
 
+import {
+  AGENT_GIT_PACKAGE,
+  agentInstallCommands,
+  agentMcpProxyConfig,
+} from "@/lib/agent/install";
+
 export function mcpEndpoint(origin: string): string {
   return `${origin.replace(/\/$/, "")}/api/mcp`;
 }
 
-/** Cursor / IDE: local @arcdot/agent proxy (auto-settle). Not raw remote URL. */
+/** Cursor / IDE: local @arcdot/agent proxy via GitHub (until npm publish). */
 export function editorMcpConfig(origin: string): string {
-  const host = origin.replace(/\/$/, "");
-  return JSON.stringify(
-    {
-      mcpServers: {
-        arcdot: {
-          command: "npx",
-          args: ["-y", "@arcdot/agent", "mcp", "--origin", host],
-        },
-      },
-    },
-    null,
-    2,
-  );
+  return agentMcpProxyConfig(origin);
 }
 
 /** Universal descriptor agents and frameworks can ingest. */
@@ -32,10 +26,18 @@ export function universalMcpConfig(origin: string): string {
       protocol: "mcp",
       transport: "stdio-proxy",
       client: "@arcdot/agent",
+      install: AGENT_GIT_PACKAGE,
       remoteEndpoint: url,
       proxy: {
         command: "npx",
-        args: ["-y", "@arcdot/agent", "mcp", "--origin", host],
+        args: [
+          "--yes",
+          `--package=${AGENT_GIT_PACKAGE}`,
+          "arcdot",
+          "mcp",
+          "--origin",
+          host,
+        ],
       },
       methods: ["initialize", "tools/list", "tools/call", "ping"],
       discovery: {
@@ -45,7 +47,7 @@ export function universalMcpConfig(origin: string): string {
       payment: {
         chain: "arc-mainnet",
         chainId: 5042,
-        note: "Buyer wallet via npx @arcdot/agent wallet create (~/.arcdot/wallet.json). Local MCP proxy auto-settles; keys never leave the buyer machine.",
+        note: `Buyer wallet via GitHub package (${AGENT_GIT_PACKAGE}). Local MCP proxy auto-settles; keys never leave the buyer machine.`,
       },
       docs: `${host}/hub`,
     },
@@ -55,18 +57,19 @@ export function universalMcpConfig(origin: string): string {
 }
 
 export function pythonHttpSnippet(origin: string): string {
-  return `# Prefer the SDK / CLI — no need to clone arcdot.
+  const host = origin.replace(/\/$/, "");
+  return `# Prefer the buyer client — GitHub install (npm publish coming later)
 #
-#   npx @arcdot/agent wallet create
+#   ${agentInstallCommands.npxWalletCreate}
 #   # fund the address on Arc, then:
 #
-#   npm i @arcdot/agent
+#   ${agentInstallCommands.npmInstall}
 #
 from pathlib import Path
 # Or use Node:
-#   npx @arcdot/agent unlock --origin ${origin.replace(/\/$/, "")} --service quick-brief --prompt "Hi"
+#   ${agentInstallCommands.npxUnlock(host)}
 
-print("Use @arcdot/agent (Node) for settle + unlock. Origin:", "${origin.replace(/\/$/, "")}")
+print("Use @arcdot/agent (Node) for settle + unlock. Origin:", "${host}")
 `;
 }
 
@@ -74,12 +77,12 @@ export function langchainStyleSnippet(origin: string): string {
   const host = origin.replace(/\/$/, "");
   return `# Buyer agent — keys stay on YOUR machine (never on arcdot. server)
 #
-# 1) npx @arcdot/agent wallet create
+# 1) ${agentInstallCommands.npxWalletCreate}
 # 2) Fund the printed address with native USDC on Arc (5042)
 # 3) Use the SDK or CLI (auto-settle)
 
 # Node:
-#   npm i @arcdot/agent
+#   ${agentInstallCommands.npmInstall}
 #
 #   import { createArcdotAgent } from "@arcdot/agent";
 #   const agent = await createArcdotAgent({ origin: "${host}" });
@@ -87,9 +90,9 @@ export function langchainStyleSnippet(origin: string): string {
 #   # or: await agent.callMcpTool("arcdot_quick_brief", { prompt: "Hi" });
 
 # CLI one-liner:
-#   npx @arcdot/agent unlock --origin ${host} --service quick-brief --prompt "Hi"
+#   ${agentInstallCommands.npxUnlock(host)}
 
-# Cursor: use the MCP proxy JSON from Hub (npx @arcdot/agent mcp --origin …)
+# Cursor: use the MCP proxy JSON from Hub (GitHub-backed npx)
 `;
 }
 

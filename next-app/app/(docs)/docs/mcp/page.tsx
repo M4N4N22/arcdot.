@@ -7,6 +7,10 @@ import {
   DocsProse,
   DocsUl,
 } from "@/components/docs/DocsProse";
+import {
+  agentInstallCommands,
+  agentMcpProxyConfig,
+} from "@/lib/agent/install";
 
 export const metadata = { title: "MCP reference" };
 
@@ -15,6 +19,7 @@ export default function DocsMcpPage() {
     <DocsProse
       pathname="/docs/mcp"
       title="MCP reference"
+      eyebrow="Guides"
       description="Protocol details for the arcdot. MCP adapter. For setup and copy-paste configs, use the Integration Hub."
     >
       <DocsP>
@@ -73,9 +78,9 @@ curl -s -X POST "$ORIGIN/api/mcp" \\
       </DocsP>
       <CodeBlock
         title="bash"
-        code={`npx @arcdot/agent wallet create
+        code={`${agentInstallCommands.npxWalletCreate}
 # fund address on Arc, then Cursor mcp.json:
-# { "mcpServers": { "arcdot": { "command": "npx", "args": ["-y", "@arcdot/agent", "mcp", "--origin", "$ORIGIN"] } } }`}
+${agentMcpProxyConfig("$ORIGIN")}`}
       />
       <DocsOl>
         <li>

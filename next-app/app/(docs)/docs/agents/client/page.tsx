@@ -1,11 +1,18 @@
 import Link from "next/link";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 import {
+  DocsCallout,
   DocsH2,
   DocsP,
   DocsProse,
   DocsUl,
 } from "@/components/docs/DocsProse";
+import {
+  AGENT_GIT_PACKAGE,
+  AGENT_GITHUB_URL,
+  agentInstallCommands,
+  agentMcpProxyConfig,
+} from "@/lib/agent/install";
 
 export const metadata = { title: "Agent client" };
 
@@ -14,21 +21,40 @@ export default function DocsAgentClientPage() {
     <DocsProse
       pathname="/docs/agents/client"
       title="Agent client"
-      description="Use @arcdot/agent — wallet, auto-settle, and MCP proxy without cloning this repo."
+      eyebrow="Agents"
+      description="Install @arcdot/agent from GitHub — wallet, auto-settle, and MCP proxy without cloning this repo."
     >
+      <DocsCallout title="GitHub-only for now">
+        npm publish comes later. Until then, install from{" "}
+        <a
+          href={AGENT_GITHUB_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="underline underline-offset-4"
+        >
+          {AGENT_GITHUB_URL.replace("https://", "")}
+        </a>
+        .
+      </DocsCallout>
+
       <DocsH2>Install</DocsH2>
       <CodeBlock
         title="bash"
-        code={`npx @arcdot/agent --help
-# or: npm i @arcdot/agent`}
+        code={`# one-shot CLI
+${agentInstallCommands.npxWalletCreate}
+
+# as a dependency
+${agentInstallCommands.npmInstall}
+
+# package: ${AGENT_GIT_PACKAGE}`}
       />
 
       <DocsH2>Wallet + unlock</DocsH2>
       <CodeBlock
         title="bash"
-        code={`npx @arcdot/agent wallet create
+        code={`${agentInstallCommands.npxWalletCreate}
 # fund the address on Arc Mainnet (5042), then:
-npx @arcdot/agent unlock --origin "$ORIGIN" --service <slug> --prompt "Your prompt"`}
+npx --yes --package="${AGENT_GIT_PACKAGE}" arcdot unlock --origin "$ORIGIN" --service <slug> --prompt "Your prompt"`}
       />
       <DocsP>
         SDK:{" "}
@@ -46,36 +72,39 @@ npx @arcdot/agent unlock --origin "$ORIGIN" --service <slug> --prompt "Your prom
         <Link href="/hub" className="underline underline-offset-4">
           MCP Hub
         </Link>
-        .
+        :
       </DocsP>
+      <CodeBlock
+        title="mcp.json"
+        code={agentMcpProxyConfig("$ORIGIN")}
+      />
+
+      <DocsH2>Clone + link (contributors)</DocsH2>
+      <CodeBlock title="bash" code={agentInstallCommands.cloneLink} />
 
       <DocsH2>Probe a host</DocsH2>
       <DocsP>
         From this monorepo (contributors): confirms well-known, health, catalog,
-        and 402 pay instructions:
+        and payment-needed instructions:
       </DocsP>
       <CodeBlock title="bash" code={`npm run agent:probe -- "$ORIGIN"`} />
 
       <DocsH2>Paid but failed</DocsH2>
       <DocsP>
         If settlement succeeded but the upstream reply failed, follow unlock
-        credit rules in the gateway docs — do not double-pay the same{" "}
-        <code className="font-mono text-sm">paymentId</code>.
+        credit rules in the gateway docs — do not double-pay.
       </DocsP>
       <DocsUl>
         <li>
           <Link
             href="/docs/api/gateway"
-            className="underline underline-offset-4 text-foreground"
+            className="underline underline-offset-4"
           >
             Unlock API
           </Link>
         </li>
         <li>
-          <Link
-            href="/docs/errors"
-            className="underline underline-offset-4 text-foreground"
-          >
+          <Link href="/docs/errors" className="underline underline-offset-4">
             Errors
           </Link>
         </li>

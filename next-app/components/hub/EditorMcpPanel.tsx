@@ -63,7 +63,7 @@ export function EditorMcpPanel({ origin }: EditorMcpPanelProps) {
               <div className="min-w-0">
                 <p className="font-mono text-sm font-semibold">arcdot</p>
                 <p className="mt-1 break-all font-mono text-[11px] text-muted">
-                  npx @arcdot/agent mcp --origin …
+                  npx … arcdot mcp --origin … (GitHub)
                 </p>
               </div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-muted ring-1 ring-line">

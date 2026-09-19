@@ -1,12 +1,18 @@
 import Link from "next/link";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 import {
+  DocsCallout,
   DocsH2,
   DocsOl,
   DocsP,
   DocsProse,
   DocsUl,
 } from "@/components/docs/DocsProse";
+import {
+  AGENT_GIT_PACKAGE,
+  agentInstallCommands,
+  agentMcpProxyConfig,
+} from "@/lib/agent/install";
 
 export const metadata = { title: "For agents" };
 
@@ -15,8 +21,16 @@ export default function DocsAgentsPage() {
     <DocsProse
       pathname="/docs/agents"
       title="For agents"
+      eyebrow="Guides"
       description="Autonomous buyers discover, settle, and unlock over HTTP. No arcdot. login."
     >
+      <DocsCallout title="Skip the hand-roll">
+        Prefer{" "}
+        <Link href="/docs/agents/client" className="underline underline-offset-4">
+          @arcdot/agent
+        </Link>{" "}
+        from GitHub — it auto-settles and runs the Cursor MCP proxy.
+      </DocsCallout>
       <DocsH2>What you need</DocsH2>
       <DocsUl>
         <li>A funded wallet on Arc Mainnet (native USDC)</li>
@@ -94,19 +108,16 @@ export default function DocsAgentsPage() {
 
       <DocsH2>Recommended: @arcdot/agent</DocsH2>
       <DocsP>
-        Publishable buyer client — local wallet, auto-settle, MCP proxy for
-        Cursor. Keys never touch the arcdot. server:
+        GitHub-distributed buyer client — local wallet, auto-settle, MCP proxy
+        for Cursor. Keys never touch the arcdot. server:
       </DocsP>
       <CodeBlock
         title="bash"
-        code={`npx @arcdot/agent wallet create
-npx @arcdot/agent unlock --origin "$ORIGIN" --service <slug> --prompt "Your prompt"
+        code={`${agentInstallCommands.npxWalletCreate}
+npx --yes --package="${AGENT_GIT_PACKAGE}" arcdot unlock --origin "$ORIGIN" --service <slug> --prompt "Your prompt"
 
 # Cursor mcp.json — local proxy (auto-pays):
-# { "mcpServers": { "arcdot": {
-#   "command": "npx",
-#   "args": ["-y", "@arcdot/agent", "mcp", "--origin", "$ORIGIN"]
-# }}}`}
+${agentMcpProxyConfig("$ORIGIN")}`}
       />
       <DocsP>
         Critical: amounts are{" "}

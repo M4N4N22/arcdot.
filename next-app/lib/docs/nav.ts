@@ -14,13 +14,13 @@ export const docsNav: DocsNavGroup[] = [
     items: [
       { href: "/docs", label: "Overview" },
       { href: "/docs/quickstart", label: "Quickstart" },
+      { href: "/docs/agents/client", label: "Install client" },
     ],
   },
   {
     label: "Guides",
     items: [
       { href: "/docs/agents", label: "For agents" },
-      { href: "/docs/agents/client", label: "Agent client" },
       { href: "/docs/sellers", label: "For sellers" },
       { href: "/docs/discovery", label: "Discovery" },
       { href: "/docs/mcp", label: "MCP reference" },
@@ -45,8 +45,11 @@ export const docsNav: DocsNavGroup[] = [
 /** Flat order for prev/next pager — Hub lives in app shell, not docs pager. */
 export const docsPageOrder: DocsNavItem[] = docsNav
   .flatMap((g) => g.items)
-  .filter((item) => item.href.startsWith("/docs"));
-
+  .filter(
+    (item, i, arr) =>
+      item.href.startsWith("/docs") &&
+      arr.findIndex((x) => x.href === item.href) === i,
+  );
 
 export function docsPager(pathname: string): {
   prev: DocsNavItem | null;

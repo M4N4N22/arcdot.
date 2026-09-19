@@ -99,8 +99,8 @@ curl -s -X POST $BASE/api/gateway \\
   -d '{"service":"${slug}","input":{"prompt":"…"},"auth":{"issuedAt":0,"expiresAt":0}}'
 
 # Or (buyer client — no clone):
-#   npx @arcdot/agent wallet create
-#   npx @arcdot/agent unlock --origin $BASE --service ${slug} --prompt "…"
+#   npx --yes --package="github:M4N4N22/arcdot.#path:packages/arcdot-agent" arcdot wallet create
+#   npx --yes --package="github:M4N4N22/arcdot.#path:packages/arcdot-agent" arcdot unlock --origin $BASE --service ${slug} --prompt "…"
 # Price for selected service: ${price} USDC`;
   }, [service]);
 

@@ -6,6 +6,11 @@ import { CopyButton } from "@/components/hub/CopyButton";
 import { EditorMcpPanel } from "@/components/hub/EditorMcpPanel";
 import { HubCodePanel } from "@/components/hub/HubCodePanel";
 import {
+  AGENT_GITHUB_URL,
+  AGENT_GIT_PACKAGE,
+  agentInstallCommands,
+} from "@/lib/agent/install";
+import {
   curlHandshakeSnippet,
   editorMcpConfig,
   langchainStyleSnippet,
@@ -15,6 +20,7 @@ import {
 } from "@/lib/hub/mcpConfig";
 
 const SECTIONS = [
+  { id: "install", label: "Install" },
   { id: "config", label: "Universal config" },
   { id: "wallet", label: "Agent wallet" },
   { id: "editors", label: "IDEs & clients" },
@@ -27,7 +33,7 @@ const PLACEHOLDER_ORIGIN = "https://your-app.vercel.app";
 
 export function McpHub() {
   const [origin, setOrigin] = useState(PLACEHOLDER_ORIGIN);
-  const [active, setActive] = useState<string>("config");
+  const [active, setActive] = useState<string>("install");
   const [frameworkTab, setFrameworkTab] = useState<FrameworkTab>("python");
 
   useEffect(() => {
@@ -84,29 +90,38 @@ export function McpHub() {
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted md:text-base">
           Point editors and frameworks at arcdot. with{" "}
-          <span className="font-medium text-foreground">@arcdot/agent</span> —
-          local wallet, auto-settle, no API keys on our server.
+          <span className="font-medium text-foreground">@arcdot/agent</span>{" "}
+          (GitHub install) — local wallet, auto-settle, no API keys on our
+          server.
         </p>
 
         <div className="mt-6 flex flex-wrap items-center gap-2.5">
           <CopyButton
-            value={endpoint}
-            label="Copy MCP link"
+            value={agentInstallCommands.npxWalletCreate}
+            label="Copy install"
             variant="primary"
             className="h-10 rounded-full px-5 text-sm"
           />
+          <CopyButton
+            value={endpoint}
+            label="Copy MCP link"
+            variant="soft"
+            className="h-10 rounded-full px-5 text-sm"
+          />
           <Link
-            href="/docs/quickstart"
+            href="/docs/agents/client"
             className="inline-flex h-10 items-center rounded-full bg-[#efeeea] px-5 text-sm font-semibold text-foreground ring-1 ring-black/[0.04] transition-colors hover:bg-foreground hover:text-surface"
           >
-            Get started
+            Install guide
           </Link>
-          <Link
-            href="/docs"
+          <a
+            href={AGENT_GITHUB_URL}
+            target="_blank"
+            rel="noreferrer"
             className="inline-flex h-10 items-center rounded-full border border-line bg-surface px-5 text-sm font-medium text-muted transition-colors hover:text-foreground"
           >
-            Documentation
-          </Link>
+            GitHub
+          </a>
         </div>
 
         <p className="mt-4 break-all font-mono text-[11px] text-muted">
@@ -142,12 +157,57 @@ export function McpHub() {
         </ul>
       </nav>
 
+      {/* §0 Install */}
+      <section
+        id="install"
+        className="mt-5 scroll-mt-24 rounded-3xl border border-line bg-surface p-6 shadow-sm md:p-8"
+      >
+        <p className="font-mono text-[11px] text-muted">01</p>
+        <h2 className="mt-1 font-display text-2xl tracking-tight">
+          Install buyer client
+        </h2>
+        <p className="mt-2 max-w-xl text-sm text-muted">
+          Distributed from GitHub for now (npm publish later). One command
+          creates a local wallet — no clone required for day-to-day use.
+        </p>
+
+        <div className="mt-6">
+          <HubCodePanel
+            title="bash"
+            filename="install.sh"
+            code={`# Create wallet (GitHub package)\n${agentInstallCommands.npxWalletCreate}\n\n# Add as a dependency\n${agentInstallCommands.npmInstall}\n\n# Package: ${AGENT_GIT_PACKAGE}`}
+            accentCopy
+          />
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <CopyButton
+            value={agentInstallCommands.npxWalletCreate}
+            label="Copy wallet create"
+            variant="primary"
+            className="h-10 rounded-full px-4 text-sm"
+          />
+          <CopyButton
+            value={agentInstallCommands.npmInstall}
+            label="Copy npm install"
+            variant="soft"
+            className="h-10 rounded-full px-4 text-sm"
+          />
+          <Link
+            href="/docs/agents/client"
+            className="inline-flex h-10 items-center rounded-full border border-line px-4 text-sm font-medium text-muted transition-colors hover:text-foreground"
+          >
+            Full install docs
+          </Link>
+        </div>
+      </section>
+
       {/* §1 Universal config */}
       <section
         id="config"
         className="mt-5 scroll-mt-24 rounded-3xl border border-line bg-surface p-6 shadow-sm md:p-8"
       >
-        <p className="font-mono text-[11px] text-muted">01</p>
+        <p className="font-mono text-[11px] text-muted">02</p>
         <h2 className="mt-1 font-display text-2xl tracking-tight">
           Universal config
         </h2>
@@ -186,13 +246,13 @@ export function McpHub() {
         id="wallet"
         className="mt-5 scroll-mt-24 rounded-3xl border border-line bg-surface p-6 shadow-sm md:p-8"
       >
-        <p className="font-mono text-[11px] text-muted">02</p>
+        <p className="font-mono text-[11px] text-muted">03</p>
         <h2 className="mt-1 font-display text-2xl tracking-tight">
           Give your agent a wallet
         </h2>
         <p className="mt-2 max-w-xl text-sm text-muted">
-          No repo clone. Install the buyer client, fund a local wallet, then
-          connect via the MCP proxy — arcdot. never holds your key.
+          No repo clone. Install from GitHub, fund a local wallet, then connect
+          via the MCP proxy — arcdot. never holds your key.
         </p>
 
         <ol className="mt-6 space-y-3">
@@ -200,7 +260,7 @@ export function McpHub() {
             {
               n: "1",
               title: "Create a wallet (one command)",
-              body: "npx @arcdot/agent wallet create — saves to ~/.arcdot/wallet.json on your machine.",
+              body: `${agentInstallCommands.npxWalletCreate} — saves to ~/.arcdot/wallet.json on your machine.`,
             },
             {
               n: "2",
@@ -215,7 +275,7 @@ export function McpHub() {
             {
               n: "4",
               title: "Or unlock from scripts / LangChain",
-              body: "npx @arcdot/agent unlock --origin … — or import createArcdotAgent from @arcdot/agent.",
+              body: `${agentInstallCommands.npxUnlock("…")} — or import createArcdotAgent from @arcdot/agent.`,
             },
           ].map((step) => (
             <li
@@ -235,19 +295,18 @@ export function McpHub() {
           ))}
         </ol>
 
-        <div className="mt-5 rounded-2xl border border-line bg-surface-muted/50 p-4 font-mono text-[11px] leading-relaxed text-muted md:text-xs">
-          <p className="text-foreground"># anywhere — no clone</p>
-          <p>npx @arcdot/agent wallet create</p>
-          <p className="mt-2 text-foreground"># after funding</p>
-          <p>
-            npx @arcdot/agent unlock --origin {origin} --service quick-brief
-            --prompt &quot;Hi&quot;
-          </p>
+        <div className="mt-5">
+          <HubCodePanel
+            title="bash"
+            filename="wallet.sh"
+            code={`# anywhere — no clone\n${agentInstallCommands.npxWalletCreate}\n\n# after funding\n${agentInstallCommands.npxUnlock(origin)}`}
+            accentCopy
+          />
         </div>
 
         <p className="mt-4 text-xs text-muted">
-          Package: @arcdot/agent. Keys stay in ~/.arcdot or ARCDOT_PRIVATE_KEY
-          on the buyer host only.
+          Package from GitHub: {AGENT_GIT_PACKAGE}. Keys stay in ~/.arcdot or
+          ARCDOT_PRIVATE_KEY on the buyer host only.
         </p>
       </section>
 
@@ -256,7 +315,7 @@ export function McpHub() {
         id="editors"
         className="mt-5 scroll-mt-24 rounded-3xl border border-line bg-surface p-6 shadow-sm md:p-8"
       >
-        <p className="font-mono text-[11px] text-muted">03</p>
+        <p className="font-mono text-[11px] text-muted">04</p>
         <h2 className="mt-1 font-display text-2xl tracking-tight">
           IDEs &amp; clients
         </h2>
@@ -282,11 +341,11 @@ export function McpHub() {
                   1
                 </span>
                 <span className="pt-0.5">
-                  Run{" "}
+                  Run the{" "}
                   <span className="font-medium text-foreground">
-                    npx @arcdot/agent wallet create
+                    GitHub install
                   </span>{" "}
-                  and fund the address
+                  wallet command and fund the address
                 </span>
               </li>
               <li className="flex gap-3">
@@ -323,7 +382,7 @@ export function McpHub() {
         id="frameworks"
         className="mt-5 scroll-mt-24 rounded-3xl border border-line bg-surface p-6 shadow-sm md:p-8"
       >
-        <p className="font-mono text-[11px] text-muted">04</p>
+        <p className="font-mono text-[11px] text-muted">05</p>
         <h2 className="mt-1 font-display text-2xl tracking-tight">
           Agent frameworks
         </h2>

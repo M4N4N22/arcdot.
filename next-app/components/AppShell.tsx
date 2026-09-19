@@ -23,9 +23,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [mobileOpen]);
 
   return (
-    <div className="flex h-svh max-h-svh flex-1 gap-3 overflow-hidden p-3 md:p-4">
+    <div className="flex h-svh max-h-svh flex-1  overflow-hidden p-0 md:p-0">
       {/* Desktop nav rail — fixed height, own scroll if needed */}
-      <aside className="animate-shell-in relative z-20 hidden h-full w-56 shrink-0 overflow-hidden rounded-3xl border border-line bg-surface shadow-sm md:block lg:w-60">
+      <aside className="animate-shell-in relative z-20 hidden h-full w-56 shrink-0 overflow-hidden  border border-line bg-surface shadow-sm md:block lg:w-60">
         <div className="h-full overflow-y-auto">
           <AppSidebar />
         </div>
@@ -49,7 +49,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       )}
 
       {/* Main column — header fixed, only children scroll */}
-      <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-3xl border border-line bg-surface/80 shadow-sm backdrop-blur-sm">
+      <div className="relative  z-10 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden  border border-line bg-surface/80 shadow-sm backdrop-blur-sm">
         <div className="shrink-0">
           <AppHeader onMenuClick={() => setMobileOpen(true)} />
         </div>

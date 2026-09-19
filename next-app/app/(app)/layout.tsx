@@ -2,7 +2,7 @@ import { AppShell } from "@/components/AppShell";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative flex h-svh max-h-svh flex-1 flex-col overflow-hidden">
+    <div className="relative flex h-svh max-h-svh flex-1 flex-col overflow-hidden ">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
