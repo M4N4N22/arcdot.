@@ -64,9 +64,10 @@ export function buildAgentManifest(
     escrow_contract: gateway,
     catalog: `${origin}/api/services`,
     unlock: `${origin}/api/gateway`,
+    mcp: `${origin}/api/mcp`,
     docs: `${origin}/docs`,
     openapi: `${origin}/.well-known/openapi.json`,
-    note: "amount / price_wei use 18-decimal native USDC. 0.01 USDC = 10000000000000000 (1e16).",
+    note: "amount / price_wei use 18-decimal native USDC. 0.01 USDC = 10000000000000000 (1e16). MCP: POST /api/mcp (tools/list, tools/call).",
     services: services.map((s) => {
       const pub = publicServiceForAgent(
         s,
@@ -194,6 +195,23 @@ export function buildOpenApiDocument(request: Request) {
           summary: "Health check",
           operationId: "health",
           responses: { "200": { description: "OK" } },
+        },
+      },
+      "/api/mcp": {
+        get: {
+          summary: "MCP server descriptor (Streamable HTTP)",
+          operationId: "mcpDescribe",
+          responses: { "200": { description: "MCP endpoint metadata" } },
+        },
+        post: {
+          summary: "MCP JSON-RPC (initialize, tools/list, tools/call)",
+          operationId: "mcpRpc",
+          description:
+            "Catalog services as MCP tools. Unpaid tools/call returns payment instructions in tool content.",
+          responses: {
+            "200": { description: "JSON-RPC response" },
+            "204": { description: "Notification acknowledged" },
+          },
         },
       },
     },

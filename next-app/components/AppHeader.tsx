@@ -4,6 +4,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { usePathname } from "next/navigation";
 
 function titleForPath(pathname: string): string {
+  if (pathname.startsWith("/hub")) return "MCP Hub";
   if (pathname.startsWith("/console")) return "Console";
   if (pathname.startsWith("/docs")) return "Documentation";
   if (pathname.startsWith("/services/") && pathname !== "/services") {

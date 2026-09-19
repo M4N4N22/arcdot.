@@ -75,6 +75,20 @@ export default function DocsAgentsPage() {
         >
           Agent client
         </Link>
+        . MCP tools:{" "}
+        <Link
+          href="/hub"
+          className="underline underline-offset-4 text-foreground"
+        >
+          MCP Hub
+        </Link>
+        {" · "}
+        <Link
+          href="/docs/mcp"
+          className="underline underline-offset-4 text-foreground"
+        >
+          reference
+        </Link>
         .
       </DocsP>
 

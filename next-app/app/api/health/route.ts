@@ -20,6 +20,7 @@ export async function GET() {
     protocol: "arcdot.gateway",
     catalog: "/api/services",
     unlock: "/api/gateway",
+    mcp: "/api/mcp",
     wellKnown: {
       plugin: "/.well-known/ai-plugin.json",
       agent: "/.well-known/arcdot.json",
@@ -70,7 +71,7 @@ export async function GET() {
   if (promptLeak === true && requiresDurableStore()) {
     checks.ok = false;
     checks.privacyError =
-      "Anon can read system_prompt — apply schema_v3 column grants";
+      "Anon can read system_prompt or upstream_bearer — apply schema_v3/v4 column grants";
   }
 
   return NextResponse.json(checks, {

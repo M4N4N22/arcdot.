@@ -19,6 +19,8 @@ export default function CreateServicePage() {
   const [systemPrompt, setSystemPrompt] = useState(
     "You are a helpful specialist. Keep answers short and clear.",
   );
+  const [upstreamUrl, setUpstreamUrl] = useState("");
+  const [upstreamBearer, setUpstreamBearer] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -39,12 +41,14 @@ export default function CreateServicePage() {
     setBusy(true);
     try {
       const issuedAt = Math.floor(Date.now() / 1000);
+      const upstream = upstreamUrl.trim();
       const challenge = buildCreateChallenge({
         slug,
         title,
         price_usdc: priceUsdc,
         owner_address: address,
         issuedAt,
+        upstream_url: upstream,
       });
       const signature = await signMessageAsync({ message: challenge });
       const res = await fetch("/api/services", {
@@ -56,6 +60,8 @@ export default function CreateServicePage() {
           description,
           price_usdc: priceUsdc,
           system_prompt: systemPrompt,
+          upstream_url: upstream,
+          upstream_bearer: upstreamBearer.trim(),
           owner_address: address,
           signature,
           issuedAt,
@@ -85,7 +91,7 @@ export default function CreateServicePage() {
         </h1>
         <p className="mt-2 text-muted">
           Publish a gated endpoint. Buyers pay in USDC on Arc and unlock your
-          reply.
+          reply — hosted here or on your own API.
         </p>
       </div>
 
@@ -138,14 +144,42 @@ export default function CreateServicePage() {
             />
           </label>
           <label className="block space-y-2 text-sm font-medium">
+            <span>Your API URL (optional)</span>
+            <input
+              value={upstreamUrl}
+              onChange={(e) => setUpstreamUrl(e.target.value)}
+              className={`${inputClass} font-mono`}
+              placeholder="https://…"
+              maxLength={500}
+            />
+            <span className="block text-xs font-normal text-muted">
+              If set, arcdot. POSTs paid requests to your HTTPS API instead of
+              using built-in model instructions.
+            </span>
+          </label>
+          <label className="block space-y-2 text-sm font-medium">
+            <span>API bearer token (optional)</span>
+            <input
+              type="password"
+              value={upstreamBearer}
+              onChange={(e) => setUpstreamBearer(e.target.value)}
+              className={`${inputClass} font-mono`}
+              placeholder="Only stored for your service"
+              maxLength={500}
+              autoComplete="off"
+            />
+          </label>
+          <label className="block space-y-2 text-sm font-medium">
             <span>Instructions for the model</span>
             <textarea
-              required
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
               rows={4}
               className={inputClass}
             />
+            <span className="block text-xs font-normal text-muted">
+              Used when you do not set an API URL.
+            </span>
           </label>
           {error && <p className="text-sm text-red-700">{error}</p>}
           <button

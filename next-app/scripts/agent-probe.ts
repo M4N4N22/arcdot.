@@ -94,8 +94,40 @@ async function main() {
     payment: unlockJson.error?.payment ?? null,
   };
 
+  const mcpInit = await fetch(new URL("/api/mcp", origin), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 1,
+      method: "initialize",
+      params: {
+        protocolVersion: "2025-03-26",
+        capabilities: {},
+        clientInfo: { name: "arcdot-probe", version: "0.1.0" },
+      },
+    }),
+  });
+  const mcpList = await fetch(new URL("/api/mcp", origin), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      jsonrpc: "2.0",
+      id: 2,
+      method: "tools/list",
+    }),
+  });
+  const mcpListJson = (await mcpList.json()) as {
+    result?: { tools?: unknown[] };
+  };
+  out.mcp = {
+    initializeStatus: mcpInit.status,
+    toolsListStatus: mcpList.status,
+    toolCount: mcpListJson.result?.tools?.length ?? 0,
+  };
+
   out.hint =
-    "Pay depositPayment(paymentId, seller) with msg.value == price_wei on chain 5042, then POST /api/gateway with X-Arc-* headers. See /docs/agents/client";
+    "Pay depositPayment(paymentId, seller) with msg.value == price_wei on chain 5042, then POST /api/gateway with X-Arc-* headers — or use POST /api/mcp tools/call. See /docs/mcp";
 
   console.log(JSON.stringify(out, null, 2));
   if (unlock.status !== 402) {

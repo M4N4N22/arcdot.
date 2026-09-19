@@ -1,7 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 
 /**
- * Returns true if the anon key can read system_prompt (privacy regression).
+ * Returns true if the anon key can read secret service columns (privacy regression).
  * null = could not probe (no anon key / network).
  */
 export async function probeAnonSystemPromptLeak(): Promise<boolean | null> {
@@ -15,7 +15,7 @@ export async function probeAnonSystemPromptLeak(): Promise<boolean | null> {
     });
     const { data, error } = await client
       .from("services")
-      .select("system_prompt")
+      .select("system_prompt, upstream_bearer")
       .eq("status", "published")
       .limit(1)
       .maybeSingle();
@@ -35,7 +35,11 @@ export async function probeAnonSystemPromptLeak(): Promise<boolean | null> {
       return null;
     }
 
-    if (data && "system_prompt" in data && data.system_prompt != null) {
+    if (
+      data &&
+      (("system_prompt" in data && data.system_prompt != null) ||
+        ("upstream_bearer" in data && data.upstream_bearer != null))
+    ) {
       return true;
     }
     return false;

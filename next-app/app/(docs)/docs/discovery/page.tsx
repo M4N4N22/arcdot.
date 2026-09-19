@@ -43,6 +43,24 @@ export default function DocsDiscoveryPage() {
 curl -s "$ORIGIN/.well-known/ai-plugin.json" | jq .`}
       />
 
+      <DocsH2>MCP</DocsH2>
+      <DocsP>
+        Agents that speak Model Context Protocol can load tools from{" "}
+        <code className="font-mono text-sm">POST /api/mcp</code>. Setup lives in
+        the{" "}
+        <Link href="/hub" className="underline underline-offset-4 text-foreground">
+          MCP Hub
+        </Link>
+        ; protocol detail is in the{" "}
+        <Link
+          href="/docs/mcp"
+          className="underline underline-offset-4 text-foreground"
+        >
+          MCP reference
+        </Link>
+        . Same catalog and Arc settlement as the HTTP gateway.
+      </DocsP>
+
       <DocsH2>Live catalog (source of truth)</DocsH2>
       <DocsP>
         Prices and sellers can change. Always prefer{" "}

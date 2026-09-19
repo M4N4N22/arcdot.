@@ -5,6 +5,7 @@ export function buildUpdateChallenge(params: {
   paused?: boolean;
   title?: string;
   price_usdc?: string;
+  upstream_url?: string;
 }): string {
   return [
     "arcdot.updateService",
@@ -14,6 +15,9 @@ export function buildUpdateChallenge(params: {
     params.title ? `title:${params.title}` : "",
     params.price_usdc ? `price:${params.price_usdc}` : "",
     typeof params.paused === "boolean" ? `paused:${params.paused}` : "",
+    params.upstream_url !== undefined
+      ? `upstream:${params.upstream_url}`
+      : "",
   ]
     .filter(Boolean)
     .join("\n");

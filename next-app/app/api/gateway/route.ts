@@ -29,6 +29,7 @@ import {
 import { completeWithGemini } from "@/lib/llm/gemini";
 import { durableStoreBlocked, durableStoreReady } from "@/lib/ops/durable";
 import { notifySellerWebhook } from "@/lib/seller/webhook";
+import { callSellerUpstream } from "@/lib/seller/upstream";
 import type {
   Gateway200Body,
   Gateway402Body,
@@ -135,10 +136,31 @@ async function fulfillUpstream(params: {
 }): Promise<NextResponse> {
   const prompt = extractPrompt(params.input);
   try {
-    const { text, mock } = await completeWithGemini(
-      prompt,
-      params.serviceRow?.system_prompt,
-    );
+    let text: string;
+    let mock = false;
+    let fulfillment: "upstream" | "gemini" = "gemini";
+
+    const upstreamUrl = params.serviceRow?.upstream_url?.trim();
+    if (upstreamUrl) {
+      fulfillment = "upstream";
+      const up = await callSellerUpstream({
+        upstreamUrl,
+        upstreamBearer: params.serviceRow?.upstream_bearer,
+        prompt,
+        input: params.input,
+        service: params.serviceKey,
+        requestId: params.requestId,
+        settlement: params.settlement,
+      });
+      text = up.text;
+    } else {
+      const gemini = await completeWithGemini(
+        prompt,
+        params.serviceRow?.system_prompt,
+      );
+      text = gemini.text;
+      mock = gemini.mock;
+    }
 
     if (params.serviceRow) {
       await insertRequest({
@@ -182,6 +204,7 @@ async function fulfillUpstream(params: {
 
     logGateway({
       outcome: "ok",
+      fulfillment,
       requestId: params.requestId,
       service: params.serviceKey,
       payer: params.payer,

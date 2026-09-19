@@ -8,6 +8,7 @@ import {
 import { ARC } from "@/lib/arc/constants";
 import { buildUpdateChallenge } from "@/lib/auth/updateServiceChallenge";
 import { getProfile, getServiceBySlug, updateService } from "@/lib/catalog/store";
+import { isValidUpstreamUrlShape } from "@/lib/seller/upstream";
 
 export const runtime = "nodejs";
 
@@ -16,6 +17,8 @@ const patchSchema = z.object({
   description: z.string().max(500).optional(),
   price_usdc: z.string().regex(/^\d+(\.\d{1,6})?$/).optional(),
   system_prompt: z.string().max(2000).optional(),
+  upstream_url: z.string().max(500).optional(),
+  upstream_bearer: z.string().max(500).optional(),
   paused: z.boolean().optional(),
   owner_address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   signature: z.string().regex(/^0x[a-fA-F0-9]+$/),
@@ -80,6 +83,17 @@ export async function PATCH(
     return NextResponse.json({ error: "Signature expired" }, { status: 401 });
   }
 
+  if (
+    body.upstream_url !== undefined &&
+    body.upstream_url.trim() !== "" &&
+    !isValidUpstreamUrlShape(body.upstream_url)
+  ) {
+    return NextResponse.json(
+      { error: "Upstream URL must be https without credentials" },
+      { status: 400 },
+    );
+  }
+
   const challenge = buildUpdateChallenge({
     slug,
     owner_address: body.owner_address,
@@ -87,6 +101,8 @@ export async function PATCH(
     paused: body.paused,
     title: body.title,
     price_usdc: body.price_usdc,
+    upstream_url:
+      body.upstream_url !== undefined ? body.upstream_url.trim() : undefined,
   });
   const recovered = await recoverMessageAddress({
     message: challenge,
@@ -101,6 +117,12 @@ export async function PATCH(
   if (body.description !== undefined) patch.description = body.description;
   if (body.system_prompt !== undefined) patch.system_prompt = body.system_prompt;
   if (typeof body.paused === "boolean") patch.paused = body.paused;
+  if (body.upstream_url !== undefined) {
+    patch.upstream_url = body.upstream_url.trim() || null;
+  }
+  if (body.upstream_bearer !== undefined) {
+    patch.upstream_bearer = body.upstream_bearer.trim() || null;
+  }
   if (body.price_usdc) {
     const priceWei = usdcToWei(body.price_usdc);
     if (BigInt(priceWei) < ARC.feeWei) {

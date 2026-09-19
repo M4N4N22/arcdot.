@@ -5,6 +5,10 @@ import { usePathname } from "next/navigation";
 
 const navGroups = [
   {
+    label: "Connect",
+    items: [{ href: "/hub", label: "MCP Hub" }],
+  },
+  {
     label: "Develop",
     items: [
       { href: "/console", label: "Console" },
@@ -41,6 +45,9 @@ function isActive(pathname: string, href: string) {
   }
   if (href === "/console") {
     return pathname === "/console";
+  }
+  if (href === "/hub") {
+    return pathname === "/hub" || pathname.startsWith("/hub/");
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -97,7 +104,7 @@ export function AppSidebar({ onNavigate }: AppSidebarProps) {
 
       <div className="border-t border-line px-5 py-4">
         <p className="text-xs leading-relaxed text-muted">
-          Agents pay over HTTP. Console is the live demo surface.
+          Start in MCP Hub — connect Cursor, then try tools live.
         </p>
       </div>
     </div>

@@ -18,21 +18,22 @@ export default function Home() {
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <Link
-              href="/console"
+              href="/hub"
               className="inline-flex h-11 items-center justify-center bg-accent px-5 text-sm font-medium text-surface transition-opacity hover:opacity-90"
+            >
+              Connect in Cursor
+            </Link>
+            <Link
+              href="/console"
+              className="inline-flex h-11 items-center justify-center border border-line bg-surface/70 px-5 text-sm font-medium text-foreground backdrop-blur-sm transition-colors hover:bg-surface"
             >
               Open console
             </Link>
-            <Link
-              href="/docs"
-              className="inline-flex h-11 items-center justify-center border border-line bg-surface/70 px-5 text-sm font-medium text-foreground backdrop-blur-sm transition-colors hover:bg-surface"
-            >
-              Documentation
-            </Link>
           </div>
           <p className="mt-6 font-mono text-xs text-muted">
-            Agents start at{" "}
-            <span className="text-foreground">GET /api/services</span>
+            MCP at <span className="text-foreground">POST /api/mcp</span>
+            {" · "}
+            Catalog at <span className="text-foreground">GET /api/services</span>
           </p>
         </div>
       </section>
@@ -93,14 +94,14 @@ export default function Home() {
               For builders
             </h2>
             <p className="mt-3 max-w-sm text-muted">
-              Read the docs, publish in Studio, and let agents pay your
-              endpoints without API keys.
+              Connect Cursor via the MCP Hub, publish in Studio, and let agents
+              pay your endpoints without API keys.
             </p>
             <Link
-              href="/docs"
+              href="/hub"
               className="mt-6 inline-block text-sm font-medium underline underline-offset-4 transition-colors hover:text-muted"
             >
-              Read the documentation
+              Open MCP Hub
             </Link>
           </div>
           <div>

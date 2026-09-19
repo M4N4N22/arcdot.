@@ -95,6 +95,9 @@ export function DocsLayoutClient({ children }: { children: React.ReactNode }) {
           </Link>
         </div>
         <nav className="flex flex-wrap items-center justify-end gap-4 text-sm text-muted">
+          <Link href="/hub" className="transition-colors hover:text-foreground">
+            MCP Hub
+          </Link>
           <Link href="/console" className="transition-colors hover:text-foreground">
             Console
           </Link>

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { CodeBlock } from "@/components/docs/CodeBlock";
 import {
   DocsH2,
   DocsOl,
@@ -30,11 +31,44 @@ export default function DocsSellersPage() {
           <Link href="/create" className="underline underline-offset-4 text-foreground">
             Create
           </Link>{" "}
-          — title, slug, description, price (minimum 0.01 USDC), and model
-          instructions
+          — title, slug, description, price (minimum 0.01 USDC), and either model
+          instructions or your own HTTPS API
         </li>
         <li>Sign a short ownership message — no password accounts</li>
       </DocsOl>
+
+      <DocsH2>Your own API (upstream)</DocsH2>
+      <DocsP>
+        Host your tool anywhere (AWS, Vercel, …). Paste an{" "}
+        <code className="font-mono text-sm">https://</code> URL on Create or Edit.
+        After a buyer pays on Arc, arcdot. POSTs to your endpoint and returns the
+        reply. Catalog/MCP show{" "}
+        <code className="font-mono text-sm">has_upstream: true</code> — never your
+        URL or bearer token publicly.
+      </DocsP>
+      <DocsP>Request body (JSON):</DocsP>
+      <CodeBlock
+        title="json"
+        code={`{
+  "prompt": "…",
+  "input": { "prompt": "…" },
+  "service": "your-slug",
+  "requestId": "…",
+  "settlement": {
+    "txHash": "0x…",
+    "paymentId": "0x…",
+    "payer": "0x…"
+  }
+}`}
+      />
+      <DocsP>
+        Respond <code className="font-mono text-sm">200</code> with{" "}
+        <code className="font-mono text-sm">{`{ "text": "…" }`}</code> or{" "}
+        <code className="font-mono text-sm">{`{ "result": "…" }`}</code>. Optional{" "}
+        <code className="font-mono text-sm">Authorization: Bearer …</code> from
+        the token you saved in Studio. Timeouts and private-network hosts are
+        rejected (SSRF protection).
+      </DocsP>
 
       <DocsH2>Earn</DocsH2>
       <DocsP>
@@ -63,6 +97,11 @@ export default function DocsSellersPage() {
         <li>
           Manifest{" "}
           <code className="font-mono text-sm">/.well-known/arcdot.json</code>
+        </li>
+        <li>
+          MCP{" "}
+          <code className="font-mono text-sm">POST /api/mcp</code>{" "}
+          <code className="font-mono text-sm">tools/list</code>
         </li>
       </DocsUl>
       <DocsP>

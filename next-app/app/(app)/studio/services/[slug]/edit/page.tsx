@@ -19,6 +19,8 @@ export default function EditServicePage() {
   const [description, setDescription] = useState("");
   const [priceUsdc, setPriceUsdc] = useState("0.01");
   const [systemPrompt, setSystemPrompt] = useState("");
+  const [upstreamUrl, setUpstreamUrl] = useState("");
+  const [upstreamBearer, setUpstreamBearer] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -39,6 +41,8 @@ export default function EditServicePage() {
       setDescription(found.description);
       setPriceUsdc(found.price_usdc);
       setSystemPrompt(found.system_prompt);
+      setUpstreamUrl(found.upstream_url ?? "");
+      setUpstreamBearer(found.upstream_bearer ?? "");
     })();
   }, [address, params.slug]);
 
@@ -49,12 +53,14 @@ export default function EditServicePage() {
     setError(null);
     try {
       const issuedAt = Math.floor(Date.now() / 1000);
+      const upstream = upstreamUrl.trim();
       const challenge = buildUpdateChallenge({
         slug: service.slug,
         owner_address: address,
         issuedAt,
         title,
         price_usdc: priceUsdc,
+        upstream_url: upstream,
       });
       const signature = await signMessageAsync({ message: challenge });
       const res = await fetch(`/api/services/${service.slug}`, {
@@ -65,6 +71,8 @@ export default function EditServicePage() {
           description,
           price_usdc: priceUsdc,
           system_prompt: systemPrompt,
+          upstream_url: upstream,
+          upstream_bearer: upstreamBearer.trim(),
           owner_address: address,
           signature,
           issuedAt,
@@ -136,13 +144,36 @@ export default function EditServicePage() {
             />
           </label>
           <label className="block space-y-2 text-sm font-medium">
+            <span>Your API URL (optional)</span>
+            <input
+              className={`${inputClass} font-mono`}
+              value={upstreamUrl}
+              onChange={(e) => setUpstreamUrl(e.target.value)}
+              placeholder="https://…"
+              maxLength={500}
+            />
+            <span className="block text-xs font-normal text-muted">
+              Leave blank to use model instructions on arcdot.
+            </span>
+          </label>
+          <label className="block space-y-2 text-sm font-medium">
+            <span>API bearer token (optional)</span>
+            <input
+              type="password"
+              className={`${inputClass} font-mono`}
+              value={upstreamBearer}
+              onChange={(e) => setUpstreamBearer(e.target.value)}
+              maxLength={500}
+              autoComplete="off"
+            />
+          </label>
+          <label className="block space-y-2 text-sm font-medium">
             <span>Instructions for the model</span>
             <textarea
               className={inputClass}
               rows={4}
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
-              required
             />
           </label>
           {error && <p className="text-sm text-red-700">{error}</p>}

@@ -4,6 +4,7 @@ export function buildCreateChallenge(params: {
   price_usdc: string;
   owner_address: string;
   issuedAt: number;
+  upstream_url?: string;
 }): string {
   return [
     "arcdot.createService",
@@ -11,6 +12,7 @@ export function buildCreateChallenge(params: {
     `title:${params.title}`,
     `price:${params.price_usdc}`,
     `owner:${params.owner_address.toLowerCase()}`,
+    `upstream:${params.upstream_url ?? ""}`,
     `issuedAt:${params.issuedAt}`,
   ].join("\n");
 }

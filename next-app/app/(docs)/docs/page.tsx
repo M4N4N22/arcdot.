@@ -7,6 +7,11 @@ export const metadata = {
 
 const cards = [
   {
+    href: "/hub",
+    title: "MCP Hub",
+    body: "Connect Cursor or your agent framework with one-click configs.",
+  },
+  {
     href: "/docs/quickstart",
     title: "Quickstart",
     body: "Hit the live catalog and unlock a service in minutes.",

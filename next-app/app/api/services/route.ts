@@ -10,6 +10,7 @@ import {
   listPublishedServices,
   upsertProfile,
 } from "@/lib/catalog/store";
+import { isValidUpstreamUrlShape } from "@/lib/seller/upstream";
 
 export const runtime = "nodejs";
 
@@ -22,7 +23,9 @@ const createSchema = z.object({
   title: z.string().min(2).max(80),
   description: z.string().max(500),
   price_usdc: z.string().regex(/^\d+(\.\d{1,6})?$/),
-  system_prompt: z.string().max(2000),
+  system_prompt: z.string().max(2000).optional().default(""),
+  upstream_url: z.string().max(500).optional().default(""),
+  upstream_bearer: z.string().max(500).optional().default(""),
   owner_address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   signature: z.string().regex(/^0x[a-fA-F0-9]+$/),
   issuedAt: z.number().int().positive(),
@@ -81,7 +84,22 @@ export async function POST(request: Request) {
     );
   }
 
-  const challenge = buildCreateChallenge(body);
+  const upstream_url = body.upstream_url.trim();
+  if (upstream_url && !isValidUpstreamUrlShape(upstream_url)) {
+    return NextResponse.json(
+      { error: "Upstream URL must be https without credentials" },
+      { status: 400 },
+    );
+  }
+
+  const challenge = buildCreateChallenge({
+    slug: body.slug,
+    title: body.title,
+    price_usdc: body.price_usdc,
+    owner_address: body.owner_address,
+    issuedAt: body.issuedAt,
+    upstream_url,
+  });
   const recovered = await recoverMessageAddress({
     message: challenge,
     signature: body.signature as Hex,
@@ -105,6 +123,8 @@ export async function POST(request: Request) {
       price_wei: priceWei,
       price_usdc: body.price_usdc,
       system_prompt: body.system_prompt,
+      upstream_url: upstream_url || null,
+      upstream_bearer: body.upstream_bearer.trim() || null,
       status: "published",
       paused: false,
     });

@@ -25,6 +25,7 @@ export function publicServiceForAgent(
     seller: s.owner_address,
     seller_name: sellerName ?? null,
     paused: s.paused,
+    has_upstream: Boolean(s.upstream_url?.trim()),
     input: INPUT_HINT,
     example: {
       service: s.slug,
@@ -63,6 +64,7 @@ export function agentCatalogEnvelope(
       service: "/api/services/{slug}",
       unlock: "/api/gateway",
       health: "/api/health",
+      mcp: "/api/mcp",
       wellKnownPlugin: "/.well-known/ai-plugin.json",
       wellKnownAgent: "/.well-known/arcdot.json",
       openapi: "/.well-known/openapi.json",

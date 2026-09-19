@@ -9,6 +9,10 @@ export interface ServiceRow {
   price_wei: string;
   price_usdc: string;
   system_prompt: string;
+  /** HTTPS endpoint for seller-owned fulfillment; null = Gemini path. */
+  upstream_url?: string | null;
+  /** Optional bearer for upstream; server-only, never public API. */
+  upstream_bearer?: string | null;
   status: ServiceStatus;
   paused: boolean;
   created_at: string;

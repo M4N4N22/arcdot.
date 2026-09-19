@@ -24,7 +24,12 @@ const memoryProfiles = new Map<string, ProfileRow>([
 ]);
 
 function withPausedDefault(row: ServiceRow): ServiceRow {
-  return { ...row, paused: Boolean(row.paused) };
+  return {
+    ...row,
+    paused: Boolean(row.paused),
+    upstream_url: row.upstream_url ?? null,
+    upstream_bearer: row.upstream_bearer ?? null,
+  };
 }
 
 export async function listPublishedServices(): Promise<ServiceRow[]> {
@@ -101,6 +106,8 @@ export async function createService(
       price_wei: input.price_wei,
       price_usdc: input.price_usdc,
       system_prompt: input.system_prompt,
+      upstream_url: input.upstream_url?.trim() || null,
+      upstream_bearer: input.upstream_bearer?.trim() || null,
       status: input.status,
       paused: input.paused ?? false,
     })
@@ -121,6 +128,8 @@ export async function updateService(
       | "price_wei"
       | "price_usdc"
       | "system_prompt"
+      | "upstream_url"
+      | "upstream_bearer"
       | "paused"
       | "status"
     >
