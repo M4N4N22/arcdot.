@@ -71,3 +71,31 @@ body {
 .animate-log-in {
   animation: log-in 0.35s ease-out both;
 }
+
+@keyframes shell-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes drawer-in {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-shell-in {
+  animation: shell-in 0.45s ease-out both;
+}
+
+.animate-drawer-in {
+  animation: drawer-in 0.28s ease-out both;
+}

@@ -10,6 +10,14 @@ export const runtime = "nodejs";
 export async function GET() {
   const checks: Record<string, unknown> = {
     ok: true,
+    protocol: "arcdot.gateway",
+    catalog: "/api/services",
+    unlock: "/api/gateway",
+    wellKnown: {
+      plugin: "/.well-known/ai-plugin.json",
+      agent: "/.well-known/arcdot.json",
+      openapi: "/.well-known/openapi.json",
+    },
     chainId: ARC.chainId,
     gatewayConfigured: Boolean(
       ARC.gatewayAddress && ARC.gatewayAddress.length === 42,

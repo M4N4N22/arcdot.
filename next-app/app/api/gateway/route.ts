@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
 import type { Hex } from "viem";
+import {
+  buildPaymentInstructions,
+  buildX402PaymentRequired,
+  withX402Headers,
+} from "@/lib/agent/x402";
 import { ARC } from "@/lib/arc/constants";
 import {
   PaymentVerificationError,
@@ -23,7 +28,6 @@ import type {
   Gateway402Body,
   GatewayAuthMessage,
   GatewayErrorCode,
-  GatewayPaymentInstructions,
   GatewaySettlement,
 } from "@/lib/types/gateway";
 import { GATEWAY_FEE_USDC } from "@/lib/types/gateway";
@@ -50,42 +54,36 @@ function isDemoUnlock(request: Request): boolean {
   return Boolean(provided && provided === secret);
 }
 
-function paymentInstructions(
-  service?: ServiceRow | null,
-): GatewayPaymentInstructions {
-  return {
-    chainId: ARC.chainId,
-    gateway: ARC.gatewayAddress || ZERO_ADDR,
-    feeWei: service?.price_wei ?? ARC.feeWei.toString(),
-    feeUsdc: service?.price_usdc ?? GATEWAY_FEE_USDC,
-    method: "depositPayment",
-    paymentIdHint:
-      "bytes32 unique id + seller address for V2 depositPayment(paymentId, seller)",
-    rpcUrl: ARC.rpcUrl,
-    explorerTxBase: ARC.explorerTxBase,
-  };
-}
-
 function paymentRequired(
   code: GatewayErrorCode,
   message: string,
   requestId: string,
   service?: ServiceRow | null,
 ): NextResponse<Gateway402Body> {
-  return NextResponse.json(
+  const payment = buildPaymentInstructions(service);
+  const x402 = buildX402PaymentRequired({
+    payment,
+    service,
+    code,
+    message,
+  });
+  const res = NextResponse.json(
     {
-      ok: false,
-      status: 402,
+      ok: false as const,
+      status: 402 as const,
       error: {
         code,
         message,
-        payment: paymentInstructions(service),
+        payment,
       },
+      x402,
       requestId,
       timestamp: new Date().toISOString(),
-    },
+    } satisfies Gateway402Body,
     { status: 402 },
   );
+  withX402Headers(res.headers, payment, x402);
+  return res;
 }
 
 function extractPrompt(input: unknown): string {

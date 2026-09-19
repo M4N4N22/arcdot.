@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { recoverMessageAddress, type Hex } from "viem";
 import { z } from "zod";
+import { agentCatalogEnvelope } from "@/lib/agent/catalog";
 import { ARC } from "@/lib/arc/constants";
 import { buildCreateChallenge } from "@/lib/auth/createServiceChallenge";
 import {
   createService,
+  getProfilesByAddresses,
   listPublishedServices,
   upsertProfile,
 } from "@/lib/catalog/store";
@@ -35,17 +37,14 @@ function usdcToWei(usdc: string): string {
 export async function GET() {
   try {
     const services = await listPublishedServices();
-    return NextResponse.json({
-      services: services.map((s) => ({
-        id: s.id,
-        slug: s.slug,
-        title: s.title,
-        description: s.description,
-        price_usdc: s.price_usdc,
-        price_wei: s.price_wei,
-        owner_address: s.owner_address,
-      })),
-    });
+    const profiles = await getProfilesByAddresses(
+      services.map((s) => s.owner_address),
+    );
+    const sellerNames: Record<string, string | null> = {};
+    for (const [addr, p] of profiles) {
+      sellerNames[addr] = p.display_name;
+    }
+    return NextResponse.json(agentCatalogEnvelope(services, sellerNames));
   } catch (err) {
     console.error(err);
     return NextResponse.json(

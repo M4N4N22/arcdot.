@@ -1,6 +1,7 @@
 import { getSupabaseAdmin, isSupabaseConfigured } from "@/lib/supabase/server";
 import {
   LOCAL_SEED_SERVICES,
+  type ProfileRow,
   type RequestRow,
   type ServiceRow,
 } from "@/lib/types/catalog";
@@ -8,6 +9,17 @@ import {
 const memoryServices: ServiceRow[] = [...LOCAL_SEED_SERVICES];
 const memoryRequests: RequestRow[] = [];
 const memorySpent = new Set<string>();
+const memoryProfiles = new Map<string, ProfileRow>([
+  [
+    "0x00000000000000000000000000000000000000a1",
+    {
+      wallet_address: "0x00000000000000000000000000000000000000a1",
+      display_name: "arcdot.",
+      bio: "Official demo services for the payable API gateway.",
+      created_at: new Date().toISOString(),
+    },
+  ],
+]);
 
 function withPausedDefault(row: ServiceRow): ServiceRow {
   return { ...row, paused: Boolean(row.paused) };
@@ -137,14 +149,82 @@ export async function updateService(
 
 export async function upsertProfile(params: {
   wallet_address: string;
-  display_name?: string;
-}): Promise<void> {
-  if (!isSupabaseConfigured()) return;
-  const { error } = await getSupabaseAdmin().from("profiles").upsert({
-    wallet_address: params.wallet_address.toLowerCase(),
-    display_name: params.display_name ?? null,
-  });
+  display_name?: string | null;
+  bio?: string | null;
+}): Promise<ProfileRow> {
+  const wallet = params.wallet_address.toLowerCase();
+  const now = new Date().toISOString();
+
+  if (!isSupabaseConfigured()) {
+    const existing = memoryProfiles.get(wallet);
+    const row: ProfileRow = {
+      wallet_address: wallet,
+      display_name:
+        params.display_name !== undefined
+          ? params.display_name
+          : (existing?.display_name ?? null),
+      bio: params.bio !== undefined ? params.bio : (existing?.bio ?? null),
+      created_at: existing?.created_at ?? now,
+    };
+    memoryProfiles.set(wallet, row);
+    return row;
+  }
+
+  const patch: Record<string, unknown> = { wallet_address: wallet };
+  if (params.display_name !== undefined) patch.display_name = params.display_name;
+  if (params.bio !== undefined) patch.bio = params.bio;
+
+  const { data, error } = await getSupabaseAdmin()
+    .from("profiles")
+    .upsert(patch)
+    .select("*")
+    .single();
   if (error) throw error;
+  return data as ProfileRow;
+}
+
+export async function getProfile(
+  walletAddress: string,
+): Promise<ProfileRow | null> {
+  const wallet = walletAddress.toLowerCase();
+  if (!isSupabaseConfigured()) {
+    return memoryProfiles.get(wallet) ?? null;
+  }
+  const { data, error } = await getSupabaseAdmin()
+    .from("profiles")
+    .select("*")
+    .eq("wallet_address", wallet)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as ProfileRow | null) ?? null;
+}
+
+export async function getProfilesByAddresses(
+  addresses: string[],
+): Promise<Map<string, ProfileRow>> {
+  const unique = [
+    ...new Set(addresses.map((a) => a.toLowerCase()).filter(Boolean)),
+  ];
+  const map = new Map<string, ProfileRow>();
+  if (unique.length === 0) return map;
+
+  if (!isSupabaseConfigured()) {
+    for (const a of unique) {
+      const p = memoryProfiles.get(a);
+      if (p) map.set(a, p);
+    }
+    return map;
+  }
+
+  const { data, error } = await getSupabaseAdmin()
+    .from("profiles")
+    .select("*")
+    .in("wallet_address", unique);
+  if (error) throw error;
+  for (const row of (data ?? []) as ProfileRow[]) {
+    map.set(row.wallet_address.toLowerCase(), row);
+  }
+  return map;
 }
 
 export async function insertRequest(

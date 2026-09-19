@@ -1,9 +1,13 @@
 import { NextResponse } from "next/server";
 import { recoverMessageAddress, type Hex } from "viem";
 import { z } from "zod";
+import {
+  agentCatalogEnvelope,
+  publicServiceForAgent,
+} from "@/lib/agent/catalog";
 import { ARC } from "@/lib/arc/constants";
 import { buildUpdateChallenge } from "@/lib/auth/updateServiceChallenge";
-import { getServiceBySlug, updateService } from "@/lib/catalog/store";
+import { getProfile, getServiceBySlug, updateService } from "@/lib/catalog/store";
 
 export const runtime = "nodejs";
 
@@ -34,16 +38,17 @@ export async function GET(
     if (!service || service.status !== "published" || service.paused) {
       return NextResponse.json({ error: "Not found" }, { status: 404 });
     }
+    const profile = await getProfile(service.owner_address);
+    const sellerName = profile?.display_name ?? null;
+    const { services: _listed, ...meta } = agentCatalogEnvelope(
+      [service],
+      { [service.owner_address.toLowerCase()]: sellerName },
+    );
     return NextResponse.json({
+      ...meta,
       service: {
-        id: service.id,
-        slug: service.slug,
-        title: service.title,
-        description: service.description,
-        price_usdc: service.price_usdc,
-        price_wei: service.price_wei,
+        ...publicServiceForAgent(service, sellerName),
         owner_address: service.owner_address,
-        paused: service.paused,
       },
     });
   } catch (err) {

@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "agent:demo": "npx tsx scripts/agent-request.ts"
+    "agent:demo": "npx tsx scripts/agent-request.ts",
+    "agent:pay": "npx tsx scripts/agent-pay.ts"
   },
   "dependencies": {
     "@rainbow-me/rainbowkit": "^2.2.11",

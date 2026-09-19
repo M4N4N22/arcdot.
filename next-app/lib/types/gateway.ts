@@ -48,12 +48,16 @@ export interface GatewayAuthMessage {
 export interface GatewayPaymentInstructions {
   chainId: typeof ARC_CHAIN_ID;
   gateway: `0x${string}`;
+  /** Seller address for depositPayment(paymentId, seller). Null if unknown. */
+  seller: `0x${string}` | null;
   feeWei: string;
   feeUsdc: string;
   method: "depositPayment";
   paymentIdHint: string;
   rpcUrl: string;
   explorerTxBase: string;
+  unlockPath: "/api/gateway";
+  auth: "EIP-191";
 }
 
 export interface Gateway402Body {
@@ -64,6 +68,8 @@ export interface Gateway402Body {
     message: string;
     payment: GatewayPaymentInstructions;
   };
+  /** x402 v2 negotiation payload (also base64 in PAYMENT-REQUIRED header) */
+  x402?: unknown;
   requestId: string;
   timestamp: string;
 }
