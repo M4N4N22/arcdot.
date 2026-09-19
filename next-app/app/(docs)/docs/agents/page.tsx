@@ -59,6 +59,25 @@ export default function DocsAgentsPage() {
         .
       </DocsP>
 
+      <DocsH2>Probe first</DocsH2>
+      <DocsP>
+        Before paying, confirm the host is a live toll booth:
+      </DocsP>
+      <CodeBlock
+        title="bash"
+        code={`npm run agent:probe -- "$ORIGIN"`}
+      />
+      <DocsP>
+        Full client notes:{" "}
+        <Link
+          href="/docs/agents/client"
+          className="underline underline-offset-4 text-foreground"
+        >
+          Agent client
+        </Link>
+        .
+      </DocsP>
+
       <DocsH2>Recommended helper</DocsH2>
       <DocsP>
         Use the packaged paid client against the live host:

@@ -20,6 +20,7 @@ export const docsNav: DocsNavGroup[] = [
     label: "Guides",
     items: [
       { href: "/docs/agents", label: "For agents" },
+      { href: "/docs/agents/client", label: "Agent client" },
       { href: "/docs/sellers", label: "For sellers" },
       { href: "/docs/discovery", label: "Discovery" },
       { href: "/docs/payment", label: "Payment on Arc" },

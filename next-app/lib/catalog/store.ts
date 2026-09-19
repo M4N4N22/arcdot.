@@ -4,11 +4,13 @@ import {
   type ProfileRow,
   type RequestRow,
   type ServiceRow,
+  type UnlockCreditRow,
 } from "@/lib/types/catalog";
 
 const memoryServices: ServiceRow[] = [...LOCAL_SEED_SERVICES];
 const memoryRequests: RequestRow[] = [];
 const memorySpent = new Set<string>();
+const memoryUnlockCredits = new Map<string, UnlockCreditRow>();
 const memoryProfiles = new Map<string, ProfileRow>([
   [
     "0x00000000000000000000000000000000000000a1",
@@ -151,6 +153,7 @@ export async function upsertProfile(params: {
   wallet_address: string;
   display_name?: string | null;
   bio?: string | null;
+  webhook_url?: string | null;
 }): Promise<ProfileRow> {
   const wallet = params.wallet_address.toLowerCase();
   const now = new Date().toISOString();
@@ -164,6 +167,10 @@ export async function upsertProfile(params: {
           ? params.display_name
           : (existing?.display_name ?? null),
       bio: params.bio !== undefined ? params.bio : (existing?.bio ?? null),
+      webhook_url:
+        params.webhook_url !== undefined
+          ? params.webhook_url
+          : (existing?.webhook_url ?? null),
       created_at: existing?.created_at ?? now,
     };
     memoryProfiles.set(wallet, row);
@@ -173,6 +180,7 @@ export async function upsertProfile(params: {
   const patch: Record<string, unknown> = { wallet_address: wallet };
   if (params.display_name !== undefined) patch.display_name = params.display_name;
   if (params.bio !== undefined) patch.bio = params.bio;
+  if (params.webhook_url !== undefined) patch.webhook_url = params.webhook_url;
 
   const { data, error } = await getSupabaseAdmin()
     .from("profiles")
@@ -342,6 +350,112 @@ export async function isSpentPayment(txHash: string): Promise<boolean> {
     .from("spent_payments")
     .select("tx_hash")
     .eq("tx_hash", key)
+    .maybeSingle();
+  if (error) throw error;
+  return Boolean(data);
+}
+
+export async function issueUnlockCredit(params: {
+  txHash: string;
+  payerAddress: string;
+  serviceId: string | null;
+  serviceSlug: string;
+  paymentId?: string | null;
+  ttlMs?: number;
+}): Promise<UnlockCreditRow> {
+  const tx = params.txHash.toLowerCase();
+  const expires = new Date(
+    Date.now() + (params.ttlMs ?? 24 * 60 * 60 * 1000),
+  ).toISOString();
+  const row: UnlockCreditRow = {
+    tx_hash: tx,
+    payer_address: params.payerAddress.toLowerCase(),
+    service_id: params.serviceId,
+    service_slug: params.serviceSlug,
+    payment_id: params.paymentId ?? null,
+    expires_at: expires,
+    consumed_at: null,
+    created_at: new Date().toISOString(),
+  };
+
+  if (!isSupabaseConfigured()) {
+    memoryUnlockCredits.set(tx, row);
+    return row;
+  }
+
+  const { data, error } = await getSupabaseAdmin()
+    .from("unlock_credits")
+    .upsert({
+      tx_hash: tx,
+      payer_address: row.payer_address,
+      service_id: params.serviceId,
+      service_slug: params.serviceSlug,
+      payment_id: params.paymentId ?? null,
+      expires_at: expires,
+      consumed_at: null,
+    })
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data as UnlockCreditRow;
+}
+
+/** Returns credit if valid and unused; does not consume. */
+export async function getOpenUnlockCredit(params: {
+  txHash: string;
+  payerAddress: string;
+  serviceSlug: string;
+}): Promise<UnlockCreditRow | null> {
+  const tx = params.txHash.toLowerCase();
+  const payer = params.payerAddress.toLowerCase();
+  const now = new Date().toISOString();
+
+  if (!isSupabaseConfigured()) {
+    const c = memoryUnlockCredits.get(tx);
+    if (
+      !c ||
+      c.consumed_at ||
+      c.payer_address !== payer ||
+      c.service_slug !== params.serviceSlug ||
+      c.expires_at < now
+    ) {
+      return null;
+    }
+    return c;
+  }
+
+  const { data, error } = await getSupabaseAdmin()
+    .from("unlock_credits")
+    .select("*")
+    .eq("tx_hash", tx)
+    .eq("payer_address", payer)
+    .eq("service_slug", params.serviceSlug)
+    .is("consumed_at", null)
+    .gt("expires_at", now)
+    .maybeSingle();
+  if (error) throw error;
+  return (data as UnlockCreditRow | null) ?? null;
+}
+
+/** Atomically consume credit. Returns false if already used/missing. */
+export async function consumeUnlockCredit(txHash: string): Promise<boolean> {
+  const tx = txHash.toLowerCase();
+  const now = new Date().toISOString();
+
+  if (!isSupabaseConfigured()) {
+    const c = memoryUnlockCredits.get(tx);
+    if (!c || c.consumed_at || c.expires_at < now) return false;
+    memoryUnlockCredits.set(tx, { ...c, consumed_at: now });
+    return true;
+  }
+
+  const { data, error } = await getSupabaseAdmin()
+    .from("unlock_credits")
+    .update({ consumed_at: now })
+    .eq("tx_hash", tx)
+    .is("consumed_at", null)
+    .gt("expires_at", now)
+    .select("tx_hash")
     .maybeSingle();
   if (error) throw error;
   return Boolean(data);

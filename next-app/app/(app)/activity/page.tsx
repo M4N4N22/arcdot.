@@ -3,12 +3,14 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
-import { useAccount } from "wagmi";
+import { useAccount, useSignMessage } from "wagmi";
+import { buildSignedReadChallenge } from "@/lib/auth/signedReadChallenge";
 import { statusLabel } from "@/lib/format/usdc";
 import type { RequestRow } from "@/lib/types/catalog";
 
 export default function ActivityPage() {
   const { address, isConnected } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const [requests, setRequests] = useState<RequestRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -18,21 +20,33 @@ export default function ActivityPage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch(
-        `/api/me/requests?address=${encodeURIComponent(address)}`,
-      );
+      const issuedAt = Math.floor(Date.now() / 1000);
+      const challenge = buildSignedReadChallenge({
+        purpose: "activity",
+        address,
+        issuedAt,
+      });
+      const signature = await signMessageAsync({ message: challenge });
+      const qs = new URLSearchParams({
+        address,
+        signature,
+        issuedAt: String(issuedAt),
+      });
+      const res = await fetch(`/api/me/requests?${qs}`);
       const data = await res.json();
       if (!res.ok) {
         setError(data.error || "Could not load activity");
         return;
       }
       setRequests(data.requests ?? []);
-    } catch {
-      setError("Could not load activity");
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Could not load activity",
+      );
     } finally {
       setLoading(false);
     }
-  }, [address]);
+  }, [address, signMessageAsync]);
 
   useEffect(() => {
     void load();
@@ -66,7 +80,7 @@ export default function ActivityPage() {
           <ConnectButton />
         </div>
       ) : loading ? (
-        <p className="mt-12 text-muted">Loading…</p>
+        <p className="mt-12 text-muted">Confirm in wallet to load…</p>
       ) : error ? (
         <p className="mt-12 text-sm text-red-700">{error}</p>
       ) : requests.length === 0 ? (

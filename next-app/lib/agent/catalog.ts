@@ -72,6 +72,7 @@ export function agentCatalogEnvelope(
       args: ["paymentId:bytes32", "seller:address"],
       auth: "EIP-191 personal_sign over gateway challenge",
       headers: ["X-Arc-Tx-Hash", "X-Arc-Address", "X-Arc-Signature"],
+      unlockCreditHeader: "X-Arc-Unlock-Credit",
       unpaidStatus: 402,
       x402: {
         version: 2,

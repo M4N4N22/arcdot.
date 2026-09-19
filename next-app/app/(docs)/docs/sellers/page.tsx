@@ -42,13 +42,15 @@ export default function DocsSellersPage() {
         Track sales under Studio → Sales.
       </DocsP>
 
-      <DocsH2>Profile</DocsH2>
+      <DocsH2>Profile & sale webhook</DocsH2>
       <DocsP>
         Set a display name and bio under{" "}
         <Link href="/studio/profile" className="underline underline-offset-4 text-foreground">
           Profile
         </Link>
-        . Buyers see this on listings and your public page{" "}
+        . Optionally paste an https webhook URL — arcdot. POSTs a sale receipt when
+        an unlock completes. Use “Send test ping” to verify. Buyers see your public
+        page at{" "}
         <code className="font-mono text-sm text-foreground">/u/&lt;address&gt;</code>.
       </DocsP>
 

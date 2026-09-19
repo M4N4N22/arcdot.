@@ -1,0 +1,14 @@
+{
+  "name": "@arcdot/agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "In-repo agent client for arcdot. paid unlocks (scripts + tooling).",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "peerDependencies": {
+    "viem": "^2.0.0"
+  }
+}

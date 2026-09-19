@@ -25,7 +25,9 @@ export type GatewayErrorCode =
   | "SERVICE_NOT_FOUND"
   | "SERVICE_PAUSED"
   | "RATE_LIMITED"
-  | "SELLER_MISMATCH";
+  | "SELLER_MISMATCH"
+  | "DURABLE_STORE_REQUIRED"
+  | "UNLOCK_CREDIT_INVALID";
 
 export interface GatewayTargetPayload {
   service: string;

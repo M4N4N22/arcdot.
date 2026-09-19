@@ -56,7 +56,7 @@ export function DocsLayoutClient({ children }: { children: React.ReactNode }) {
   }, [pathname]);
 
   return (
-    <div className="relative flex min-h-full flex-1 flex-col bg-background text-foreground">
+    <div className="relative flex h-svh max-h-svh flex-1 flex-col overflow-hidden bg-background text-foreground">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
@@ -66,7 +66,7 @@ export function DocsLayoutClient({ children }: { children: React.ReactNode }) {
         }}
       />
 
-      <header className="relative z-20 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-line bg-surface/70 px-4 backdrop-blur-sm md:h-16 md:px-6">
+      <header className="relative z-20 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-line bg-surface/80 px-4 backdrop-blur-sm md:h-16 md:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
@@ -104,8 +104,8 @@ export function DocsLayoutClient({ children }: { children: React.ReactNode }) {
         </nav>
       </header>
 
-      <div className="relative z-10 flex min-h-0 flex-1">
-        <aside className="sticky top-14 hidden h-[calc(100svh-3.5rem)] w-56 shrink-0 overflow-y-auto border-r border-line bg-surface/50 md:top-16 md:block md:h-[calc(100svh-4rem)] lg:w-60">
+      <div className="relative z-10 flex min-h-0 flex-1 overflow-hidden">
+        <aside className="hidden h-full w-56 shrink-0 overflow-y-auto border-r border-line bg-surface/50 md:block lg:w-60">
           <DocsSidebar />
         </aside>
 
@@ -126,7 +126,7 @@ export function DocsLayoutClient({ children }: { children: React.ReactNode }) {
           </div>
         )}
 
-        <div className="min-w-0 flex-1 overflow-y-auto">{children}</div>
+        <div className="min-h-0 min-w-0 flex-1 overflow-y-auto">{children}</div>
       </div>
     </div>
   );

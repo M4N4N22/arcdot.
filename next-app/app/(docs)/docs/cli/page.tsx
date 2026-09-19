@@ -16,6 +16,15 @@ export default function DocsCliPage() {
       title="CLI"
       description="Command-line helpers that talk to your live arcdot. origin."
     >
+      <DocsH2>Probe</DocsH2>
+      <DocsP>
+        Check that an origin speaks arcdot. before paying:
+      </DocsP>
+      <CodeBlock
+        title="bash"
+        code={`npm run agent:probe -- "$ORIGIN"`}
+      />
+
       <DocsH2>Paid unlock</DocsH2>
       <DocsP>
         Requires a funded Arc wallet. Point{" "}

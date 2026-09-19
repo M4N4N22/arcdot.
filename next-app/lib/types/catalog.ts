@@ -18,6 +18,18 @@ export interface ProfileRow {
   wallet_address: string;
   display_name: string | null;
   bio: string | null;
+  webhook_url?: string | null;
+  created_at: string;
+}
+
+export interface UnlockCreditRow {
+  tx_hash: string;
+  payer_address: string;
+  service_id: string | null;
+  service_slug: string;
+  payment_id: string | null;
+  expires_at: string;
+  consumed_at: string | null;
   created_at: string;
 }
 

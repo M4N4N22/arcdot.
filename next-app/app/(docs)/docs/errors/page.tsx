@@ -54,12 +54,36 @@ export default function DocsErrorsPage() {
         <li>Amount mismatch / wrong seller</li>
         <li>Replayed transaction</li>
         <li>Invalid signature</li>
-        <li>Rate limited / upstream failure</li>
+        <li>Rate limited</li>
+        <li>
+          <code className="font-mono text-sm">DURABLE_STORE_REQUIRED</code> —
+          production unlocks need Supabase
+        </li>
+        <li>
+          <code className="font-mono text-sm">UPSTREAM_FAILED</code> with{" "}
+          <code className="font-mono text-sm">creditIssued: true</code> — paid
+          but the reply failed; one free re-unlock on the same payment
+          confirmation within 24h (no second deposit)
+        </li>
+        <li>
+          <code className="font-mono text-sm">UNLOCK_CREDIT_INVALID</code> —
+          credit missing, expired, or already used
+        </li>
       </DocsUl>
       <DocsP>
         Machine codes live in the gateway error union (e.g.{" "}
         <code className="font-mono text-sm">SERVICE_PAUSED</code>,{" "}
         <code className="font-mono text-sm">TX_ALREADY_CONSUMED</code>).
+      </DocsP>
+
+      <DocsH2>Paid-failure unlock credit</DocsH2>
+      <DocsP>
+        After a verified payment is marked spent, if fulfillment fails the
+        gateway stores a one-time unlock credit keyed by the payment
+        confirmation. Agents retry{" "}
+        <code className="font-mono text-sm">POST /api/gateway</code> with the
+        same payment headers and a fresh EIP-191 signature over the new input —
+        settlement is not charged again.
       </DocsP>
     </DocsProse>
   );

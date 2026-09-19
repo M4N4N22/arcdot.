@@ -9,25 +9,87 @@ export const runtime = "nodejs";
 const patchSchema = z.object({
   display_name: z.string().max(80),
   bio: z.string().max(500),
+  webhook_url: z
+    .string()
+    .max(500)
+    .refine(
+      (v) => v === "" || /^https:\/\//i.test(v),
+      "Webhook must be an https URL",
+    )
+    .optional(),
   owner_address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   signature: z.string().regex(/^0x[a-fA-F0-9]+$/),
   issuedAt: z.number().int().positive(),
 });
 
+function publicProfile(profile: {
+  wallet_address: string;
+  display_name: string | null;
+  bio: string | null;
+  created_at: string | null;
+}) {
+  return {
+    wallet_address: profile.wallet_address,
+    display_name: profile.display_name,
+    bio: profile.bio,
+    created_at: profile.created_at,
+  };
+}
+
+async function verifyOwnerRead(params: {
+  address: string;
+  signature: string | null;
+  issuedAt: string | null;
+}): Promise<boolean> {
+  if (!params.signature || !params.issuedAt) return false;
+  const issuedAt = Number(params.issuedAt);
+  if (!Number.isFinite(issuedAt)) return false;
+  const now = Math.floor(Date.now() / 1000);
+  if (Math.abs(now - issuedAt) > 300) return false;
+  const challenge = buildUpdateProfileChallenge({
+    owner_address: params.address,
+    display_name: "",
+    webhook_url: "",
+    issuedAt,
+  });
+  try {
+    const recovered = await recoverMessageAddress({
+      message: challenge,
+      signature: params.signature as Hex,
+    });
+    return recovered.toLowerCase() === params.address.toLowerCase();
+  } catch {
+    return false;
+  }
+}
+
 export async function GET(request: Request) {
-  const address = new URL(request.url).searchParams.get("address");
+  const url = new URL(request.url);
+  const address = url.searchParams.get("address");
   if (!address || !/^0x[a-fA-F0-9]{40}$/.test(address)) {
     return NextResponse.json({ error: "Invalid address" }, { status: 400 });
   }
   try {
     const profile = await getProfile(address);
-    return NextResponse.json({
-      profile: profile ?? {
+    const base = publicProfile(
+      profile ?? {
         wallet_address: address.toLowerCase(),
         display_name: null,
         bio: null,
         created_at: null,
       },
+    );
+
+    const ownerOk = await verifyOwnerRead({
+      address,
+      signature: url.searchParams.get("signature"),
+      issuedAt: url.searchParams.get("issuedAt"),
+    });
+
+    return NextResponse.json({
+      profile: ownerOk
+        ? { ...base, webhook_url: profile?.webhook_url ?? null }
+        : base,
     });
   } catch (err) {
     console.error(err);
@@ -54,9 +116,11 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Signature expired" }, { status: 401 });
   }
 
+  const webhook_url = body.webhook_url ?? "";
   const challenge = buildUpdateProfileChallenge({
     owner_address: body.owner_address,
     display_name: body.display_name,
+    webhook_url,
     issuedAt: body.issuedAt,
   });
 
@@ -79,8 +143,14 @@ export async function PATCH(request: Request) {
       wallet_address: body.owner_address,
       display_name: body.display_name.trim() || null,
       bio: body.bio.trim() || null,
+      webhook_url: webhook_url.trim() || null,
     });
-    return NextResponse.json({ profile });
+    return NextResponse.json({
+      profile: {
+        ...publicProfile(profile),
+        webhook_url: profile.webhook_url ?? null,
+      },
+    });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Could not save profile" }, { status: 500 });

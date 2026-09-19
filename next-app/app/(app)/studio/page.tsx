@@ -6,9 +6,11 @@ import { useCallback, useEffect, useState } from "react";
 import {
   useAccount,
   useReadContract,
+  useSignMessage,
   useWriteContract,
   useWaitForTransactionReceipt,
 } from "wagmi";
+import { buildSignedReadChallenge } from "@/lib/auth/signedReadChallenge";
 import { promptGatewayAbi } from "@/lib/arc/constants";
 import { formatUsdcWei, statusLabel } from "@/lib/format/usdc";
 import { ARC_CHAIN_ID } from "@/lib/types/gateway";
@@ -16,6 +18,7 @@ import type { RequestRow, ServiceRow } from "@/lib/types/catalog";
 
 export default function StudioPage() {
   const { address, isConnected } = useAccount();
+  const { signMessageAsync } = useSignMessage();
   const [services, setServices] = useState<ServiceRow[]>([]);
   const [sales, setSales] = useState<RequestRow[]>([]);
   const gateway = (process.env.NEXT_PUBLIC_PROMPT_GATEWAY_ADDRESS ||
@@ -38,15 +41,30 @@ export default function StudioPage() {
 
   const load = useCallback(async () => {
     if (!address) return;
-    const [sRes, salesRes] = await Promise.all([
-      fetch(`/api/studio/services?address=${address}`),
-      fetch(`/api/studio/sales?address=${address}`),
-    ]);
+    const sRes = await fetch(`/api/studio/services?address=${address}`);
     const sJson = await sRes.json();
-    const salesJson = await salesRes.json();
     setServices(sJson.services ?? []);
-    setSales(salesJson.sales ?? []);
-  }, [address]);
+
+    try {
+      const issuedAt = Math.floor(Date.now() / 1000);
+      const challenge = buildSignedReadChallenge({
+        purpose: "sales",
+        address,
+        issuedAt,
+      });
+      const signature = await signMessageAsync({ message: challenge });
+      const qs = new URLSearchParams({
+        address,
+        signature,
+        issuedAt: String(issuedAt),
+      });
+      const salesRes = await fetch(`/api/studio/sales?${qs}`);
+      const salesJson = await salesRes.json();
+      setSales(salesJson.sales ?? []);
+    } catch {
+      setSales([]);
+    }
+  }, [address, signMessageAsync]);
 
   useEffect(() => {
     void load();

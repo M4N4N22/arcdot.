@@ -181,3 +181,11 @@ export function agentPrivateKeyFromEnv(): Hex {
 }
 
 export { ARC_CHAIN_ID };
+
+export {
+  isGateway402Body,
+  parsePaymentRequired,
+  gatewayErrorCode,
+  paymentDepositArgs,
+} from "@/lib/agent/parse402";
+

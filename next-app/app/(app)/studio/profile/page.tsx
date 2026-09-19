@@ -11,48 +11,82 @@ export default function StudioProfilePage() {
   const { signMessageAsync } = useSignMessage();
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
+  const [webhookUrl, setWebhookUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [pinged, setPinged] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
     if (!address) return;
-    const res = await fetch(`/api/studio/profile?address=${address}`);
-    const data = await res.json();
-    if (data.profile) {
-      setDisplayName(data.profile.display_name ?? "");
-      setBio(data.profile.bio ?? "");
+    try {
+      const issuedAt = Math.floor(Date.now() / 1000);
+      const challenge = buildUpdateProfileChallenge({
+        owner_address: address,
+        display_name: "",
+        webhook_url: "",
+        issuedAt,
+      });
+      const signature = await signMessageAsync({ message: challenge });
+      const qs = new URLSearchParams({
+        address,
+        signature,
+        issuedAt: String(issuedAt),
+      });
+      const res = await fetch(`/api/studio/profile?${qs}`);
+      const data = await res.json();
+      if (data.profile) {
+        setDisplayName(data.profile.display_name ?? "");
+        setBio(data.profile.bio ?? "");
+        setWebhookUrl(data.profile.webhook_url ?? "");
+      }
+    } catch {
+      const res = await fetch(`/api/studio/profile?address=${address}`);
+      const data = await res.json();
+      if (data.profile) {
+        setDisplayName(data.profile.display_name ?? "");
+        setBio(data.profile.bio ?? "");
+      }
     }
-  }, [address]);
+  }, [address, signMessageAsync]);
 
   useEffect(() => {
     void load();
   }, [load]);
 
+  async function signAndPayload(extra?: { forPing?: boolean }) {
+    if (!address) throw new Error("Connect wallet");
+    const issuedAt = Math.floor(Date.now() / 1000);
+    const challenge = buildUpdateProfileChallenge({
+      owner_address: address,
+      display_name: displayName,
+      webhook_url: webhookUrl,
+      issuedAt,
+    });
+    const signature = await signMessageAsync({ message: challenge });
+    return {
+      display_name: displayName,
+      bio,
+      webhook_url: webhookUrl,
+      owner_address: address,
+      signature,
+      issuedAt,
+      forPing: extra?.forPing,
+    };
+  }
+
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!address) return;
     setBusy(true);
     setError(null);
     setSaved(false);
+    setPinged(false);
     try {
-      const issuedAt = Math.floor(Date.now() / 1000);
-      const challenge = buildUpdateProfileChallenge({
-        owner_address: address,
-        display_name: displayName,
-        issuedAt,
-      });
-      const signature = await signMessageAsync({ message: challenge });
+      const payload = await signAndPayload();
       const res = await fetch("/api/studio/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          display_name: displayName,
-          bio,
-          owner_address: address,
-          signature,
-          issuedAt,
-        }),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -62,6 +96,30 @@ export default function StudioProfilePage() {
       setSaved(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onTestPing() {
+    setBusy(true);
+    setError(null);
+    setPinged(false);
+    try {
+      const payload = await signAndPayload({ forPing: true });
+      const res = await fetch("/api/studio/webhook/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error || "Ping failed");
+        return;
+      }
+      setPinged(true);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Ping failed");
     } finally {
       setBusy(false);
     }
@@ -115,15 +173,37 @@ export default function StudioProfilePage() {
             maxLength={500}
           />
         </label>
+        <label className="block space-y-2 text-sm font-medium">
+          <span>Sale webhook URL</span>
+          <input
+            className={inputClass}
+            value={webhookUrl}
+            onChange={(e) => setWebhookUrl(e.target.value)}
+            placeholder="https://…"
+            maxLength={500}
+          />
+          <span className="block text-xs font-normal text-muted">
+            Optional. We POST a sale receipt when an unlock completes.
+          </span>
+        </label>
         {error && <p className="text-sm text-red-700">{error}</p>}
         {saved && <p className="text-sm text-muted">Saved.</p>}
+        {pinged && <p className="text-sm text-muted">Test ping sent.</p>}
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="submit"
             disabled={busy}
             className="h-11 bg-accent px-5 text-sm font-medium text-surface disabled:opacity-50"
           >
-            {busy ? "Saving…" : "Save profile"}
+            {busy ? "Working…" : "Save profile"}
+          </button>
+          <button
+            type="button"
+            disabled={busy || !webhookUrl.trim()}
+            onClick={() => void onTestPing()}
+            className="h-11 border border-line bg-surface px-5 text-sm disabled:opacity-50"
+          >
+            Send test ping
           </button>
           <Link
             href={`/u/${address}`}

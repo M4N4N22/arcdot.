@@ -1,3 +1,4 @@
+import { formatUsdcWei } from "@/lib/format/usdc";
 import { NextResponse } from "next/server";
 import type { Hex } from "viem";
 import {
@@ -13,8 +14,11 @@ import {
 import { hashGatewayInput } from "@/lib/auth/inputHash";
 import { verifyGatewaySignature } from "@/lib/auth/verifySignature";
 import {
+  consumeUnlockCredit,
+  getOpenUnlockCredit,
   getServiceBySlug,
   insertRequest,
+  issueUnlockCredit,
   tryMarkSpentPayment,
 } from "@/lib/catalog/store";
 import { checkRateLimit, clientIp } from "@/lib/gateway/rateLimit";
@@ -23,6 +27,8 @@ import {
   gatewayHeadersSchema,
 } from "@/lib/gateway/schema";
 import { completeWithGemini } from "@/lib/llm/gemini";
+import { durableStoreBlocked, durableStoreReady } from "@/lib/ops/durable";
+import { notifySellerWebhook } from "@/lib/seller/webhook";
 import type {
   Gateway200Body,
   Gateway402Body,
@@ -124,6 +130,8 @@ async function fulfillUpstream(params: {
   amountWei?: string;
   sellerAmountWei?: string;
   platformAmountWei?: string;
+  /** When set, issue unlock credit if fulfill fails (paid path only). */
+  issueCreditOnFail?: boolean;
 }): Promise<NextResponse> {
   const prompt = extractPrompt(params.input);
   try {
@@ -148,6 +156,28 @@ async function fulfillUpstream(params: {
         seller_amount_wei: params.sellerAmountWei ?? null,
         platform_amount_wei: params.platformAmountWei ?? null,
       }).catch((err) => console.error("insertRequest failed", err));
+
+      const seller = params.seller ?? params.serviceRow.owner_address;
+      void notifySellerWebhook({
+        sellerAddress: seller,
+        receipt: {
+          event: "sale.fulfilled",
+          txHash:
+            params.settlement.txHash === ZERO_HASH
+              ? null
+              : params.settlement.txHash,
+          paymentId:
+            params.settlement.paymentId === ZERO_HASH
+              ? null
+              : params.settlement.paymentId,
+          service: params.serviceKey,
+          amountUsdc: params.serviceRow.price_usdc,
+          sellerAmountUsdc: params.sellerAmountWei
+            ? formatUsdcWei(params.sellerAmountWei)
+            : null,
+          at: new Date().toISOString(),
+        },
+      });
     }
 
     logGateway({
@@ -197,10 +227,39 @@ async function fulfillUpstream(params: {
         platform_amount_wei: params.platformAmountWei ?? null,
       }).catch(() => undefined);
     }
+
+    let creditIssued = false;
+    if (
+      params.issueCreditOnFail &&
+      !params.demo &&
+      params.serviceRow &&
+      params.settlement.txHash !== ZERO_HASH
+    ) {
+      try {
+        await issueUnlockCredit({
+          txHash: params.settlement.txHash,
+          payerAddress: params.payer,
+          serviceId: params.serviceRow.id,
+          serviceSlug: params.serviceRow.slug,
+          paymentId: params.settlement.paymentId,
+        });
+        creditIssued = true;
+        logGateway({
+          outcome: "credit_issued",
+          requestId: params.requestId,
+          txHash: params.settlement.txHash,
+          service: params.serviceKey,
+        });
+      } catch (creditErr) {
+        console.error("issueUnlockCredit failed", creditErr);
+      }
+    }
+
     logGateway({
       outcome: "upstream_failed",
       requestId: params.requestId,
       service: params.serviceKey,
+      creditIssued,
       latencyMs: Date.now() - params.started,
     });
     return NextResponse.json(
@@ -209,8 +268,10 @@ async function fulfillUpstream(params: {
         status: 500,
         error: {
           code: "UPSTREAM_FAILED" as GatewayErrorCode,
-          message:
-            "Paid request could not be completed. Contact support with requestId.",
+          message: creditIssued
+            ? "Paid request failed after settlement. Retry the same payment within 24h to redeem a one-time unlock credit (no second deposit)."
+            : "Paid request could not be completed. Contact support with requestId.",
+          creditIssued,
         },
         requestId: params.requestId,
         timestamp: new Date().toISOString(),
@@ -224,7 +285,7 @@ export async function POST(request: Request) {
   const requestId = crypto.randomUUID();
   const started = Date.now();
 
-  const rl = checkRateLimit({ key: `gw:${clientIp(request)}` });
+  const rl = await checkRateLimit({ key: `gw:${clientIp(request)}` });
   if (!rl.ok) {
     logGateway({ outcome: "rate_limited", requestId });
     return NextResponse.json(
@@ -294,6 +355,24 @@ export async function POST(request: Request) {
       sellerAmountWei: split.sellerAmountWei.toString(),
       platformAmountWei: split.platformAmountWei.toString(),
     });
+  }
+
+  if (durableStoreBlocked()) {
+    logGateway({ outcome: "durable_store_required", requestId });
+    return NextResponse.json(
+      {
+        ok: false,
+        status: 503,
+        error: {
+          code: "DURABLE_STORE_REQUIRED" as GatewayErrorCode,
+          message:
+            "Paid unlocks require a durable store. Configure Supabase on this deployment.",
+        },
+        requestId,
+        timestamp: new Date().toISOString(),
+      },
+      { status: 503 },
+    );
   }
 
   if (!serviceRow || serviceRow.status !== "published") {
@@ -370,6 +449,68 @@ export async function POST(request: Request) {
     );
   }
 
+  // Paid-failure credit path: same tx (or X-Arc-Unlock-Credit alias), no second deposit
+  const creditHeader = request.headers.get("x-arc-unlock-credit");
+  if (
+    creditHeader &&
+    /^0x[a-fA-F0-9]{64}$/.test(creditHeader) &&
+    creditHeader.toLowerCase() !== txHash.toLowerCase()
+  ) {
+    return paymentRequired(
+      "UNLOCK_CREDIT_INVALID",
+      "Unlock credit header must match the payment confirmation",
+      requestId,
+      serviceRow,
+    );
+  }
+
+  const openCredit = await getOpenUnlockCredit({
+    txHash,
+    payerAddress: address,
+    serviceSlug: serviceRow.slug,
+  });
+  if (openCredit) {
+    const consumed = await consumeUnlockCredit(txHash);
+    if (!consumed) {
+      return paymentRequired(
+        "UNLOCK_CREDIT_INVALID",
+        "Unlock credit is no longer available",
+        requestId,
+        serviceRow,
+      );
+    }
+    logGateway({
+      outcome: "credit_consumed",
+      requestId,
+      txHash,
+      service: serviceRow.slug,
+    });
+    const split = splitAmounts(expectedAmount);
+    return fulfillUpstream({
+      serviceRow,
+      serviceKey: body.data.service,
+      input: body.data.input,
+      requestId,
+      started,
+      settlement: {
+        txHash,
+        payer: address,
+        amountWei: serviceRow.price_wei,
+        amountUsdc: serviceRow.price_usdc,
+        paymentId: (openCredit.payment_id as Hex) || ZERO_HASH,
+        blockNumber: 0,
+        verifiedAt: new Date().toISOString(),
+      },
+      demo: false,
+      payer: address,
+      seller: serviceRow.owner_address,
+      amountWei: serviceRow.price_wei,
+      sellerAmountWei: split.sellerAmountWei.toString(),
+      platformAmountWei: split.platformAmountWei.toString(),
+      issueCreditOnFail: false,
+    });
+  }
+
   let verified;
   try {
     verified = await verifyArcPayment({
@@ -432,6 +573,7 @@ export async function POST(request: Request) {
     amountWei: verified.amountWei.toString(),
     sellerAmountWei: verified.sellerAmountWei.toString(),
     platformAmountWei: verified.platformAmountWei.toString(),
+    issueCreditOnFail: true,
   });
 }
 
@@ -445,5 +587,6 @@ export async function GET() {
     chainId: ARC.chainId,
     gateway: ARC.gatewayAddress || null,
     demoUnlockAllowed: demoUnlockAllowed(),
+    durableStore: durableStoreReady(),
   });
 }
