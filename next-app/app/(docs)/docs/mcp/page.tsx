@@ -25,7 +25,7 @@ export default function DocsMcpPage() {
         >
           MCP Hub
         </Link>{" "}
-        — Cursor panels, framework snippets, and one-click config copy.
+        — IDE setup, framework snippets, and one-click config copy.
       </DocsP>
 
       <DocsH2>Endpoint</DocsH2>

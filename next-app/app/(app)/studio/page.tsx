@@ -16,8 +16,19 @@ import {
 } from "@/lib/auth/signedReadSession";
 import { promptGatewayAbi } from "@/lib/arc/constants";
 import { formatUsdcWei, statusLabel } from "@/lib/format/usdc";
+import {
+  networkFeePercent,
+  sellerKeepPercent,
+} from "@/lib/studio/fees";
 import { ARC_CHAIN_ID } from "@/lib/types/gateway";
 import type { RequestRow, ServiceRow } from "@/lib/types/catalog";
+
+const QUICK_LINKS = [
+  { href: "/create", label: "Publish" },
+  { href: "/studio/services", label: "Your tools" },
+  { href: "/studio/sales", label: "Sales" },
+  { href: "/studio/profile", label: "Profile" },
+] as const;
 
 export default function StudioPage() {
   const { address, isConnected } = useAccount();
@@ -48,7 +59,6 @@ export default function StudioPage() {
     const sJson = await sRes.json();
     setServices(sJson.services ?? []);
 
-    // Never prompt on Studio home — use cached session only
     const session = await ensureSignedReadSession({
       address,
       signMessageAsync,
@@ -87,12 +97,16 @@ export default function StudioPage() {
     });
   }
 
-  if (!isConnected) {
+  const keepPct = sellerKeepPercent();
+  const feePct = networkFeePercent();
+
+  if (!isConnected || !address) {
     return (
       <main className="mx-auto max-w-5xl px-6 py-10 md:px-8">
         <h1 className="font-display text-3xl tracking-tight">Studio</h1>
-        <p className="mt-2 text-muted">
-          Connect your wallet to manage services and withdraw earnings.
+        <p className="mt-2 max-w-md text-muted">
+          Connect your wallet to list tools, set prices, and withdraw USDC
+          earnings.
         </p>
         <div className="mt-6">
           <ConnectButton />
@@ -104,6 +118,7 @@ export default function StudioPage() {
   const pendingWei = typeof pending === "bigint" ? pending : BigInt(0);
   const fulfilled = sales.filter((s) => s.status === "fulfilled").length;
   const recent = sales.slice(0, 5);
+  const shortAddr = `${address.slice(0, 6)}…${address.slice(-4)}`;
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 pb-16 pt-6 md:px-8">
@@ -112,39 +127,59 @@ export default function StudioPage() {
           Studio
         </h1>
         <p className="mt-2 text-muted">
-          Your seller home — earnings, services, and recent sales.
-        </p>
-        <p className="mt-3 font-mono text-xs text-muted">
-          Agents discover your listings at{" "}
-          <span className="text-foreground">/api/services</span>
+          List tools, set your price, and withdraw USDC to your wallet.
         </p>
       </div>
 
-      <section className="mt-12 grid gap-6 sm:grid-cols-3">
-        <div className="border border-line bg-surface p-5">
-          <p className="text-xs uppercase tracking-wider text-muted">
-            Available to withdraw
+      {/* Payout wallet */}
+      <section className="mt-10 border border-line bg-surface/80">
+        <div className="border-b border-line px-5 py-4">
+          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted">
+            Payout wallet
           </p>
-          <p className="mt-2 font-mono text-2xl">
-            {formatUsdcWei(pendingWei)} USDC
+          <p className="mt-2 font-mono text-sm text-foreground">{shortAddr}</p>
+          <p className="mt-1 text-xs text-muted">
+            Earnings from paid requests settle to this connected wallet.
           </p>
+        </div>
+        <div className="flex flex-wrap items-end justify-between gap-4 px-5 py-5">
+          <div>
+            <p className="text-xs uppercase tracking-wider text-muted">
+              Available to withdraw
+            </p>
+            <p className="mt-2 font-mono text-2xl">
+              {formatUsdcWei(pendingWei)} USDC
+            </p>
+          </div>
           <button
             type="button"
             disabled={isPending || pendingWei === BigInt(0) || !gateway}
             onClick={() => void onWithdraw()}
-            className="mt-4 h-10 bg-accent px-4 text-sm font-medium text-surface disabled:opacity-40"
+            className="h-10 bg-accent px-4 text-sm font-medium text-surface disabled:opacity-40"
           >
             {isPending ? "Confirm in wallet…" : "Withdraw"}
           </button>
         </div>
+      </section>
+
+      {/* Fee strip — SaaS copy */}
+      <p className="mt-4 text-sm text-muted">
+        You keep {keepPct}% of each paid request; arcdot. keeps {feePct}% for
+        the network.
+      </p>
+
+      {/* Stats */}
+      <section className="mt-10 grid gap-4 sm:grid-cols-2">
         <div className="border border-line bg-surface p-5">
-          <p className="text-xs uppercase tracking-wider text-muted">Services</p>
+          <p className="text-xs uppercase tracking-wider text-muted">
+            Your tools
+          </p>
           <p className="mt-2 font-mono text-2xl">{services.length}</p>
           <Link
             href="/studio/services"
             className="mt-4 inline-block text-sm underline underline-offset-4"
           >
-            Manage services
+            Manage tools
           </Link>
         </div>
         <div className="border border-line bg-surface p-5">
@@ -163,36 +198,47 @@ export default function StudioPage() {
         </div>
       </section>
 
-      <div className="mt-10 flex flex-wrap gap-3">
-        <Link
-          href="/create"
-          className="inline-flex h-11 items-center bg-accent px-5 text-sm font-medium text-surface"
-        >
-          Create a service
-        </Link>
-        <Link
-          href="/studio/profile"
-          className="inline-flex h-11 items-center border border-line bg-surface px-5 text-sm"
-        >
-          Edit profile
-        </Link>
-        <Link
-          href={`/u/${address}`}
-          className="inline-flex h-11 items-center border border-line bg-surface px-5 text-sm"
-        >
-          Public page
-        </Link>
-      </div>
+      {/* Studio-only quick links */}
+      <nav className="mt-10 flex flex-wrap gap-2" aria-label="Studio">
+        {QUICK_LINKS.map((link) => (
+          <Link
+            key={link.href}
+            href={link.href}
+            className={[
+              "inline-flex h-10 items-center px-4 text-sm",
+              link.href === "/create"
+                ? "bg-accent font-medium text-surface"
+                : "border border-line bg-surface text-foreground",
+            ].join(" ")}
+          >
+            {link.label}
+          </Link>
+        ))}
+      </nav>
 
-      {recent.length > 0 && (
-        <section className="mt-14">
-          <h2 className="text-sm font-medium uppercase tracking-wider text-muted">
-            Recent sales
-          </h2>
+      {/* Recent sales */}
+      <section className="mt-14">
+        <h2 className="text-sm font-medium uppercase tracking-wider text-muted">
+          Recent sales
+        </h2>
+        {recent.length === 0 ? (
+          <div className="mt-4 border border-line bg-surface/60 px-5 py-8">
+            <p className="text-muted">No sales yet.</p>
+            <Link
+              href="/create"
+              className="mt-3 inline-block text-sm font-medium underline underline-offset-4"
+            >
+              Publish your first tool
+            </Link>
+          </div>
+        ) : (
           <ul className="mt-4 divide-y divide-line border-y border-line">
             {recent.map((s) => (
-              <li key={s.id} className="flex flex-wrap justify-between gap-2 py-4">
-                <p className="font-medium">{s.service_slug ?? "Service"}</p>
+              <li
+                key={s.id}
+                className="flex flex-wrap justify-between gap-2 py-4"
+              >
+                <p className="font-medium">{s.service_slug ?? "Tool"}</p>
                 <p className="font-mono text-xs text-muted">
                   {statusLabel(s.status)}
                   {s.seller_amount_wei
@@ -202,8 +248,47 @@ export default function StudioPage() {
               </li>
             ))}
           </ul>
-        </section>
-      )}
+        )}
+      </section>
+
+      {/* Outbound pillars only */}
+      <footer className="mt-14 border-t border-line pt-8">
+        <p className="text-sm text-muted">Continue</p>
+        <ul className="mt-3 divide-y divide-line border-y border-line">
+          <li>
+            <Link
+              href="/hub"
+              className="group flex items-baseline justify-between gap-4 py-4"
+            >
+              <div>
+                <p className="font-medium group-hover:underline group-hover:underline-offset-4">
+                  How buyers connect
+                </p>
+                <p className="mt-1 text-sm text-muted">
+                  Wire MCP clients to discover your tools.
+                </p>
+              </div>
+              <span className="text-sm text-muted">→</span>
+            </Link>
+          </li>
+          <li>
+            <Link
+              href="/services"
+              className="group flex items-baseline justify-between gap-4 py-4"
+            >
+              <div>
+                <p className="font-medium group-hover:underline group-hover:underline-offset-4">
+                  See Explore
+                </p>
+                <p className="mt-1 text-sm text-muted">
+                  Browse live tools on the network.
+                </p>
+              </div>
+              <span className="text-sm text-muted">→</span>
+            </Link>
+          </li>
+        </ul>
+      </footer>
     </main>
   );
 }

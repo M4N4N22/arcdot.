@@ -9,7 +9,7 @@ const cards = [
   {
     href: "/hub",
     title: "MCP Hub",
-    body: "Connect Cursor or your agent framework with one-click configs.",
+    body: "Wire any MCP client — editors, frameworks, or scripts — with one-click configs.",
   },
   {
     href: "/docs/quickstart",

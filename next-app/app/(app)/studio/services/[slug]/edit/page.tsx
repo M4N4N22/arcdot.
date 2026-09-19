@@ -33,7 +33,7 @@ export default function EditServicePage() {
         (s) => s.slug === params.slug,
       );
       if (!found) {
-        setError("Service not found");
+        setError("Tool not found");
         return;
       }
       setService(found);
@@ -108,9 +108,9 @@ export default function EditServicePage() {
         href="/studio/services"
         className="text-sm text-muted hover:text-foreground"
       >
-        ← Services
+        ← Your tools
       </Link>
-      <h1 className="mt-5 font-display text-3xl tracking-tight">Edit service</h1>
+      <h1 className="mt-5 font-display text-3xl tracking-tight">Edit tool</h1>
       {!service ? (
         <p className="mt-6 text-muted">{error || "Loading…"}</p>
       ) : (

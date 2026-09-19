@@ -3,53 +3,68 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const navGroups = [
-  {
-    label: "Connect",
-    items: [{ href: "/hub", label: "MCP Hub" }],
-  },
-  {
-    label: "Develop",
-    items: [
-      { href: "/console", label: "Console" },
-      { href: "/docs", label: "Docs" },
-    ],
-  },
-  {
-    label: "Agents",
-    items: [{ href: "/services", label: "Try in browser" }],
-  },
-  {
-    label: "Workspace",
-    items: [{ href: "/activity", label: "Activity" }],
-  },
-  {
-    label: "Seller",
-    items: [
-      { href: "/studio", label: "Studio" },
-      { href: "/studio/profile", label: "Profile" },
-      { href: "/create", label: "Create" },
-    ],
-  },
-] as const;
+type NavChild = {
+  href: string;
+  label: string;
+};
 
-function isActive(pathname: string, href: string) {
+type NavPillar = {
+  href: string;
+  label: string;
+  children?: NavChild[];
+};
+
+/** Three product pillars — Hub / Studio / Explore. Console & Activity stay off-nav. */
+const pillars: NavPillar[] = [
+  {
+    href: "/hub",
+    label: "MCP Hub",
+    children: [{ href: "/docs", label: "Docs" }],
+  },
+  {
+    href: "/studio",
+    label: "Studio",
+    children: [
+      { href: "/create", label: "Publish" },
+      { href: "/studio/services", label: "Your tools" },
+      { href: "/studio/sales", label: "Sales" },
+      { href: "/studio/profile", label: "Profile" },
+    ],
+  },
+  {
+    href: "/services",
+    label: "Explore",
+  },
+];
+
+function pathMatches(pathname: string, href: string): boolean {
   if (href === "/services") {
     return pathname === "/services" || pathname.startsWith("/services/");
   }
   if (href === "/studio") {
-    return pathname === "/studio" || pathname.startsWith("/studio/");
+    return pathname === "/studio";
+  }
+  if (href === "/studio/services") {
+    return (
+      pathname === "/studio/services" ||
+      pathname.startsWith("/studio/services/")
+    );
   }
   if (href === "/docs") {
     return pathname === "/docs" || pathname.startsWith("/docs/");
   }
-  if (href === "/console") {
-    return pathname === "/console";
-  }
   if (href === "/hub") {
     return pathname === "/hub" || pathname.startsWith("/hub/");
   }
+  if (href === "/create") {
+    return pathname === "/create";
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function pillarSectionActive(pathname: string, pillar: NavPillar): boolean {
+  if (pathMatches(pathname, pillar.href)) return true;
+  return (pillar.children ?? []).some((c) => pathMatches(pathname, c.href));
 }
 
 type AppSidebarProps = {
@@ -71,40 +86,61 @@ export function AppSidebar({ onNavigate }: AppSidebarProps) {
         </Link>
       </div>
 
-      <nav className="flex-1 overflow-y-auto px-3 py-5">
-        {navGroups.map((group) => (
-          <div key={group.label} className="mb-6 last:mb-0">
-            <p className="mb-2 px-2 text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
-              {group.label}
-            </p>
-            <ul className="space-y-0.5">
-              {group.items.map((item) => {
-                const active = isActive(pathname, item.href);
-                return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      onClick={onNavigate}
-                      className={[
-                        "block px-2 py-2 text-sm transition-colors",
-                        active
-                          ? "bg-foreground/[0.06] font-medium text-foreground"
-                          : "text-muted hover:bg-foreground/[0.04] hover:text-foreground",
-                      ].join(" ")}
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ))}
+      <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Main">
+        <ul className="space-y-4">
+          {pillars.map((pillar) => {
+            const sectionActive = pillarSectionActive(pathname, pillar);
+            const mainExact = pathMatches(pathname, pillar.href);
+            const showChildren = Boolean(pillar.children?.length);
+
+            return (
+              <li key={pillar.href}>
+                <Link
+                  href={pillar.href}
+                  onClick={onNavigate}
+                  className={[
+                    "block rounded-xl px-3 py-2 text-sm transition-colors",
+                    mainExact || (sectionActive && !showChildren)
+                      ? "bg-foreground text-surface font-medium"
+                      : sectionActive
+                        ? "font-medium text-foreground"
+                        : "text-muted hover:bg-surface-muted hover:text-foreground",
+                  ].join(" ")}
+                >
+                  {pillar.label}
+                </Link>
+                {showChildren && (
+                  <ul className="mt-1 space-y-0.5 pl-2">
+                    {pillar.children!.map((child) => {
+                      const active = pathMatches(pathname, child.href);
+                      return (
+                        <li key={child.href}>
+                          <Link
+                            href={child.href}
+                            onClick={onNavigate}
+                            className={[
+                              "block rounded-lg px-3 py-1.5 text-[13px] transition-colors",
+                              active
+                                ? "bg-surface-muted font-medium text-foreground"
+                                : "text-muted hover:bg-surface-muted/80 hover:text-foreground",
+                            ].join(" ")}
+                          >
+                            {child.label}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       </nav>
 
       <div className="border-t border-line px-5 py-4">
         <p className="text-xs leading-relaxed text-muted">
-          Start in MCP Hub — connect Cursor, then try tools live.
+          Publish tools in Studio. Connect buyers from MCP Hub.
         </p>
       </div>
     </div>

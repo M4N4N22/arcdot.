@@ -1,8 +1,13 @@
 import Link from "next/link";
 import {
+  ExploreBrowser,
+  type ExploreToolItem,
+} from "@/components/explore/ExploreBrowser";
+import {
   getProfilesByAddresses,
   listPublishedServices,
 } from "@/lib/catalog/store";
+import { getToolMeta } from "@/lib/explore/toolMeta";
 
 export const dynamic = "force-dynamic";
 
@@ -10,70 +15,60 @@ function shortAddr(a: string) {
   return `${a.slice(0, 6)}…${a.slice(-4)}`;
 }
 
-export default async function ServicesPage() {
+export default async function ExplorePage() {
   const services = await listPublishedServices();
   const profiles = await getProfilesByAddresses(
     services.map((s) => s.owner_address),
   );
 
+  const tools: ExploreToolItem[] = services.map((s) => {
+    const profile = profiles.get(s.owner_address.toLowerCase());
+    const meta = getToolMeta(s.slug, s.description);
+    return {
+      id: s.id,
+      slug: s.slug,
+      title: s.title,
+      description: s.description,
+      priceUsdc: s.price_usdc,
+      priceNum: Number(s.price_usdc) || 0,
+      ownerLabel: profile?.display_name || shortAddr(s.owner_address),
+      ownerAddress: s.owner_address,
+      imageUrl: s.image_url ?? null,
+      category: meta.category,
+      createdAt: s.created_at,
+    };
+  });
+
   return (
-    <main className="mx-auto w-full max-w-5xl px-6 pb-16 pt-6 md:px-8">
-      <div className="animate-fade-up max-w-xl">
-        <h1 className="font-display text-3xl tracking-tight md:text-4xl">
-          Try in browser
-        </h1>
-        <p className="mt-2 text-muted">
-          Same path agents use — pick a service, pay a few cents in USDC, get a
-          reply. For autonomous clients, start at{" "}
-          <span className="font-mono text-sm text-foreground">/api/services</span>
-          .
-        </p>
+    <main className="mx-auto w-full max-w-[90rem] px-4 pb-16 pt-5 md:px-6 md:pt-6">
+      <div className="animate-fade-up flex flex-wrap items-end justify-between gap-3 px-1">
+        <div>
+          <h1 className="font-display text-3xl tracking-tight md:text-4xl">
+            Explore
+          </h1>
+          <p className="mt-1.5 max-w-lg text-sm text-muted">
+            Browse live tools on the network — search, filter, and try any of
+            them in the browser.
+          </p>
+        </div>
       </div>
 
-      <ul className="mt-12 divide-y divide-line border-y border-line">
-        {services.length === 0 && (
-          <li className="py-10 text-muted">
-            No published services yet.{" "}
-            <Link href="/create" className="underline underline-offset-4">
-              Create the first one
-            </Link>
-            .
-          </li>
-        )}
-        {services.map((s) => {
-          const profile = profiles.get(s.owner_address.toLowerCase());
-          const sellerLabel =
-            profile?.display_name || shortAddr(s.owner_address);
-          return (
-            <li key={s.id} className="py-8">
-              <div className="flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
-                <div>
-                  <Link
-                    href={`/services/${s.slug}`}
-                    className="text-lg font-medium underline-offset-4 hover:underline"
-                  >
-                    {s.title}
-                  </Link>
-                  <p className="mt-1 max-w-lg text-muted">{s.description}</p>
-                  <p className="mt-2 text-xs text-muted">
-                    <span className="font-mono">{s.slug}</span>
-                    {" · "}
-                    <Link
-                      href={`/u/${s.owner_address}`}
-                      className="text-foreground underline-offset-2 hover:underline"
-                    >
-                      {sellerLabel}
-                    </Link>
-                  </p>
-                </div>
-                <p className="shrink-0 font-mono text-sm text-foreground">
-                  {s.price_usdc} USDC
-                </p>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+      <ExploreBrowser tools={tools} />
+
+      <footer className="mt-12 flex flex-wrap gap-3 px-1 text-sm">
+        <Link
+          href="/hub"
+          className="inline-flex h-10 items-center rounded-full border border-line bg-surface px-4 shadow-sm transition-colors hover:bg-surface-muted"
+        >
+          Connect via MCP Hub
+        </Link>
+        <Link
+          href="/create"
+          className="inline-flex h-10 items-center rounded-full bg-accent px-4 font-medium text-surface"
+        >
+          Publish a tool
+        </Link>
+      </footer>
     </main>
   );
 }

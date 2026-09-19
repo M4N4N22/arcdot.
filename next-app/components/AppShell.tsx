@@ -23,10 +23,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [mobileOpen]);
 
   return (
-    <div className="relative flex min-h-full flex-1">
-      {/* Desktop sidebar */}
-      <aside className="animate-shell-in relative z-20 hidden w-56 shrink-0 border-r border-line bg-surface/80 backdrop-blur-sm md:block lg:w-60">
-        <div className="sticky top-0 h-svh">
+    <div className="relative flex min-h-full flex-1 gap-3 p-3 md:p-4">
+      {/* Desktop nav rail */}
+      <aside className="animate-shell-in relative z-20 hidden w-56 shrink-0 overflow-hidden rounded-3xl border border-line bg-surface shadow-sm md:block lg:w-60">
+        <div className="h-[calc(100svh-2rem)]">
           <AppSidebar />
         </div>
       </aside>
@@ -40,15 +40,15 @@ export function AppShell({ children }: { children: ReactNode }) {
             aria-label="Close navigation"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="animate-drawer-in absolute inset-y-0 left-0 w-[min(18rem,88vw)] border-r border-line bg-surface shadow-sm">
+          <aside className="animate-drawer-in absolute inset-y-3 left-3 w-[min(18rem,88vw)] overflow-hidden rounded-3xl border border-line bg-surface shadow-lg">
             <AppSidebar onNavigate={() => setMobileOpen(false)} />
           </aside>
         </div>
       )}
 
-      <div className="relative z-10 flex min-w-0 flex-1 flex-col">
+      <div className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden rounded-3xl border border-line bg-surface/80 shadow-sm backdrop-blur-sm">
         <AppHeader onMenuClick={() => setMobileOpen(true)} />
-        <div className="flex-1 overflow-y-auto">{children}</div>
+        <div className="flex-1 overflow-y-auto bg-background/40">{children}</div>
       </div>
     </div>
   );

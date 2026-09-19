@@ -29,6 +29,7 @@ function withPausedDefault(row: ServiceRow): ServiceRow {
     paused: Boolean(row.paused),
     upstream_url: row.upstream_url ?? null,
     upstream_bearer: row.upstream_bearer ?? null,
+    image_url: row.image_url ?? null,
   };
 }
 
@@ -130,6 +131,7 @@ export async function updateService(
       | "system_prompt"
       | "upstream_url"
       | "upstream_bearer"
+      | "image_url"
       | "paused"
       | "status"
     >

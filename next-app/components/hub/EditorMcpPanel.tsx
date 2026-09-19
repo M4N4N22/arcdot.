@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { CopyButton } from "@/components/hub/CopyButton";
-import { HubCodePanel } from "@/components/hub/HubCodePanel";
 import { mcpEndpoint } from "@/lib/hub/mcpConfig";
 
-type CursorSettingsMockProps = {
+type EditorMcpPanelProps = {
   origin: string;
 };
 
-export function CursorSettingsMock({ origin }: CursorSettingsMockProps) {
+/** Generic MCP servers panel — not tied to a single IDE brand. */
+export function EditorMcpPanel({ origin }: EditorMcpPanelProps) {
   const url = mcpEndpoint(origin);
   const [pulse, setPulse] = useState(false);
 
@@ -29,7 +29,7 @@ export function CursorSettingsMock({ origin }: CursorSettingsMockProps) {
           aria-hidden
         />
         <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted">
-          Cursor · MCP Servers
+          MCP · Servers
         </p>
       </div>
 
@@ -38,14 +38,15 @@ export function CursorSettingsMock({ origin }: CursorSettingsMockProps) {
           <p className="text-[11px] text-muted">General</p>
           <p className="mt-3 text-[11px] text-muted">Models</p>
           <p className="mt-3 text-[11px] font-medium text-foreground">MCP</p>
-          <p className="mt-3 text-[11px] text-muted">Rules</p>
+          <p className="mt-3 text-[11px] text-muted">Tools</p>
         </aside>
 
         <div className="space-y-4 px-4 py-4">
           <div>
             <p className="text-sm font-medium">Installed servers</p>
             <p className="mt-1 text-xs text-muted">
-              Add arcdot. so your assistant can discover and unlock paid tools.
+              Point any MCP-capable client at arcdot. to discover and unlock
+              paid tools.
             </p>
           </div>
 

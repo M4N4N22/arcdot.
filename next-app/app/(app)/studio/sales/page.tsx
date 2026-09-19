@@ -72,7 +72,7 @@ export default function StudioSalesPage() {
       <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl tracking-tight">Sales</h1>
-          <p className="mt-2 text-muted">Recent unlocks for your services.</p>
+          <p className="mt-2 text-muted">Recent unlocks for your tools.</p>
         </div>
         <button
           type="button"
@@ -87,7 +87,7 @@ export default function StudioSalesPage() {
         <div className="mt-10 flex flex-col items-start gap-3">
           <p className="text-muted">
             Confirm once in your wallet to view sales. One signature covers
-            Activity and Sales for about an hour.
+            Studio sales for about an hour.
           </p>
           <button
             type="button"

@@ -13,6 +13,8 @@ export interface ServiceRow {
   upstream_url?: string | null;
   /** Optional bearer for upstream; server-only, never public API. */
   upstream_bearer?: string | null;
+  /** Optional public card image URL; null → Explore uses brand “a.” mark. */
+  image_url?: string | null;
   status: ServiceStatus;
   paused: boolean;
   created_at: string;
@@ -74,6 +76,7 @@ export const LOCAL_SEED_SERVICES: ServiceRow[] = [
     price_usdc: "0.01",
     system_prompt:
       "You are a concise briefing assistant. Reply in exactly two short sentences.",
+    image_url: null,
     status: "published",
     paused: false,
     created_at: new Date().toISOString(),
@@ -88,6 +91,7 @@ export const LOCAL_SEED_SERVICES: ServiceRow[] = [
     price_usdc: "0.01",
     system_prompt:
       "You rewrite user text to be calm, clear, and professional. Return only the rewritten text.",
+    image_url: null,
     status: "published",
     paused: false,
     created_at: new Date().toISOString(),
@@ -103,6 +107,7 @@ export const LOCAL_SEED_SERVICES: ServiceRow[] = [
     price_usdc: "0.02",
     system_prompt:
       "You produce a short actionable checklist (5 bullets max) for the agent task described by the user.",
+    image_url: null,
     status: "published",
     paused: false,
     created_at: new Date().toISOString(),

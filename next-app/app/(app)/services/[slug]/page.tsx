@@ -1,6 +1,7 @@
 "use client";
 
 import { ConnectButton } from "@rainbow-me/rainbowkit";
+import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -11,12 +12,14 @@ import {
   useSwitchChain,
   useWriteContract,
 } from "wagmi";
+import { BrandMark } from "@/components/explore/BrandMark";
 import {
   buildGatewayAuthMessage,
   getAuthChallengeText,
 } from "@/lib/agent/client";
 import { makePaymentId } from "@/lib/agent/paymentId";
 import { promptGatewayAbi } from "@/lib/arc/constants";
+import { getToolMeta, resolveToolImage } from "@/lib/explore/toolMeta";
 import { ARC_CHAIN_ID } from "@/lib/types/gateway";
 import { arcMainnet } from "@/lib/wallet/arcChain";
 
@@ -31,6 +34,7 @@ type PublicService = {
   seller?: string;
   owner_address?: string;
   seller_name?: string | null;
+  image_url?: string | null;
 };
 
 const STEPS: { id: UnlockStep; label: string }[] = [
@@ -75,7 +79,7 @@ export default function ServiceDetailPage() {
     (async () => {
       const res = await fetch(`/api/services/${slug}`);
       if (!res.ok) {
-        if (!cancelled) setLoadError("This service is not available.");
+        if (!cancelled) setLoadError("This tool is not available.");
         return;
       }
       const data = (await res.json()) as { service: PublicService };
@@ -86,13 +90,20 @@ export default function ServiceDetailPage() {
     };
   }, [slug]);
 
+  useEffect(() => {
+    if (!service) return;
+    if (typeof window === "undefined") return;
+    if (window.location.hash === "#try") {
+      document.getElementById("try")?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [service]);
+
   const priceWei = useMemo(
     () => (service ? BigInt(service.price_wei) : BigInt(0)),
     [service],
   );
 
-  const sellerAddress =
-    service?.seller || service?.owner_address || "";
+  const sellerAddress = service?.seller || service?.owner_address || "";
 
   const runPaidRequest = useCallback(async () => {
     if (!service || !address || !sellerAddress) return;
@@ -186,7 +197,7 @@ export default function ServiceDetailPage() {
         setStep("error");
         setStatus(
           body?.error?.message ||
-            "Payment went through, but unlock failed. Check Activity or try again.",
+            "Payment went through, but unlock failed. Try again in a moment.",
         );
         return;
       }
@@ -224,7 +235,7 @@ export default function ServiceDetailPage() {
       <main className="mx-auto max-w-5xl px-6 py-10 md:px-8">
         <p className="text-muted">{loadError}</p>
         <Link href="/services" className="mt-4 inline-block underline">
-          Back to try catalog
+          Back to Explore
         </Link>
       </main>
     );
@@ -239,6 +250,12 @@ export default function ServiceDetailPage() {
   }
 
   const activeIdx = stepIndex(step);
+  const meta = getToolMeta(service.slug, service.description);
+  const image = resolveToolImage({
+    imageUrl: service.image_url,
+    slug: service.slug,
+  });
+  const ownerLabel = service.seller_name || shortAddr(sellerAddress);
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 pb-16 pt-6 md:px-8">
@@ -246,108 +263,166 @@ export default function ServiceDetailPage() {
         href="/services"
         className="text-sm text-muted transition-colors hover:text-foreground"
       >
-        ← Try catalog
+        ← Explore
       </Link>
 
-      <div className="mt-6 max-w-2xl animate-fade-up">
-        <p className="text-xs font-medium uppercase tracking-wider text-muted">
-          Try in browser
-        </p>
-        <h1 className="mt-2 font-display text-3xl tracking-tight md:text-4xl">
-          {service.title}
-        </h1>
-        <p className="mt-3 text-muted">{service.description}</p>
-        <p className="mt-4 font-mono text-sm">
-          {service.price_usdc} USDC per request
-        </p>
-        {sellerAddress && (
-          <p className="mt-2 text-sm text-muted">
-            Seller{" "}
-            <Link
-              href={`/u/${sellerAddress}`}
-              className="text-foreground underline underline-offset-4"
-            >
-              {service.seller_name || shortAddr(sellerAddress)}
-            </Link>
-          </p>
-        )}
-      </div>
-
-      <ol className="mt-10 flex max-w-2xl flex-wrap gap-3 text-xs uppercase tracking-wider text-muted">
-        {STEPS.map((s, i) => {
-          const reached = activeIdx >= i;
-          const current = activeIdx === i && step !== "done";
-          return (
-            <li
-              key={s.id}
-              className={[
-                "border border-line px-3 py-1.5",
-                reached ? "text-foreground" : "",
-                current ? "bg-foreground/[0.06]" : "bg-surface/60",
-              ].join(" ")}
-            >
-              {String(i + 1).padStart(2, "0")} {s.label}
-            </li>
-          );
-        })}
-      </ol>
-
-      <div className="mt-8 max-w-2xl space-y-4">
-        <label className="block text-sm font-medium" htmlFor="prompt">
-          Your request
-        </label>
-        <textarea
-          id="prompt"
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          rows={5}
-          className="w-full border border-line bg-surface px-4 py-3 text-sm outline-none focus:border-foreground"
-          placeholder="What should this service do for you?"
-        />
-
-        {!isConnected ? (
-          <div className="flex flex-col items-start gap-3">
-            <p className="text-sm text-muted">Connect your wallet to pay.</p>
-            <ConnectButton />
+      {/* Header */}
+      <header className="mt-6 flex max-w-2xl animate-fade-up flex-col gap-5 sm:flex-row sm:items-start">
+        {image ? (
+          <div className="relative h-20 w-20 shrink-0 overflow-hidden border border-line bg-background">
+            <Image
+              src={image}
+              alt=""
+              fill
+              className="object-cover"
+              sizes="80px"
+              unoptimized
+            />
           </div>
         ) : (
-          <button
-            type="button"
-            disabled={busy}
-            onClick={() => void runPaidRequest()}
-            className="h-11 bg-accent px-5 text-sm font-medium text-surface disabled:opacity-50"
-          >
-            {busy ? "Working…" : `Pay ${service.price_usdc} USDC & unlock`}
-          </button>
+          <BrandMark size="lg" />
         )}
-
-        {status && <p className="text-sm text-muted">{status}</p>}
-        {txHash && (
-          <p className="text-xs text-muted">
-            <a
-              className="underline"
-              href={`https://explorer.arc.io/tx/${txHash}`}
-              target="_blank"
-              rel="noreferrer"
-            >
-              View payment confirmation
-            </a>
+        <div className="min-w-0">
+          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted">
+            {meta.category}
           </p>
-        )}
-        {reply && (
-          <>
+          <h1 className="mt-1 font-display text-3xl tracking-tight md:text-4xl">
+            {service.title}
+          </h1>
+          {meta.tagline && (
+            <p className="mt-2 text-muted">{meta.tagline}</p>
+          )}
+          <p className="mt-4 font-mono text-sm">
+            {service.price_usdc} USDC per request
+          </p>
+          <p className="mt-2 font-mono text-xs text-muted">{service.slug}</p>
+          {sellerAddress && (
+            <p className="mt-3 text-sm text-muted">
+              Owned by{" "}
+              <Link
+                href={`/u/${sellerAddress}`}
+                className="text-foreground underline underline-offset-4"
+              >
+                {ownerLabel}
+              </Link>
+            </p>
+          )}
+          <a
+            href="#try"
+            className="mt-5 inline-flex h-10 items-center bg-accent px-4 text-sm font-medium text-surface"
+          >
+            Try in browser
+          </a>
+        </div>
+      </header>
+
+      {/* About */}
+      <section className="mt-12 max-w-2xl border-t border-line pt-10">
+        <h2 className="font-display text-2xl tracking-tight">About</h2>
+        <p className="mt-3 leading-relaxed text-muted">{service.description}</p>
+
+        <h3 className="mt-8 text-sm font-medium uppercase tracking-wider text-muted">
+          Use cases
+        </h3>
+        <ul className="mt-3 list-disc space-y-2 pl-5 text-muted marker:text-foreground/40">
+          {meta.useCases.map((uc) => (
+            <li key={uc}>{uc}</li>
+          ))}
+        </ul>
+      </section>
+
+      {/* Try in browser */}
+      <section
+        id="try"
+        className="mt-12 max-w-2xl scroll-mt-24 border-t border-line pt-10"
+      >
+        <h2 className="font-display text-2xl tracking-tight">
+          Try in browser
+        </h2>
+        <p className="mt-2 text-muted">
+          Pay a few cents in USDC, unlock a reply — same path agents use.
+        </p>
+
+        <ol className="mt-8 flex flex-wrap gap-3 text-xs uppercase tracking-wider text-muted">
+          {STEPS.map((s, i) => {
+            const reached = activeIdx >= i;
+            const current = activeIdx === i && step !== "done";
+            return (
+              <li
+                key={s.id}
+                className={[
+                  "border border-line px-3 py-1.5",
+                  reached ? "text-foreground" : "",
+                  current ? "bg-foreground/[0.06]" : "bg-surface/60",
+                ].join(" ")}
+              >
+                {String(i + 1).padStart(2, "0")} {s.label}
+              </li>
+            );
+          })}
+        </ol>
+
+        <div className="mt-8 space-y-4">
+          <label className="block text-sm font-medium" htmlFor="prompt">
+            Your request
+          </label>
+          <textarea
+            id="prompt"
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            rows={5}
+            className="w-full border border-line bg-surface px-4 py-3 text-sm outline-none focus:border-foreground"
+            placeholder="What should this tool do for you?"
+          />
+
+          {!isConnected ? (
+            <div className="flex flex-col items-start gap-3">
+              <p className="text-sm text-muted">Connect your wallet to pay.</p>
+              <ConnectButton />
+            </div>
+          ) : (
+            <button
+              type="button"
+              disabled={busy}
+              onClick={() => void runPaidRequest()}
+              className="h-11 bg-accent px-5 text-sm font-medium text-surface disabled:opacity-50"
+            >
+              {busy ? "Working…" : `Pay ${service.price_usdc} USDC & unlock`}
+            </button>
+          )}
+
+          {status && <p className="text-sm text-muted">{status}</p>}
+          {txHash && (
+            <p className="text-xs text-muted">
+              <a
+                className="underline"
+                href={`https://explorer.arc.io/tx/${txHash}`}
+                target="_blank"
+                rel="noreferrer"
+              >
+                View payment confirmation
+              </a>
+            </p>
+          )}
+          {reply && (
             <div className="border border-line bg-surface p-5 whitespace-pre-wrap text-sm leading-relaxed">
               {reply}
             </div>
-            <p className="text-xs text-muted">
-              Agents can call this the same way — see the protocol docs, or run{" "}
-              <span className="font-mono text-foreground">
-                npm run agent:pay -- {service.slug}
-              </span>
-            </p>
-          </>
-        )}
-      </div>
+          )}
+        </div>
+      </section>
+
+      {/* For agents */}
+      <section className="mt-12 max-w-2xl border-t border-line pt-8">
+        <p className="text-sm text-muted">
+          Building an agent? Connect via the{" "}
+          <Link href="/hub" className="underline underline-offset-4">
+            MCP Hub
+          </Link>{" "}
+          or discover tools at{" "}
+          <span className="font-mono text-foreground">GET /api/services</span>.
+        </p>
+      </section>
     </main>
   );
 }

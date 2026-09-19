@@ -3,11 +3,11 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CopyButton } from "@/components/hub/CopyButton";
-import { CursorSettingsMock } from "@/components/hub/CursorSettingsMock";
+import { EditorMcpPanel } from "@/components/hub/EditorMcpPanel";
 import { HubCodePanel } from "@/components/hub/HubCodePanel";
 import {
   curlHandshakeSnippet,
-  cursorMcpConfig,
+  editorMcpConfig,
   langchainStyleSnippet,
   mcpEndpoint,
   pythonHttpSnippet,
@@ -15,9 +15,9 @@ import {
 } from "@/lib/hub/mcpConfig";
 
 const SECTIONS = [
-  { id: "cursor", label: "Cursor / VS Code" },
-  { id: "frameworks", label: "Frameworks" },
   { id: "config", label: "Universal config" },
+  { id: "editors", label: "IDEs & clients" },
+  { id: "frameworks", label: "Frameworks" },
 ] as const;
 
 type FrameworkTab = "python" | "agents" | "curl";
@@ -26,7 +26,7 @@ const PLACEHOLDER_ORIGIN = "https://your-app.vercel.app";
 
 export function McpHub() {
   const [origin, setOrigin] = useState(PLACEHOLDER_ORIGIN);
-  const [active, setActive] = useState<string>("cursor");
+  const [active, setActive] = useState<string>("config");
   const [frameworkTab, setFrameworkTab] = useState<FrameworkTab>("python");
 
   useEffect(() => {
@@ -54,7 +54,7 @@ export function McpHub() {
   }, []);
 
   const endpoint = mcpEndpoint(origin);
-  const cursorJson = cursorMcpConfig(origin);
+  const editorJson = editorMcpConfig(origin);
   const universalJson = universalMcpConfig(origin);
 
   const frameworkCode =
@@ -73,17 +73,16 @@ export function McpHub() {
 
   return (
     <div className="mx-auto w-full max-w-4xl px-6 pb-20 pt-6 md:px-8 md:pt-8">
-      {/* Hero — brand + one job */}
       <header className="animate-hub-rise max-w-2xl">
         <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
           Integration Hub
         </p>
         <h1 className="mt-3 font-display text-4xl tracking-tight md:text-5xl">
-          Connect your assistant
+          Connect any MCP client
         </h1>
         <p className="mt-4 text-base leading-relaxed text-muted md:text-lg">
-          Pull the arcdot. MCP server into Cursor, VS Code, or any agent
-          framework. Your tools unlock with a few cents of USDC — no API keys.
+          Point editors, agent frameworks, or custom scripts at the arcdot. MCP
+          server. Paid tools unlock with a few cents of USDC — no API keys.
         </p>
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <CopyButton
@@ -96,7 +95,6 @@ export function McpHub() {
         </div>
       </header>
 
-      {/* Sticky section nav */}
       <nav
         className="sticky top-0 z-20 -mx-6 mt-10 border-y border-line bg-background/90 px-6 backdrop-blur-sm md:-mx-8 md:px-8"
         aria-label="Hub sections"
@@ -124,64 +122,108 @@ export function McpHub() {
         </ul>
       </nav>
 
-      {/* §1 Cursor */}
+      {/* §1 Universal — lead with protocol, not a vendor */}
       <section
-        id="cursor"
+        id="config"
         className="animate-fade-up scroll-mt-24 border-b border-line py-12 md:py-14"
         style={{ animationDelay: "60ms" }}
       >
         <p className="font-mono text-xs text-muted">01</p>
         <h2 className="mt-2 font-display text-2xl tracking-tight md:text-3xl">
-          Cursor &amp; VS Code
+          Universal config
         </h2>
         <p className="mt-3 max-w-xl text-muted">
-          Paste the live serverless MCP link into your editor settings. Your
-          coding assistant immediately gets catalog discovery and paid tools.
+          One schema for scripts, CI, SDKs, and custom clients. Copy once —
+          point anything at your live arcdot. deployment.
+        </p>
+
+        <div className="mt-8">
+          <HubCodePanel
+            title="schema"
+            filename="arcdot-mcp-config.json"
+            code={universalJson}
+            accentCopy
+          />
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-2">
+          <CopyButton
+            value={universalJson}
+            label="Copy arcdot-mcp-config.json"
+            variant="primary"
+            className="h-10 px-4 text-sm"
+          />
+          <CopyButton
+            value={endpoint}
+            label="Copy endpoint only"
+            variant="ghost"
+            className="h-10 px-4 text-sm"
+          />
+        </div>
+      </section>
+
+      {/* §2 IDEs & clients */}
+      <section
+        id="editors"
+        className="animate-fade-up scroll-mt-24 border-b border-line py-12 md:py-14"
+        style={{ animationDelay: "100ms" }}
+      >
+        <p className="font-mono text-xs text-muted">02</p>
+        <h2 className="mt-2 font-display text-2xl tracking-tight md:text-3xl">
+          IDEs &amp; clients
+        </h2>
+        <p className="mt-3 max-w-xl text-muted">
+          Any MCP-capable editor or desktop client works the same way: add a
+          server, paste the URL, reload tools.
+        </p>
+        <p className="mt-2 text-sm text-muted">
+          Works with VS Code, Cursor, Claude Desktop, Windsurf, and other
+          clients that speak MCP over HTTP.
         </p>
 
         <div className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
-          <CursorSettingsMock origin={origin} />
+          <EditorMcpPanel origin={origin} />
           <div className="space-y-3">
             <ol className="space-y-3 text-sm text-muted">
               <li className="flex gap-3">
                 <span className="font-mono text-xs text-foreground">1</span>
                 <span>
-                  Open Cursor Settings →{" "}
-                  <span className="font-medium text-foreground">MCP</span>
+                  Open your client&apos;s{" "}
+                  <span className="font-medium text-foreground">MCP</span>{" "}
+                  settings
                 </span>
               </li>
               <li className="flex gap-3">
                 <span className="font-mono text-xs text-foreground">2</span>
                 <span>
-                  Add a new server named{" "}
+                  Add a server named{" "}
                   <span className="font-medium text-foreground">arcdot</span>
                 </span>
               </li>
               <li className="flex gap-3">
                 <span className="font-mono text-xs text-foreground">3</span>
                 <span>
-                  Paste the URL below (or drop the JSON into your MCP config
-                  file)
+                  Paste the URL (or drop the JSON into your MCP config file)
                 </span>
               </li>
             </ol>
             <HubCodePanel
               title="mcp config"
               filename="mcp.json"
-              code={cursorJson}
+              code={editorJson}
               accentCopy
             />
           </div>
         </div>
       </section>
 
-      {/* §2 Frameworks */}
+      {/* §3 Frameworks */}
       <section
         id="frameworks"
-        className="animate-fade-up scroll-mt-24 border-b border-line py-12 md:py-14"
-        style={{ animationDelay: "100ms" }}
+        className="animate-fade-up scroll-mt-24 py-12 md:py-14"
+        style={{ animationDelay: "140ms" }}
       >
-        <p className="font-mono text-xs text-muted">02</p>
+        <p className="font-mono text-xs text-muted">03</p>
         <h2 className="mt-2 font-display text-2xl tracking-tight md:text-3xl">
           Agent frameworks
         </h2>
@@ -237,47 +279,6 @@ export function McpHub() {
         </p>
       </section>
 
-      {/* §3 Universal config */}
-      <section
-        id="config"
-        className="animate-fade-up scroll-mt-24 py-12 md:py-14"
-        style={{ animationDelay: "140ms" }}
-      >
-        <p className="font-mono text-xs text-muted">03</p>
-        <h2 className="mt-2 font-display text-2xl tracking-tight md:text-3xl">
-          Universal config
-        </h2>
-        <p className="mt-3 max-w-xl text-muted">
-          One schema for scripts, CI, and custom clients. Copy once — point
-          anything at your live arcdot. deployment.
-        </p>
-
-        <div className="mt-8">
-          <HubCodePanel
-            title="schema"
-            filename="arcdot-mcp-config.json"
-            code={universalJson}
-            accentCopy
-          />
-        </div>
-
-        <div className="mt-6 flex flex-wrap gap-2">
-          <CopyButton
-            value={universalJson}
-            label="Copy arcdot-mcp-config.json"
-            variant="primary"
-            className="h-10 px-4 text-sm"
-          />
-          <CopyButton
-            value={endpoint}
-            label="Copy endpoint only"
-            variant="ghost"
-            className="h-10 px-4 text-sm"
-          />
-        </div>
-      </section>
-
-      {/* Outbound links only — do not embed other pillars */}
       <footer className="border-t border-line pt-10">
         <p className="text-sm text-muted">Continue</p>
         <ul className="mt-4 divide-y divide-line border-y border-line">
@@ -288,7 +289,7 @@ export function McpHub() {
             >
               <div>
                 <p className="font-medium group-hover:underline group-hover:underline-offset-4">
-                  Browse live tools
+                  Browse Explore
                 </p>
                 <p className="mt-1 text-sm text-muted">
                   See what&apos;s published on the network right now.
@@ -299,7 +300,7 @@ export function McpHub() {
           </li>
           <li>
             <Link
-              href="/studio"
+              href="/create"
               className="group flex items-baseline justify-between gap-4 py-5 transition-colors"
             >
               <div>

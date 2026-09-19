@@ -125,6 +125,7 @@ export async function POST(request: Request) {
       system_prompt: body.system_prompt,
       upstream_url: upstream_url || null,
       upstream_bearer: body.upstream_bearer.trim() || null,
+      image_url: null,
       status: "published",
       paused: false,
     });

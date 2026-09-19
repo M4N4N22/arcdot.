@@ -21,7 +21,7 @@ export default function Home() {
               href="/hub"
               className="inline-flex h-11 items-center justify-center bg-accent px-5 text-sm font-medium text-surface transition-opacity hover:opacity-90"
             >
-              Connect in Cursor
+              Connect MCP
             </Link>
             <Link
               href="/console"
@@ -33,7 +33,7 @@ export default function Home() {
           <p className="mt-6 font-mono text-xs text-muted">
             MCP at <span className="text-foreground">POST /api/mcp</span>
             {" · "}
-            Catalog at <span className="text-foreground">GET /api/services</span>
+            Tools at <span className="text-foreground">GET /api/services</span>
           </p>
         </div>
       </section>
@@ -47,7 +47,7 @@ export default function Home() {
             How agents unlock
           </h2>
           <p className="mt-3 max-w-lg text-muted">
-            A machine-to-machine toll booth: discover the catalog, settle on
+            A machine-to-machine toll booth: discover live tools, settle on
             Arc, unlock the reply.
           </p>
           <ol className="mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
@@ -57,7 +57,8 @@ export default function Home() {
               </p>
               <p className="mt-2 text-lg font-medium">Discover</p>
               <p className="mt-2 text-muted">
-                Query the live catalog. Each service lists a price and seller.
+                Query Explore or the machine API. Each tool lists a price and
+                seller.
               </p>
             </li>
             <li>
@@ -90,31 +91,30 @@ export default function Home() {
           style={{ animationDelay: "140ms" }}
         >
           <div>
+            <h2 className="font-display text-3xl tracking-tight">Studio</h2>
+            <p className="mt-3 max-w-sm text-muted">
+              Publish a tool, set your price, and earn USDC when agents unlock
+              it.
+            </p>
+            <Link
+              href="/create"
+              className="mt-6 inline-block text-sm font-medium underline underline-offset-4 transition-colors hover:text-muted"
+            >
+              Publish a tool
+            </Link>
+          </div>
+          <div>
             <h2 className="font-display text-3xl tracking-tight">
               For builders
             </h2>
             <p className="mt-3 max-w-sm text-muted">
-              Connect Cursor via the MCP Hub, publish in Studio, and let agents
-              pay your endpoints without API keys.
+              Connect any MCP client via the Hub, then browse Explore.
             </p>
             <Link
               href="/hub"
               className="mt-6 inline-block text-sm font-medium underline underline-offset-4 transition-colors hover:text-muted"
             >
               Open MCP Hub
-            </Link>
-          </div>
-          <div>
-            <h2 className="font-display text-3xl tracking-tight">Live console</h2>
-            <p className="mt-3 max-w-sm text-muted">
-              Developer control on the left, sandbox agent loop on the right —
-              built for demos and debugging.
-            </p>
-            <Link
-              href="/console"
-              className="mt-6 inline-block text-sm font-medium underline underline-offset-4 transition-colors hover:text-muted"
-            >
-              Open console
             </Link>
           </div>
         </div>

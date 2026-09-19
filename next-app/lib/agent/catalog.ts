@@ -26,6 +26,7 @@ export function publicServiceForAgent(
     seller_name: sellerName ?? null,
     paused: s.paused,
     has_upstream: Boolean(s.upstream_url?.trim()),
+    image_url: s.image_url ?? null,
     input: INPUT_HINT,
     example: {
       service: s.slug,

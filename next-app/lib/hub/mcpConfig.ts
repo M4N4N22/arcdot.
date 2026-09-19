@@ -4,8 +4,8 @@ export function mcpEndpoint(origin: string): string {
   return `${origin.replace(/\/$/, "")}/api/mcp`;
 }
 
-/** Cursor / VS Code style MCP server entry (streamable HTTP). */
-export function cursorMcpConfig(origin: string): string {
+/** IDE / client style MCP server entry (streamable HTTP). */
+export function editorMcpConfig(origin: string): string {
   const url = mcpEndpoint(origin);
   return JSON.stringify(
     {

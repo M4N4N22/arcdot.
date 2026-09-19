@@ -164,7 +164,7 @@ export default function StudioProfilePage() {
     return (
       <main className="mx-auto max-w-5xl px-6 py-10 md:px-8">
         <h1 className="font-display text-3xl tracking-tight">Profile</h1>
-        <p className="mt-2 text-muted">Connect your wallet to edit your seller profile.</p>
+        <p className="mt-2 text-muted">Connect your wallet to edit your profile.</p>
         <div className="mt-6">
           <ConnectButton />
         </div>

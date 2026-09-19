@@ -65,7 +65,7 @@ export default function StudioServicesPage() {
   if (!isConnected) {
     return (
       <main className="mx-auto max-w-5xl px-6 py-10 md:px-8">
-        <p className="text-muted">Connect to manage services.</p>
+        <p className="text-muted">Connect to manage your tools.</p>
         <div className="mt-4">
           <ConnectButton />
         </div>
@@ -80,20 +80,26 @@ export default function StudioServicesPage() {
       </Link>
       <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl tracking-tight">Your services</h1>
+          <h1 className="font-display text-3xl tracking-tight">Your tools</h1>
           <p className="mt-2 text-muted">Pause, edit, or open a listing.</p>
         </div>
         <Link
           href="/create"
           className="h-10 bg-accent px-4 text-sm font-medium text-surface inline-flex items-center"
         >
-          New service
+          Publish
         </Link>
       </div>
       {error && <p className="mt-4 text-sm text-red-700">{error}</p>}
       <ul className="mt-10 divide-y divide-line border-y border-line">
         {services.length === 0 && (
-          <li className="py-8 text-muted">No services yet.</li>
+          <li className="py-8 text-muted">
+            No tools yet.{" "}
+            <Link href="/create" className="underline underline-offset-4">
+              Publish your first
+            </Link>
+            .
+          </li>
         )}
         {services.map((s) => (
           <li

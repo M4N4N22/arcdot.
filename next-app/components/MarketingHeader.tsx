@@ -35,7 +35,7 @@ export function MarketingHeader() {
           href="/studio"
           className="transition-colors hover:text-foreground"
         >
-          Sell
+          Studio
         </Link>
         <ConnectButton
           accountStatus="address"
