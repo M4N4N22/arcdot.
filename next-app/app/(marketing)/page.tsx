@@ -1,5 +1,10 @@
 import Link from "next/link";
-import { LiveUnlockStrip } from "@/components/LiveUnlockStrip";
+import { FinalCta } from "@/components/marketing/FinalCta";
+import { HowItWorks } from "@/components/marketing/HowItWorks";
+import { PublishEarn } from "@/components/marketing/PublishEarn";
+import { SeeItSettle } from "@/components/marketing/SeeItSettle";
+import { TrustedRails } from "@/components/marketing/TrustedRails";
+import { WhatYouGet } from "@/components/marketing/WhatYouGet";
 
 export default function Home() {
   return (
@@ -24,106 +29,35 @@ export default function Home() {
               Connect MCP
             </Link>
             <Link
-              href="/console"
+              href="/services"
               className="inline-flex h-11 items-center justify-center border border-line bg-surface/70 px-5 text-sm font-medium text-foreground backdrop-blur-sm transition-colors hover:bg-surface"
             >
-              Open console
+              Explore tools
+            </Link>
+            <Link
+              href="/docs"
+              className="inline-flex h-11 items-center justify-center px-2 text-sm font-medium text-muted underline-offset-4 transition-colors hover:text-foreground hover:underline"
+            >
+              Documentation
             </Link>
           </div>
-          <p className="mt-6 font-mono text-xs text-muted">
-            MCP at <span className="text-foreground">POST /api/mcp</span>
-            {" · "}
-            Tools at <span className="text-foreground">GET /api/services</span>
+          <p className="mt-6 text-sm text-muted">
+            Connect an assistant or browse live tools on Arc.
           </p>
         </div>
       </section>
 
-      <section className="border-t border-line/80 bg-surface/40">
-        <div
-          className="animate-fade-up mx-auto w-full max-w-6xl px-6 py-20 md:py-28"
-          style={{ animationDelay: "80ms" }}
-        >
-          <h2 className="font-display text-3xl tracking-tight md:text-4xl">
-            How agents unlock
-          </h2>
-          <p className="mt-3 max-w-lg text-muted">
-            A machine-to-machine toll booth: discover live tools, settle on
-            Arc, unlock the reply.
-          </p>
-          <ol className="mt-12 grid gap-10 md:grid-cols-3 md:gap-8">
-            <li>
-              <p className="text-sm font-medium uppercase tracking-wider text-muted">
-                01
-              </p>
-              <p className="mt-2 text-lg font-medium">Discover</p>
-              <p className="mt-2 text-muted">
-                Query Explore or the machine API. Each tool lists a price and
-                seller.
-              </p>
-            </li>
-            <li>
-              <p className="text-sm font-medium uppercase tracking-wider text-muted">
-                02
-              </p>
-              <p className="mt-2 text-lg font-medium">Pay on Arc</p>
-              <p className="mt-2 text-muted">
-                The agent wallet sends a tiny USDC payment — no middleman token.
-              </p>
-            </li>
-            <li>
-              <p className="text-sm font-medium uppercase tracking-wider text-muted">
-                03
-              </p>
-              <p className="mt-2 text-lg font-medium">Unlock</p>
-              <p className="mt-2 text-muted">
-                arcdot. verifies settlement and returns the response in seconds.
-              </p>
-            </li>
-          </ol>
-        </div>
-      </section>
-
-      <LiveUnlockStrip />
-
-      <section className="border-t border-line/80">
-        <div
-          className="animate-fade-up mx-auto grid w-full max-w-6xl gap-12 px-6 py-20 md:grid-cols-2 md:gap-16 md:py-28"
-          style={{ animationDelay: "140ms" }}
-        >
-          <div>
-            <h2 className="font-display text-3xl tracking-tight">Studio</h2>
-            <p className="mt-3 max-w-sm text-muted">
-              Publish a tool, set your price, and earn USDC when agents unlock
-              it.
-            </p>
-            <Link
-              href="/create"
-              className="mt-6 inline-block text-sm font-medium underline underline-offset-4 transition-colors hover:text-muted"
-            >
-              Publish a tool
-            </Link>
-          </div>
-          <div>
-            <h2 className="font-display text-3xl tracking-tight">
-              For builders
-            </h2>
-            <p className="mt-3 max-w-sm text-muted">
-              Connect any MCP client via the Hub, then browse Explore.
-            </p>
-            <Link
-              href="/hub"
-              className="mt-6 inline-block text-sm font-medium underline underline-offset-4 transition-colors hover:text-muted"
-            >
-              Open MCP Hub
-            </Link>
-          </div>
-        </div>
-      </section>
+      <TrustedRails />
+      <HowItWorks />
+      <WhatYouGet />
+      <SeeItSettle />
+      <PublishEarn />
+      <FinalCta />
 
       <footer className="border-t border-line/80">
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-8 text-sm text-muted">
           <span className="font-display text-lg text-foreground">arcdot.</span>
-          <span>Settled in USDC on Arc</span>
+          <span>Settled in USDC on Circle’s Arc</span>
         </div>
       </footer>
     </main>

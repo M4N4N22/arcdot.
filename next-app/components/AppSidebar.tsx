@@ -14,12 +14,19 @@ type NavPillar = {
   children?: NavChild[];
 };
 
-/** Three product pillars — Hub / Studio / Explore. Console & Activity stay off-nav. */
+/** Product pillars + Docs as a top-level section (not nested under Hub). */
 const pillars: NavPillar[] = [
   {
     href: "/hub",
     label: "MCP Hub",
-    children: [{ href: "/docs", label: "Docs" }],
+  },
+  {
+    href: "/docs",
+    label: "Docs",
+  },
+  {
+    href: "/services",
+    label: "Explore",
   },
   {
     href: "/studio",
@@ -30,10 +37,6 @@ const pillars: NavPillar[] = [
       { href: "/studio/sales", label: "Sales" },
       { href: "/studio/profile", label: "Profile" },
     ],
-  },
-  {
-    href: "/services",
-    label: "Explore",
   },
 ];
 

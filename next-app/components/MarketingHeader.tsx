@@ -14,28 +14,22 @@ export function MarketingHeader() {
       </Link>
       <nav className="flex flex-wrap items-center justify-end gap-4 text-sm text-muted sm:gap-5">
         <Link
-          href="/hub"
+          href="/services"
           className="transition-colors hover:text-foreground"
         >
-          MCP Hub
+          Explore
         </Link>
-        <Link
-          href="/console"
-          className="transition-colors hover:text-foreground"
-        >
-          Console
-        </Link>
-        <Link
-          href="/docs"
-          className="transition-colors hover:text-foreground"
-        >
-          Docs
+        <Link href="/hub" className="transition-colors hover:text-foreground">
+          Hub
         </Link>
         <Link
           href="/studio"
           className="transition-colors hover:text-foreground"
         >
           Studio
+        </Link>
+        <Link href="/docs" className="transition-colors hover:text-foreground">
+          Docs
         </Link>
         <ConnectButton
           accountStatus="address"

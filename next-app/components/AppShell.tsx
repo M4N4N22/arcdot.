@@ -23,10 +23,10 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [mobileOpen]);
 
   return (
-    <div className="relative flex min-h-full flex-1 gap-3 p-3 md:p-4">
-      {/* Desktop nav rail */}
-      <aside className="animate-shell-in relative z-20 hidden w-56 shrink-0 overflow-hidden rounded-3xl border border-line bg-surface shadow-sm md:block lg:w-60">
-        <div className="h-[calc(100svh-2rem)]">
+    <div className="flex h-svh max-h-svh flex-1 gap-3 overflow-hidden p-3 md:p-4">
+      {/* Desktop nav rail — fixed height, own scroll if needed */}
+      <aside className="animate-shell-in relative z-20 hidden h-full w-56 shrink-0 overflow-hidden rounded-3xl border border-line bg-surface shadow-sm md:block lg:w-60">
+        <div className="h-full overflow-y-auto">
           <AppSidebar />
         </div>
       </aside>
@@ -40,15 +40,22 @@ export function AppShell({ children }: { children: ReactNode }) {
             aria-label="Close navigation"
             onClick={() => setMobileOpen(false)}
           />
-          <aside className="animate-drawer-in absolute inset-y-3 left-3 w-[min(18rem,88vw)] overflow-hidden rounded-3xl border border-line bg-surface shadow-lg">
-            <AppSidebar onNavigate={() => setMobileOpen(false)} />
+          <aside className="animate-drawer-in absolute inset-y-3 left-3 flex w-[min(18rem,88vw)] flex-col overflow-hidden rounded-3xl border border-line bg-surface shadow-lg">
+            <div className="min-h-0 flex-1 overflow-y-auto">
+              <AppSidebar onNavigate={() => setMobileOpen(false)} />
+            </div>
           </aside>
         </div>
       )}
 
-      <div className="relative z-10 flex min-w-0 flex-1 flex-col overflow-hidden rounded-3xl border border-line bg-surface/80 shadow-sm backdrop-blur-sm">
-        <AppHeader onMenuClick={() => setMobileOpen(true)} />
-        <div className="flex-1 overflow-y-auto bg-background/40">{children}</div>
+      {/* Main column — header fixed, only children scroll */}
+      <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-3xl border border-line bg-surface/80 shadow-sm backdrop-blur-sm">
+        <div className="shrink-0">
+          <AppHeader onMenuClick={() => setMobileOpen(true)} />
+        </div>
+        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-background/40">
+          {children}
+        </div>
       </div>
     </div>
   );

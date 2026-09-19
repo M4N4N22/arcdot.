@@ -6,7 +6,7 @@ type CopyButtonProps = {
   value: string;
   label?: string;
   copiedLabel?: string;
-  variant?: "primary" | "ghost" | "dark";
+  variant?: "primary" | "ghost" | "dark" | "soft";
   className?: string;
 };
 
@@ -32,16 +32,18 @@ export function CopyButton({
   const styles =
     variant === "primary"
       ? "bg-accent text-surface hover:opacity-90"
-      : variant === "dark"
-        ? "border border-zinc-700 bg-zinc-900 text-zinc-200 hover:border-zinc-500 hover:text-white"
-        : "border border-line bg-surface text-foreground hover:bg-foreground/[0.04]";
+      : variant === "soft"
+        ? "bg-[#efeeea] text-foreground ring-1 ring-black/[0.04] hover:bg-foreground hover:text-surface"
+        : variant === "dark"
+          ? "border border-zinc-700 bg-zinc-900 text-zinc-200 hover:border-zinc-500 hover:text-white"
+          : "border border-line bg-surface text-foreground hover:bg-surface-muted";
 
   return (
     <button
       type="button"
       onClick={() => void onCopy()}
       className={[
-        "inline-flex h-9 items-center justify-center px-3 text-xs font-medium transition-all",
+        "inline-flex h-9 items-center justify-center rounded-xl px-3.5 text-xs font-semibold transition-all",
         styles,
         copied ? "scale-[0.98]" : "",
         className,

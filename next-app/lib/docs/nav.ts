@@ -14,7 +14,6 @@ export const docsNav: DocsNavGroup[] = [
     items: [
       { href: "/docs", label: "Overview" },
       { href: "/docs/quickstart", label: "Quickstart" },
-      { href: "/hub", label: "MCP Hub" },
     ],
   },
   {

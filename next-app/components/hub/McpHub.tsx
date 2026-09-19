@@ -72,34 +72,52 @@ export function McpHub() {
         : { title: "bash", filename: "handshake.sh" };
 
   return (
-    <div className="mx-auto w-full max-w-4xl px-6 pb-20 pt-6 md:px-8 md:pt-8">
-      <header className="animate-hub-rise max-w-2xl">
+    <div className="mx-auto w-full max-w-5xl px-4 pb-16 pt-5 md:px-6 md:pt-6">
+      {/* Hero card */}
+      <header className="animate-hub-rise overflow-hidden rounded-3xl border border-line bg-surface p-6 shadow-sm md:p-8">
         <p className="text-[11px] font-medium uppercase tracking-[0.14em] text-muted">
           Integration Hub
         </p>
-        <h1 className="mt-3 font-display text-4xl tracking-tight md:text-5xl">
+        <h1 className="mt-2 font-display text-3xl tracking-tight md:text-4xl">
           Connect any MCP client
         </h1>
-        <p className="mt-4 text-base leading-relaxed text-muted md:text-lg">
+        <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted md:text-base">
           Point editors, agent frameworks, or custom scripts at the arcdot. MCP
           server. Paid tools unlock with a few cents of USDC — no API keys.
         </p>
-        <div className="mt-6 flex flex-wrap items-center gap-3">
+
+        <div className="mt-6 flex flex-wrap items-center gap-2.5">
           <CopyButton
             value={endpoint}
             label="Copy MCP link"
             variant="primary"
-            className="h-10 px-4 text-sm"
+            className="h-10 rounded-full px-5 text-sm"
           />
-          <p className="font-mono text-xs text-muted break-all">{endpoint}</p>
+          <Link
+            href="/docs/quickstart"
+            className="inline-flex h-10 items-center rounded-full bg-[#efeeea] px-5 text-sm font-semibold text-foreground ring-1 ring-black/[0.04] transition-colors hover:bg-foreground hover:text-surface"
+          >
+            Get started
+          </Link>
+          <Link
+            href="/docs"
+            className="inline-flex h-10 items-center rounded-full border border-line bg-surface px-5 text-sm font-medium text-muted transition-colors hover:text-foreground"
+          >
+            Documentation
+          </Link>
         </div>
+
+        <p className="mt-4 break-all font-mono text-[11px] text-muted">
+          {endpoint}
+        </p>
       </header>
 
+      {/* Section pills */}
       <nav
-        className="sticky top-0 z-20 -mx-6 mt-10 border-y border-line bg-background/90 px-6 backdrop-blur-sm md:-mx-8 md:px-8"
+        className="sticky top-0 z-20 mt-5 rounded-2xl border border-line bg-surface/95 p-1.5 shadow-sm backdrop-blur-sm"
         aria-label="Hub sections"
       >
-        <ul className="flex gap-1 overflow-x-auto py-2">
+        <ul className="flex gap-1 overflow-x-auto">
           {SECTIONS.map((s) => {
             const isActive = active === s.id;
             return (
@@ -108,10 +126,10 @@ export function McpHub() {
                   href={`#${s.id}`}
                   onClick={() => setActive(s.id)}
                   className={[
-                    "inline-flex whitespace-nowrap px-3 py-2 text-sm transition-colors",
+                    "inline-flex whitespace-nowrap rounded-xl px-3.5 py-2 text-sm font-medium transition-colors",
                     isActive
-                      ? "bg-foreground/[0.07] font-medium text-foreground"
-                      : "text-muted hover:text-foreground",
+                      ? "bg-foreground text-surface"
+                      : "text-muted hover:bg-surface-muted hover:text-foreground",
                   ].join(" ")}
                 >
                   {s.label}
@@ -122,22 +140,21 @@ export function McpHub() {
         </ul>
       </nav>
 
-      {/* §1 Universal — lead with protocol, not a vendor */}
+      {/* §1 Universal config */}
       <section
         id="config"
-        className="animate-fade-up scroll-mt-24 border-b border-line py-12 md:py-14"
-        style={{ animationDelay: "60ms" }}
+        className="mt-5 scroll-mt-24 rounded-3xl border border-line bg-surface p-6 shadow-sm md:p-8"
       >
-        <p className="font-mono text-xs text-muted">01</p>
-        <h2 className="mt-2 font-display text-2xl tracking-tight md:text-3xl">
+        <p className="font-mono text-[11px] text-muted">01</p>
+        <h2 className="mt-1 font-display text-2xl tracking-tight">
           Universal config
         </h2>
-        <p className="mt-3 max-w-xl text-muted">
+        <p className="mt-2 max-w-xl text-sm text-muted">
           One schema for scripts, CI, SDKs, and custom clients. Copy once —
           point anything at your live arcdot. deployment.
         </p>
 
-        <div className="mt-8">
+        <div className="mt-6">
           <HubCodePanel
             title="schema"
             filename="arcdot-mcp-config.json"
@@ -146,63 +163,68 @@ export function McpHub() {
           />
         </div>
 
-        <div className="mt-6 flex flex-wrap gap-2">
+        <div className="mt-4 flex flex-wrap gap-2">
           <CopyButton
             value={universalJson}
             label="Copy arcdot-mcp-config.json"
             variant="primary"
-            className="h-10 px-4 text-sm"
+            className="h-10 rounded-full px-4 text-sm"
           />
           <CopyButton
             value={endpoint}
             label="Copy endpoint only"
-            variant="ghost"
-            className="h-10 px-4 text-sm"
+            variant="soft"
+            className="h-10 rounded-full px-4 text-sm"
           />
         </div>
       </section>
 
-      {/* §2 IDEs & clients */}
+      {/* §2 IDEs */}
       <section
         id="editors"
-        className="animate-fade-up scroll-mt-24 border-b border-line py-12 md:py-14"
-        style={{ animationDelay: "100ms" }}
+        className="mt-5 scroll-mt-24 rounded-3xl border border-line bg-surface p-6 shadow-sm md:p-8"
       >
-        <p className="font-mono text-xs text-muted">02</p>
-        <h2 className="mt-2 font-display text-2xl tracking-tight md:text-3xl">
+        <p className="font-mono text-[11px] text-muted">02</p>
+        <h2 className="mt-1 font-display text-2xl tracking-tight">
           IDEs &amp; clients
         </h2>
-        <p className="mt-3 max-w-xl text-muted">
+        <p className="mt-2 max-w-xl text-sm text-muted">
           Any MCP-capable editor or desktop client works the same way: add a
           server, paste the URL, reload tools.
         </p>
-        <p className="mt-2 text-sm text-muted">
+        <p className="mt-1.5 text-xs text-muted">
           Works with VS Code, Cursor, Claude Desktop, Windsurf, and other
           clients that speak MCP over HTTP.
         </p>
 
-        <div className="mt-8 grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
+        <div className="mt-6 grid gap-5 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
           <EditorMcpPanel origin={origin} />
-          <div className="space-y-3">
-            <ol className="space-y-3 text-sm text-muted">
+          <div className="space-y-4">
+            <ol className="space-y-2.5 rounded-2xl border border-line bg-surface-muted/50 p-4 text-sm text-muted">
               <li className="flex gap-3">
-                <span className="font-mono text-xs text-foreground">1</span>
-                <span>
+                <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface font-mono text-[11px] font-semibold text-foreground ring-1 ring-line">
+                  1
+                </span>
+                <span className="pt-0.5">
                   Open your client&apos;s{" "}
                   <span className="font-medium text-foreground">MCP</span>{" "}
                   settings
                 </span>
               </li>
               <li className="flex gap-3">
-                <span className="font-mono text-xs text-foreground">2</span>
-                <span>
+                <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface font-mono text-[11px] font-semibold text-foreground ring-1 ring-line">
+                  2
+                </span>
+                <span className="pt-0.5">
                   Add a server named{" "}
                   <span className="font-medium text-foreground">arcdot</span>
                 </span>
               </li>
               <li className="flex gap-3">
-                <span className="font-mono text-xs text-foreground">3</span>
-                <span>
+                <span className="inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-surface font-mono text-[11px] font-semibold text-foreground ring-1 ring-line">
+                  3
+                </span>
+                <span className="pt-0.5">
                   Paste the URL (or drop the JSON into your MCP config file)
                 </span>
               </li>
@@ -220,20 +242,19 @@ export function McpHub() {
       {/* §3 Frameworks */}
       <section
         id="frameworks"
-        className="animate-fade-up scroll-mt-24 py-12 md:py-14"
-        style={{ animationDelay: "140ms" }}
+        className="mt-5 scroll-mt-24 rounded-3xl border border-line bg-surface p-6 shadow-sm md:p-8"
       >
-        <p className="font-mono text-xs text-muted">03</p>
-        <h2 className="mt-2 font-display text-2xl tracking-tight md:text-3xl">
+        <p className="font-mono text-[11px] text-muted">03</p>
+        <h2 className="mt-1 font-display text-2xl tracking-tight">
           Agent frameworks
         </h2>
-        <p className="mt-3 max-w-xl text-muted">
+        <p className="mt-2 max-w-xl text-sm text-muted">
           Hook autonomous runners into the same node — list tools, call them,
           settle when payment is needed, then continue.
         </p>
 
         <div
-          className="mt-6 flex flex-wrap gap-1 border border-line bg-surface/50 p-1"
+          className="mt-5 flex flex-wrap gap-1 rounded-2xl border border-line bg-surface-muted/60 p-1"
           role="tablist"
           aria-label="Framework snippets"
         >
@@ -253,9 +274,9 @@ export function McpHub() {
                 aria-selected={selected}
                 onClick={() => setFrameworkTab(tab.id)}
                 className={[
-                  "px-3 py-2 text-sm transition-colors",
+                  "rounded-xl px-3.5 py-2 text-sm font-medium transition-colors",
                   selected
-                    ? "bg-background font-medium text-foreground shadow-sm"
+                    ? "bg-surface text-foreground shadow-sm"
                     : "text-muted hover:text-foreground",
                 ].join(" ")}
               >
@@ -279,58 +300,50 @@ export function McpHub() {
         </p>
       </section>
 
-      <footer className="border-t border-line pt-10">
-        <p className="text-sm text-muted">Continue</p>
-        <ul className="mt-4 divide-y divide-line border-y border-line">
-          <li>
-            <Link
-              href="/services"
-              className="group flex items-baseline justify-between gap-4 py-5 transition-colors"
-            >
-              <div>
-                <p className="font-medium group-hover:underline group-hover:underline-offset-4">
-                  Browse Explore
-                </p>
-                <p className="mt-1 text-sm text-muted">
-                  See what&apos;s published on the network right now.
-                </p>
-              </div>
-              <span className="shrink-0 text-sm text-muted">→</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/create"
-              className="group flex items-baseline justify-between gap-4 py-5 transition-colors"
-            >
-              <div>
-                <p className="font-medium group-hover:underline group-hover:underline-offset-4">
-                  Publish a tool
-                </p>
-                <p className="mt-1 text-sm text-muted">
-                  List your endpoint in Studio and start earning USDC.
-                </p>
-              </div>
-              <span className="shrink-0 text-sm text-muted">→</span>
-            </Link>
-          </li>
-          <li>
-            <Link
-              href="/docs/mcp"
-              className="group flex items-baseline justify-between gap-4 py-5 transition-colors"
-            >
-              <div>
-                <p className="font-medium group-hover:underline group-hover:underline-offset-4">
-                  Protocol reference
-                </p>
-                <p className="mt-1 text-sm text-muted">
-                  Full MCP methods, payment fields, and error shapes.
-                </p>
-              </div>
-              <span className="shrink-0 text-sm text-muted">→</span>
-            </Link>
-          </li>
-        </ul>
+      {/* Continue */}
+      <footer className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        <Link
+          href="/docs"
+          className="group rounded-2xl border border-line bg-surface p-5 shadow-sm transition-shadow hover:shadow-md"
+        >
+          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted">
+            Documentation
+          </p>
+          <p className="mt-1 text-sm font-semibold group-hover:underline group-hover:underline-offset-4">
+            See docs
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            Guides, API shapes, and payment on Arc.
+          </p>
+        </Link>
+        <Link
+          href="/services"
+          className="group rounded-2xl border border-line bg-surface p-5 shadow-sm transition-shadow hover:shadow-md"
+        >
+          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted">
+            Explore
+          </p>
+          <p className="mt-1 text-sm font-semibold group-hover:underline group-hover:underline-offset-4">
+            Browse tools
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            See what&apos;s live on the network.
+          </p>
+        </Link>
+        <Link
+          href="/create"
+          className="group rounded-2xl border border-line bg-surface p-5 shadow-sm transition-shadow hover:shadow-md sm:col-span-2 lg:col-span-1"
+        >
+          <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted">
+            Studio
+          </p>
+          <p className="mt-1 text-sm font-semibold group-hover:underline group-hover:underline-offset-4">
+            Publish a tool
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            List your endpoint and earn USDC.
+          </p>
+        </Link>
       </footer>
     </div>
   );
