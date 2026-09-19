@@ -9,9 +9,11 @@
     "lint": "eslint",
     "agent:demo": "npx tsx scripts/agent-request.ts",
     "agent:pay": "npx tsx scripts/agent-pay.ts",
-    "agent:probe": "npx tsx scripts/agent-probe.ts"
+    "agent:probe": "npx tsx scripts/agent-probe.ts",
+    "agent:wallet": "npx tsx scripts/create-agent-wallet.ts"
   },
   "dependencies": {
+    "@arcdot/agent": "file:../packages/arcdot-agent",
     "@base-ui/react": "^1.8.0",
     "@rainbow-me/rainbowkit": "^2.2.11",
     "@supabase/supabase-js": "^2.109.0",

@@ -2,10 +2,6 @@ import {
   callGatewayDemo,
   callGatewayPaid,
 } from "@/lib/agent/client";
-import {
-  agentPrivateKeyFromEnv,
-  runPaidAgentRequest,
-} from "@/lib/agent/paidRequest";
 import { buildPaymentInstructions } from "@/lib/agent/x402";
 import {
   getProfilesByAddresses,
@@ -259,47 +255,9 @@ export async function callMcpTool(params: {
     });
   }
 
-  // 3) Optional server-side auto-pay (AGENT_PRIVATE_KEY + MCP_AUTO_PAY=true)
-  if (
-    process.env.MCP_AUTO_PAY === "true" &&
-    process.env.AGENT_PRIVATE_KEY
-  ) {
-    try {
-      const paid = await runPaidAgentRequest({
-        baseUrl: origin,
-        service: slug,
-        input,
-        privateKey: agentPrivateKeyFromEnv(),
-        clientRequestId: `mcp-autopay-${Date.now()}`,
-      });
-      if (paid.gateway.ok) {
-        const text =
-          typeof paid.gateway.body.result === "object" &&
-          paid.gateway.body.result &&
-          "text" in paid.gateway.body.result
-            ? String((paid.gateway.body.result as { text: unknown }).text)
-            : JSON.stringify(paid.gateway.body.result);
-        return textResult(text, {
-          meta: {
-            txHash: paid.txHash,
-            paymentId: paid.paymentId,
-            settlement: paid.gateway.body.settlement,
-            autoPay: true,
-          },
-        });
-      }
-      return textResult(JSON.stringify(paid.gateway.body, null, 2), {
-        isError: true,
-      });
-    } catch (err) {
-      return textResult(
-        err instanceof Error ? err.message : "Auto-pay failed",
-        { isError: true },
-      );
-    }
-  }
-
-  // 4) Unpaid → machine-readable pay instructions (402 equivalent)
+  // 3) Unpaid → machine-readable pay instructions (402 equivalent).
+  // The buyer agent's own wallet (client-side) must depositPayment + EIP-191,
+  // then retry with arguments.payment. arcdot. never holds user keys.
   const payment = buildPaymentInstructions(service);
   const unpaid = {
     ok: false,
@@ -307,7 +265,7 @@ export async function callMcpTool(params: {
     error: {
       code: "PAYMENT_REQUIRED",
       message:
-        "Pay depositPayment(paymentId, seller) with msg.value == price_wei on Arc (chain 5042), then retry tools/call with arguments.payment { txHash, address, signature }.",
+        "Pay depositPayment(paymentId, seller) with msg.value == price_wei on Arc (chain 5042), then retry tools/call with arguments.payment { txHash, address, signature }. Create and fund an agent wallet locally — see /hub#wallet.",
       payment,
       service: {
         slug: service.slug,

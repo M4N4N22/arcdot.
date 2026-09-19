@@ -20,9 +20,13 @@ export async function GET(request: Request) {
     endpoint: `${origin}/api/mcp`,
     methods: ["initialize", "tools/list", "tools/call", "ping"],
     payment: {
-      note: "Paid tools settle on Arc via PromptGateway; unpaid tools/call returns 402-shaped JSON in tool content",
-      headers: ["X-Arc-Demo-Secret"],
-      autoPay: process.env.MCP_AUTO_PAY === "true",
+      note: "Paid tools settle on Arc via PromptGateway. Unpaid tools/call returns 402-shaped JSON. The buyer agent wallet lives in the client runtime — arcdot. never holds user keys. See /hub#wallet.",
+      clientPayment: [
+        "Create agent wallet locally",
+        "Fund with native USDC on Arc",
+        "depositPayment + EIP-191 in your agent",
+        "Retry tools/call with arguments.payment",
+      ],
     },
     docs: `${origin}/hub`,
     reference: `${origin}/docs/mcp`,

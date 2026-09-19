@@ -98,7 +98,9 @@ curl -s -X POST $BASE/api/gateway \\
   -H "X-Arc-Signature: 0x…" \\
   -d '{"service":"${slug}","input":{"prompt":"…"},"auth":{"issuedAt":0,"expiresAt":0}}'
 
-# Or: AGENT_PRIVATE_KEY=0x… npm run agent:pay -- ${slug} "prompt"
+# Or (buyer client — no clone):
+#   npx @arcdot/agent wallet create
+#   npx @arcdot/agent unlock --origin $BASE --service ${slug} --prompt "…"
 # Price for selected service: ${price} USDC`;
   }, [service]);
 

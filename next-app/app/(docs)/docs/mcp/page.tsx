@@ -67,32 +67,37 @@ curl -s -X POST "$ORIGIN/api/mcp" \\
       </DocsUl>
 
       <DocsH2>Paid call</DocsH2>
+      <DocsP>
+        Prefer the buyer client — it auto-settles so you do not hand-roll deposit
+        + retry:
+      </DocsP>
+      <CodeBlock
+        title="bash"
+        code={`npx @arcdot/agent wallet create
+# fund address on Arc, then Cursor mcp.json:
+# { "mcpServers": { "arcdot": { "command": "npx", "args": ["-y", "@arcdot/agent", "mcp", "--origin", "$ORIGIN"] } } }`}
+      />
       <DocsOl>
         <li>
-          <code className="font-mono text-sm">tools/call</code> without payment →
-          tool content with payment instructions (
-          <code className="font-mono text-sm">price_wei</code>, seller, gateway)
+          Remote <code className="font-mono text-sm">tools/call</code> without
+          payment → payment instructions in tool content
         </li>
         <li>
-          On Arc:{" "}
-          <code className="font-mono text-sm">
-            depositPayment(paymentId, seller)
-          </code>{" "}
-          with <code className="font-mono text-sm">msg.value == price_wei</code>
-        </li>
-        <li>
-          Retry with{" "}
-          <code className="font-mono text-sm">
-            arguments.payment {"{ txHash, address, signature }"}
-          </code>
+          Local <code className="font-mono text-sm">@arcdot/agent</code> proxy /
+          SDK runs{" "}
+          <code className="font-mono text-sm">depositPayment</code> + EIP-191 and
+          retries with{" "}
+          <code className="font-mono text-sm">arguments.payment</code>
         </li>
       </DocsOl>
       <DocsP>
-        Rehearsal: pass header{" "}
-        <code className="font-mono text-sm">X-Arc-Demo-Secret</code> (same as
-        gateway demo unlock). Optional server auto-pay:{" "}
-        <code className="font-mono text-sm">MCP_AUTO_PAY=true</code> +{" "}
-        <code className="font-mono text-sm">AGENT_PRIVATE_KEY</code>.
+        Rehearsal only: header{" "}
+        <code className="font-mono text-sm">X-Arc-Demo-Secret</code>. Production
+        buyers use{" "}
+        <Link href="/hub#wallet" className="underline underline-offset-4">
+          Hub → Agent wallet
+        </Link>
+        . arcdot. never holds buyer keys.
       </DocsP>
       <CodeBlock
         title="bash"

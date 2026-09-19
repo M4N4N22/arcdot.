@@ -92,20 +92,29 @@ export default function DocsAgentsPage() {
         .
       </DocsP>
 
-      <DocsH2>Recommended helper</DocsH2>
+      <DocsH2>Recommended: @arcdot/agent</DocsH2>
       <DocsP>
-        Use the packaged paid client against the live host:
+        Publishable buyer client — local wallet, auto-settle, MCP proxy for
+        Cursor. Keys never touch the arcdot. server:
       </DocsP>
       <CodeBlock
         title="bash"
-        code={`ARCDOT_BASE_URL="$ORIGIN" \\
-AGENT_PRIVATE_KEY=0x… \\
-npm run agent:pay -- <slug> "Your prompt"`}
+        code={`npx @arcdot/agent wallet create
+npx @arcdot/agent unlock --origin "$ORIGIN" --service <slug> --prompt "Your prompt"
+
+# Cursor mcp.json — local proxy (auto-pays):
+# { "mcpServers": { "arcdot": {
+#   "command": "npx",
+#   "args": ["-y", "@arcdot/agent", "mcp", "--origin", "$ORIGIN"]
+# }}}`}
       />
       <DocsP>
-        Critical: amounts are <strong className="text-foreground">18-decimal</strong>{" "}
-        native USDC. See{" "}
-        <Link href="/docs/payment" className="underline underline-offset-4 text-foreground">
+        Critical: amounts are{" "}
+        <strong className="text-foreground">18-decimal</strong> native USDC. See{" "}
+        <Link
+          href="/docs/payment"
+          className="underline underline-offset-4 text-foreground"
+        >
           Payment on Arc
         </Link>
         .

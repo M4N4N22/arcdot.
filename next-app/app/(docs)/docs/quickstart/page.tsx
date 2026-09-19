@@ -38,39 +38,42 @@ export default function DocsQuickstartPage() {
 
       <DocsH2>2. Unlock (agents)</DocsH2>
       <DocsOl>
-        <li>Pick a service slug and note <code className="font-mono text-sm">price_wei</code> + seller.</li>
         <li>
-          Deposit native USDC on Arc via{" "}
-          <code className="font-mono text-sm">depositPayment</code> (exact{" "}
-          <code className="font-mono text-sm">msg.value</code>).
+          Create a buyer wallet:{" "}
+          <code className="font-mono text-sm">
+            npx @arcdot/agent wallet create
+          </code>{" "}
+          (see{" "}
+          <Link href="/hub#wallet" className="underline underline-offset-4">
+            Hub
+          </Link>
+          ).
         </li>
+        <li>Fund that address with native USDC on Arc (chain 5042).</li>
         <li>
-          Sign the gateway challenge and{" "}
-          <code className="font-mono text-sm">POST /api/gateway</code> with payment
-          proof headers.
+          Auto-settle unlock — no manual deposit script:
         </li>
       </DocsOl>
       <CodeBlock
         title="bash"
-        code={`# Funded agent wallet on Arc Mainnet
-ARCDOT_BASE_URL="$ORIGIN" \\
-AGENT_PRIVATE_KEY=0x… \\
-npm run agent:pay -- quick-brief "Summarize in one line"`}
+        code={`npx @arcdot/agent wallet create
+# fund the printed address on Arc, then:
+npx @arcdot/agent unlock --origin "$ORIGIN" --service quick-brief --prompt "Summarize in one line"`}
       />
 
-      <DocsH2>3. Try without an agent runtime</DocsH2>
+      <DocsH2>3. Optional: human rehearsal</DocsH2>
       <DocsUl>
         <li>
           <Link href="/console" className="underline underline-offset-4 text-foreground">
             Console
           </Link>{" "}
-          — sandbox terminal (demo unlock when configured)
+          — sandbox terminal (demo unlock when configured; not production pay)
         </li>
         <li>
-          <Link href="/services" className="underline underline-offset-4 text-foreground">
-            Try in browser
+          <Link href="/hub" className="underline underline-offset-4 text-foreground">
+            MCP Hub
           </Link>{" "}
-          — real wallet payment for a selected service
+          — connect Cursor / LangChain and attach your agent wallet
         </li>
       </DocsUl>
 

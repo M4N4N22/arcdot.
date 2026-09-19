@@ -2,15 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { CopyButton } from "@/components/hub/CopyButton";
-import { mcpEndpoint } from "@/lib/hub/mcpConfig";
+import { editorMcpConfig } from "@/lib/hub/mcpConfig";
 
 type EditorMcpPanelProps = {
   origin: string;
 };
 
-/** Soft settings mock — MCP servers panel. */
+/** Soft settings mock — MCP servers panel (local @arcdot/agent proxy). */
 export function EditorMcpPanel({ origin }: EditorMcpPanelProps) {
-  const url = mcpEndpoint(origin);
+  const config = editorMcpConfig(origin);
   const [pulse, setPulse] = useState(false);
 
   useEffect(() => {
@@ -53,8 +53,8 @@ export function EditorMcpPanel({ origin }: EditorMcpPanelProps) {
               Installed servers
             </p>
             <p className="mt-1 text-xs text-muted">
-              Point any MCP-capable client at arcdot. to discover and unlock
-              paid tools.
+              Local @arcdot/agent proxy auto-settles paid tools from your
+              wallet.
             </p>
           </div>
 
@@ -63,7 +63,7 @@ export function EditorMcpPanel({ origin }: EditorMcpPanelProps) {
               <div className="min-w-0">
                 <p className="font-mono text-sm font-semibold">arcdot</p>
                 <p className="mt-1 break-all font-mono text-[11px] text-muted">
-                  {url}
+                  npx @arcdot/agent mcp --origin …
                 </p>
               </div>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-muted ring-1 ring-line">
@@ -76,7 +76,11 @@ export function EditorMcpPanel({ origin }: EditorMcpPanelProps) {
             </div>
           </div>
 
-          <CopyButton value={url} label="Copy server URL" variant="primary" />
+          <CopyButton
+            value={config}
+            label="Copy mcp.json"
+            variant="primary"
+          />
         </div>
       </div>
     </div>

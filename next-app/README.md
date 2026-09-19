@@ -6,9 +6,10 @@ Pay-as-you-go API gateway on **Arc**: agents discover services, pay native USDC,
 
 | Route | Role |
 |-------|------|
+| `/hub` | MCP + agent wallet setup (`@arcdot/agent`) |
 | `/console` | Developer control + live sandbox terminal |
-| `/docs` | Customer documentation (live-host guides + API) |
-| `/services` | Try in browser (wallet pay) |
+| `/docs` | Customer documentation |
+| `/services` | Explore tools |
 | `/studio` | Seller console |
 | `/api/services` | Machine catalog |
 | `/api/gateway` | Unlock |
@@ -16,19 +17,22 @@ Pay-as-you-go API gateway on **Arc**: agents discover services, pay native USDC,
 
 ## Local development
 
-Contributor setup (not in `/docs`):
-
 ```bash
 cp .env.example .env.local
 npm install
 npm run dev
 ```
 
-Root [README](../README.md) covers Arc fee decimals (`1e16`) and architecture.
+Buyer client lives in [`../packages/arcdot-agent`](../packages/arcdot-agent) (`@arcdot/agent`).
 
-## Agents (against a running host)
+## Agents (no clone required)
 
 ```bash
-curl -s "$ORIGIN/api/services" | jq .
-ARCDOT_BASE_URL="$ORIGIN" AGENT_PRIVATE_KEY=0x… npm run agent:pay -- quick-brief "Hi"
+npx @arcdot/agent wallet create
+# fund address on Arc (5042), then:
+npx @arcdot/agent unlock --origin "$ORIGIN" --service quick-brief --prompt "Hi"
+
+# Cursor: use Hub mcp.json (npx @arcdot/agent mcp --origin …)
 ```
+
+Keys stay on the buyer machine. The arcdot. server never auto-pays.

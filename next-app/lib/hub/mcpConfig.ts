@@ -4,14 +4,15 @@ export function mcpEndpoint(origin: string): string {
   return `${origin.replace(/\/$/, "")}/api/mcp`;
 }
 
-/** IDE / client style MCP server entry (streamable HTTP). */
+/** Cursor / IDE: local @arcdot/agent proxy (auto-settle). Not raw remote URL. */
 export function editorMcpConfig(origin: string): string {
-  const url = mcpEndpoint(origin);
+  const host = origin.replace(/\/$/, "");
   return JSON.stringify(
     {
       mcpServers: {
         arcdot: {
-          url,
+          command: "npx",
+          args: ["-y", "@arcdot/agent", "mcp", "--origin", host],
         },
       },
     },
@@ -22,25 +23,31 @@ export function editorMcpConfig(origin: string): string {
 
 /** Universal descriptor agents and frameworks can ingest. */
 export function universalMcpConfig(origin: string): string {
-  const url = mcpEndpoint(origin);
+  const host = origin.replace(/\/$/, "");
+  const url = mcpEndpoint(host);
   return JSON.stringify(
     {
       name: "arcdot",
       version: "0.1.0",
       protocol: "mcp",
-      transport: "streamable-http",
-      endpoint: url,
+      transport: "stdio-proxy",
+      client: "@arcdot/agent",
+      remoteEndpoint: url,
+      proxy: {
+        command: "npx",
+        args: ["-y", "@arcdot/agent", "mcp", "--origin", host],
+      },
       methods: ["initialize", "tools/list", "tools/call", "ping"],
       discovery: {
-        catalog: `${origin.replace(/\/$/, "")}/api/services`,
-        wellKnown: `${origin.replace(/\/$/, "")}/.well-known/agent.json`,
+        catalog: `${host}/api/services`,
+        wellKnown: `${host}/.well-known/agent.json`,
       },
       payment: {
         chain: "arc-mainnet",
         chainId: 5042,
-        note: "Unpaid tools/call returns payment instructions in tool content. Retry with payment { txHash, address, signature } after settling on Arc.",
+        note: "Buyer wallet via npx @arcdot/agent wallet create (~/.arcdot/wallet.json). Local MCP proxy auto-settles; keys never leave the buyer machine.",
       },
-      docs: `${origin.replace(/\/$/, "")}/hub`,
+      docs: `${host}/hub`,
     },
     null,
     2,
@@ -48,61 +55,47 @@ export function universalMcpConfig(origin: string): string {
 }
 
 export function pythonHttpSnippet(origin: string): string {
-  const url = mcpEndpoint(origin);
-  return `import json
-import urllib.request
+  return `# Prefer the SDK / CLI — no need to clone arcdot.
+#
+#   npx @arcdot/agent wallet create
+#   # fund the address on Arc, then:
+#
+#   npm i @arcdot/agent
+#
+from pathlib import Path
+# Or use Node:
+#   npx @arcdot/agent unlock --origin ${origin.replace(/\/$/, "")} --service quick-brief --prompt "Hi"
 
-MCP = "${url}"
-
-def mcp(method: str, params: dict | None = None, id: int = 1) -> dict:
-    body = json.dumps({
-        "jsonrpc": "2.0",
-        "id": id,
-        "method": method,
-        "params": params or {},
-    }).encode()
-    req = urllib.request.Request(
-        MCP,
-        data=body,
-        headers={"Content-Type": "application/json"},
-        method="POST",
-    )
-    with urllib.request.urlopen(req) as res:
-        return json.load(res)
-
-# 1) List tools (includes live catalog tools)
-print(mcp("tools/list"))
-
-# 2) Call a tool — unpaid calls return payment instructions
-print(mcp("tools/call", {
-    "name": "arcdot_catalog",
-    "arguments": {},
-}))
+print("Use @arcdot/agent (Node) for settle + unlock. Origin:", "${origin.replace(/\/$/, "")}")
 `;
 }
 
 export function langchainStyleSnippet(origin: string): string {
-  const url = mcpEndpoint(origin);
-  return `# Drop-in pattern for LangChain / CrewAI / AutoGPT-style runners:
-# treat arcdot as an MCP HTTP tool server, not a chat model.
+  const host = origin.replace(/\/$/, "");
+  return `# Buyer agent — keys stay on YOUR machine (never on arcdot. server)
+#
+# 1) npx @arcdot/agent wallet create
+# 2) Fund the printed address with native USDC on Arc (5042)
+# 3) Use the SDK or CLI (auto-settle)
 
-ARCDOT_MCP = "${url}"
+# Node:
+#   npm i @arcdot/agent
+#
+#   import { createArcdotAgent } from "@arcdot/agent";
+#   const agent = await createArcdotAgent({ origin: "${host}" });
+#   await agent.unlock({ service: "quick-brief", input: { prompt: "Hi" } });
+#   # or: await agent.callMcpTool("arcdot_quick_brief", { prompt: "Hi" });
 
-# Pseudocode — wire your framework's MCP or HTTP tool adapter to ARCDOT_MCP.
-# 1. initialize
-# 2. tools/list  → bind tools to the agent
-# 3. tools/call  → on payment needed, settle on Arc, retry with
-#    arguments.payment = { "txHash", "address", "signature" }
+# CLI one-liner:
+#   npx @arcdot/agent unlock --origin ${host} --service quick-brief --prompt "Hi"
 
-tools = mcp_client.list_tools(ARCDOT_MCP)
-agent.bind_tools(tools)
-agent.run("Summarize today's catalog highlights")
+# Cursor: use the MCP proxy JSON from Hub (npx @arcdot/agent mcp --origin …)
 `;
 }
 
 export function curlHandshakeSnippet(origin: string): string {
   const url = mcpEndpoint(origin);
-  return `# Descriptor
+  return `# Descriptor (remote API — discovery only; payment uses @arcdot/agent)
 curl -s "${url}" | jq .
 
 # List tools

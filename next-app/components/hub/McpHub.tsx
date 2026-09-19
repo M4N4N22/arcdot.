@@ -16,6 +16,7 @@ import {
 
 const SECTIONS = [
   { id: "config", label: "Universal config" },
+  { id: "wallet", label: "Agent wallet" },
   { id: "editors", label: "IDEs & clients" },
   { id: "frameworks", label: "Frameworks" },
 ] as const;
@@ -82,8 +83,9 @@ export function McpHub() {
           Connect any MCP client
         </h1>
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted md:text-base">
-          Point editors, agent frameworks, or custom scripts at the arcdot. MCP
-          server. Paid tools unlock with a few cents of USDC — no API keys.
+          Point editors and frameworks at arcdot. with{" "}
+          <span className="font-medium text-foreground">@arcdot/agent</span> —
+          local wallet, auto-settle, no API keys on our server.
         </p>
 
         <div className="mt-6 flex flex-wrap items-center gap-2.5">
@@ -179,22 +181,96 @@ export function McpHub() {
         </div>
       </section>
 
-      {/* §2 IDEs */}
+      {/* §2 Agent wallet */}
       <section
-        id="editors"
+        id="wallet"
         className="mt-5 scroll-mt-24 rounded-3xl border border-line bg-surface p-6 shadow-sm md:p-8"
       >
         <p className="font-mono text-[11px] text-muted">02</p>
         <h2 className="mt-1 font-display text-2xl tracking-tight">
+          Give your agent a wallet
+        </h2>
+        <p className="mt-2 max-w-xl text-sm text-muted">
+          No repo clone. Install the buyer client, fund a local wallet, then
+          connect via the MCP proxy — arcdot. never holds your key.
+        </p>
+
+        <ol className="mt-6 space-y-3">
+          {[
+            {
+              n: "1",
+              title: "Create a wallet (one command)",
+              body: "npx @arcdot/agent wallet create — saves to ~/.arcdot/wallet.json on your machine.",
+            },
+            {
+              n: "2",
+              title: "Fund it with USDC on Arc",
+              body: "Send native USDC (18 decimals) to that address on Arc Mainnet (chain 5042). Only fund what you’re willing to spend.",
+            },
+            {
+              n: "3",
+              title: "Connect with the local MCP proxy",
+              body: "Paste the Cursor JSON below. The proxy auto-settles paid tools from your wallet — no manual pay step.",
+            },
+            {
+              n: "4",
+              title: "Or unlock from scripts / LangChain",
+              body: "npx @arcdot/agent unlock --origin … — or import createArcdotAgent from @arcdot/agent.",
+            },
+          ].map((step) => (
+            <li
+              key={step.n}
+              className="flex gap-3 rounded-2xl border border-line bg-surface-muted/40 p-4"
+            >
+              <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-surface font-mono text-[11px] font-semibold text-foreground ring-1 ring-line">
+                {step.n}
+              </span>
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  {step.title}
+                </p>
+                <p className="mt-1 text-sm text-muted">{step.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <div className="mt-5 rounded-2xl border border-line bg-surface-muted/50 p-4 font-mono text-[11px] leading-relaxed text-muted md:text-xs">
+          <p className="text-foreground"># anywhere — no clone</p>
+          <p>npx @arcdot/agent wallet create</p>
+          <p className="mt-2 text-foreground"># after funding</p>
+          <p>
+            npx @arcdot/agent unlock --origin {origin} --service quick-brief
+            --prompt &quot;Hi&quot;
+          </p>
+        </div>
+
+        <p className="mt-4 text-xs text-muted">
+          Package: @arcdot/agent. Keys stay in ~/.arcdot or ARCDOT_PRIVATE_KEY
+          on the buyer host only.
+        </p>
+      </section>
+
+      {/* §3 IDEs */}
+      <section
+        id="editors"
+        className="mt-5 scroll-mt-24 rounded-3xl border border-line bg-surface p-6 shadow-sm md:p-8"
+      >
+        <p className="font-mono text-[11px] text-muted">03</p>
+        <h2 className="mt-1 font-display text-2xl tracking-tight">
           IDEs &amp; clients
         </h2>
         <p className="mt-2 max-w-xl text-sm text-muted">
-          Any MCP-capable editor or desktop client works the same way: add a
-          server, paste the URL, reload tools.
+          Use the <span className="font-medium text-foreground">local proxy</span>{" "}
+          — not a raw remote MCP URL. Cursor talks to{" "}
+          <code className="font-mono text-[11px] text-foreground">
+            @arcdot/agent mcp
+          </code>
+          , which settles paid calls from your wallet.
         </p>
         <p className="mt-1.5 text-xs text-muted">
           Works with VS Code, Cursor, Claude Desktop, Windsurf, and other
-          clients that speak MCP over HTTP.
+          clients that support stdio MCP.
         </p>
 
         <div className="mt-6 grid gap-5 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
@@ -206,9 +282,11 @@ export function McpHub() {
                   1
                 </span>
                 <span className="pt-0.5">
-                  Open your client&apos;s{" "}
-                  <span className="font-medium text-foreground">MCP</span>{" "}
-                  settings
+                  Run{" "}
+                  <span className="font-medium text-foreground">
+                    npx @arcdot/agent wallet create
+                  </span>{" "}
+                  and fund the address
                 </span>
               </li>
               <li className="flex gap-3">
@@ -216,8 +294,9 @@ export function McpHub() {
                   2
                 </span>
                 <span className="pt-0.5">
-                  Add a server named{" "}
-                  <span className="font-medium text-foreground">arcdot</span>
+                  Open your client&apos;s{" "}
+                  <span className="font-medium text-foreground">MCP</span>{" "}
+                  settings
                 </span>
               </li>
               <li className="flex gap-3">
@@ -225,7 +304,7 @@ export function McpHub() {
                   3
                 </span>
                 <span className="pt-0.5">
-                  Paste the URL (or drop the JSON into your MCP config file)
+                  Paste the proxy JSON (npx runs the local settle proxy)
                 </span>
               </li>
             </ol>
@@ -244,13 +323,14 @@ export function McpHub() {
         id="frameworks"
         className="mt-5 scroll-mt-24 rounded-3xl border border-line bg-surface p-6 shadow-sm md:p-8"
       >
-        <p className="font-mono text-[11px] text-muted">03</p>
+        <p className="font-mono text-[11px] text-muted">04</p>
         <h2 className="mt-1 font-display text-2xl tracking-tight">
           Agent frameworks
         </h2>
         <p className="mt-2 max-w-xl text-sm text-muted">
           Hook autonomous runners into the same node — list tools, call them,
-          settle when payment is needed, then continue.
+          settle from the agent&apos;s wallet when payment is needed, then
+          continue.
         </p>
 
         <div
@@ -295,8 +375,8 @@ export function McpHub() {
         </div>
 
         <p className="mt-4 text-sm text-muted">
-          Free tools like catalog listing work immediately. Paid tools ask for
-          settlement first — then return the result on retry.
+          Free tools like catalog listing work immediately. Paid tools
+          auto-settle through @arcdot/agent (proxy or SDK).
         </p>
       </section>
 

@@ -14,59 +14,53 @@ export default function DocsCliPage() {
     <DocsProse
       pathname="/docs/cli"
       title="CLI"
-      description="Command-line helpers that talk to your live arcdot. origin."
+      description="@arcdot/agent — wallet, unlock, and MCP proxy from any machine."
     >
-      <DocsH2>Probe</DocsH2>
+      <DocsH2>Buyer client</DocsH2>
       <DocsP>
-        Check that an origin speaks arcdot. before paying:
+        No repo clone. Keys stay under{" "}
+        <code className="font-mono text-sm">~/.arcdot/</code>:
       </DocsP>
       <CodeBlock
         title="bash"
-        code={`npm run agent:probe -- "$ORIGIN"`}
+        code={`npx @arcdot/agent wallet create
+npx @arcdot/agent wallet address
+npx @arcdot/agent wallet balance
+
+npx @arcdot/agent unlock --origin "$ORIGIN" --service quick-brief --prompt "One-line summary"
+
+# stdio MCP proxy for Cursor:
+npx @arcdot/agent mcp --origin "$ORIGIN"`}
       />
 
-      <DocsH2>Paid unlock</DocsH2>
+      <DocsH2>Monorepo helpers</DocsH2>
       <DocsP>
-        Requires a funded Arc wallet. Point{" "}
-        <code className="font-mono text-sm">ARCDOT_BASE_URL</code> at the live
-        host:
+        From <code className="font-mono text-sm">next-app/</code> while
+        developing this host:
       </DocsP>
       <CodeBlock
         title="bash"
-        code={`ARCDOT_BASE_URL="$ORIGIN" \\
-AGENT_PRIVATE_KEY=0x… \\
-npm run agent:pay -- quick-brief "One-line summary"`}
-      />
-
-      <DocsH2>Demo unlock</DocsH2>
-      <DocsP>
-        Only when the deployment has demo unlock enabled (rehearsal). Not
-        on-chain settlement:
-      </DocsP>
-      <CodeBlock
-        title="bash"
-        code={`ARCDOT_BASE_URL="$ORIGIN" \\
-DEMO_AGENT_SECRET=… \\
-npm run agent:demo -- quick-brief "Hello"`}
+        code={`npm run agent:probe -- "$ORIGIN"
+npm run agent:demo -- quick-brief "Hello"   # DEMO_AGENT_SECRET only`}
       />
 
       <DocsH2>Related</DocsH2>
       <DocsUl>
         <li>
-          <Link href="/docs/agents" className="underline underline-offset-4 text-foreground">
-            For agents
+          <Link
+            href="/hub"
+            className="underline underline-offset-4 text-foreground"
+          >
+            MCP Hub
           </Link>
         </li>
         <li>
-          <Link href="/docs/api/gateway" className="underline underline-offset-4 text-foreground">
-            Unlock API
+          <Link
+            href="/docs/agents/client"
+            className="underline underline-offset-4 text-foreground"
+          >
+            Agent client
           </Link>
-        </li>
-        <li>
-          <Link href="/console" className="underline underline-offset-4 text-foreground">
-            Console
-          </Link>{" "}
-          — interactive sandbox
         </li>
       </DocsUl>
     </DocsProse>
