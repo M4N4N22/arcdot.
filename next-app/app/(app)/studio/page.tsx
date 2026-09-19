@@ -10,7 +10,10 @@ import {
   useWriteContract,
   useWaitForTransactionReceipt,
 } from "wagmi";
-import { buildSignedReadChallenge } from "@/lib/auth/signedReadChallenge";
+import {
+  ensureSignedReadSession,
+  signedReadQuery,
+} from "@/lib/auth/signedReadSession";
 import { promptGatewayAbi } from "@/lib/arc/constants";
 import { formatUsdcWei, statusLabel } from "@/lib/format/usdc";
 import { ARC_CHAIN_ID } from "@/lib/types/gateway";
@@ -45,20 +48,20 @@ export default function StudioPage() {
     const sJson = await sRes.json();
     setServices(sJson.services ?? []);
 
+    // Never prompt on Studio home — use cached session only
+    const session = await ensureSignedReadSession({
+      address,
+      signMessageAsync,
+      silent: true,
+    });
+    if (!session) {
+      setSales([]);
+      return;
+    }
     try {
-      const issuedAt = Math.floor(Date.now() / 1000);
-      const challenge = buildSignedReadChallenge({
-        purpose: "sales",
-        address,
-        issuedAt,
-      });
-      const signature = await signMessageAsync({ message: challenge });
-      const qs = new URLSearchParams({
-        address,
-        signature,
-        issuedAt: String(issuedAt),
-      });
-      const salesRes = await fetch(`/api/studio/sales?${qs}`);
+      const salesRes = await fetch(
+        `/api/studio/sales?${signedReadQuery(session)}`,
+      );
       const salesJson = await salesRes.json();
       setSales(salesJson.sales ?? []);
     } catch {
@@ -148,7 +151,9 @@ export default function StudioPage() {
           <p className="text-xs uppercase tracking-wider text-muted">
             Completed sales
           </p>
-          <p className="mt-2 font-mono text-2xl">{fulfilled}</p>
+          <p className="mt-2 font-mono text-2xl">
+            {sales.length > 0 ? fulfilled : "—"}
+          </p>
           <Link
             href="/studio/sales"
             className="mt-4 inline-block text-sm underline underline-offset-4"

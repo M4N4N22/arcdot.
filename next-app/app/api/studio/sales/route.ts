@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 import { recoverMessageAddress, type Hex } from "viem";
-import { buildSignedReadChallenge } from "@/lib/auth/signedReadChallenge";
+import {
+  buildSignedReadChallenge,
+  SIGNED_READ_TTL_SEC,
+  type SignedReadPurpose,
+} from "@/lib/auth/signedReadChallenge";
 import { listRequestsForSeller } from "@/lib/catalog/store";
 
 export const runtime = "nodejs";
+
+const ACCEPTED: SignedReadPurpose[] = ["session", "sales"];
 
 async function verifyReadSignature(params: {
   address: string;
@@ -15,33 +21,33 @@ async function verifyReadSignature(params: {
     return { ok: false, status: 400, error: "issuedAt required" };
   }
   const now = Math.floor(Date.now() / 1000);
-  if (Math.abs(now - issuedAt) > 300) {
+  if (now - issuedAt > SIGNED_READ_TTL_SEC || issuedAt - now > 120) {
     return { ok: false, status: 401, error: "Signature expired" };
   }
   if (!params.signature || !/^0x[a-fA-F0-9]+$/.test(params.signature)) {
     return { ok: false, status: 401, error: "Signature required" };
   }
 
-  const challenge = buildSignedReadChallenge({
-    purpose: "sales",
-    address: params.address,
-    issuedAt,
-  });
-
-  let recovered: string;
-  try {
-    recovered = await recoverMessageAddress({
-      message: challenge,
-      signature: params.signature as Hex,
+  for (const purpose of ACCEPTED) {
+    const challenge = buildSignedReadChallenge({
+      purpose,
+      address: params.address,
+      issuedAt,
     });
-  } catch {
-    return { ok: false, status: 401, error: "Invalid signature" };
+    try {
+      const recovered = await recoverMessageAddress({
+        message: challenge,
+        signature: params.signature as Hex,
+      });
+      if (recovered.toLowerCase() === params.address.toLowerCase()) {
+        return { ok: true };
+      }
+    } catch {
+      // try next purpose
+    }
   }
 
-  if (recovered.toLowerCase() !== params.address.toLowerCase()) {
-    return { ok: false, status: 401, error: "Wrong signer" };
-  }
-  return { ok: true };
+  return { ok: false, status: 401, error: "Invalid signature" };
 }
 
 export async function GET(request: Request) {

@@ -5,6 +5,10 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAccount, useSignMessage } from "wagmi";
 import { buildUpdateProfileChallenge } from "@/lib/auth/updateProfileChallenge";
+import {
+  ensureSignedReadSession,
+  signedReadQuery,
+} from "@/lib/auth/signedReadSession";
 
 export default function StudioProfilePage() {
   const { address, isConnected } = useAccount();
@@ -12,6 +16,7 @@ export default function StudioProfilePage() {
   const [displayName, setDisplayName] = useState("");
   const [bio, setBio] = useState("");
   const [webhookUrl, setWebhookUrl] = useState("");
+  const [webhookUnlocked, setWebhookUnlocked] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [pinged, setPinged] = useState(false);
@@ -19,34 +24,30 @@ export default function StudioProfilePage() {
 
   const load = useCallback(async () => {
     if (!address) return;
-    try {
-      const issuedAt = Math.floor(Date.now() / 1000);
-      const challenge = buildUpdateProfileChallenge({
-        owner_address: address,
-        display_name: "",
-        webhook_url: "",
-        issuedAt,
-      });
-      const signature = await signMessageAsync({ message: challenge });
-      const qs = new URLSearchParams({
-        address,
-        signature,
-        issuedAt: String(issuedAt),
-      });
-      const res = await fetch(`/api/studio/profile?${qs}`);
-      const data = await res.json();
-      if (data.profile) {
-        setDisplayName(data.profile.display_name ?? "");
-        setBio(data.profile.bio ?? "");
-        setWebhookUrl(data.profile.webhook_url ?? "");
-      }
-    } catch {
-      const res = await fetch(`/api/studio/profile?address=${address}`);
-      const data = await res.json();
-      if (data.profile) {
-        setDisplayName(data.profile.display_name ?? "");
-        setBio(data.profile.bio ?? "");
-      }
+    // Public fields — never prompt on open
+    const res = await fetch(`/api/studio/profile?address=${address}`);
+    const data = await res.json();
+    if (data.profile) {
+      setDisplayName(data.profile.display_name ?? "");
+      setBio(data.profile.bio ?? "");
+    }
+
+    const session = await ensureSignedReadSession({
+      address,
+      signMessageAsync,
+      silent: true,
+    });
+    if (!session) {
+      setWebhookUnlocked(false);
+      return;
+    }
+    const privateRes = await fetch(
+      `/api/studio/profile?${signedReadQuery(session)}`,
+    );
+    const privateData = await privateRes.json();
+    if (privateData.profile && "webhook_url" in privateData.profile) {
+      setWebhookUrl(privateData.profile.webhook_url ?? "");
+      setWebhookUnlocked(true);
     }
   }, [address, signMessageAsync]);
 
@@ -54,7 +55,35 @@ export default function StudioProfilePage() {
     void load();
   }, [load]);
 
-  async function signAndPayload(extra?: { forPing?: boolean }) {
+  async function unlockWebhook() {
+    if (!address) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const session = await ensureSignedReadSession({
+        address,
+        signMessageAsync,
+        silent: false,
+      });
+      if (!session) return;
+      const res = await fetch(
+        `/api/studio/profile?${signedReadQuery(session)}`,
+      );
+      const data = await res.json();
+      if (data.profile) {
+        setDisplayName(data.profile.display_name ?? displayName);
+        setBio(data.profile.bio ?? bio);
+        setWebhookUrl(data.profile.webhook_url ?? "");
+        setWebhookUnlocked(true);
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not unlock");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function signAndPayload() {
     if (!address) throw new Error("Connect wallet");
     const issuedAt = Math.floor(Date.now() / 1000);
     const challenge = buildUpdateProfileChallenge({
@@ -71,7 +100,6 @@ export default function StudioProfilePage() {
       owner_address: address,
       signature,
       issuedAt,
-      forPing: extra?.forPing,
     };
   }
 
@@ -94,6 +122,10 @@ export default function StudioProfilePage() {
         return;
       }
       setSaved(true);
+      if (data.profile?.webhook_url !== undefined) {
+        setWebhookUrl(data.profile.webhook_url ?? "");
+        setWebhookUnlocked(true);
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Save failed");
     } finally {
@@ -106,7 +138,7 @@ export default function StudioProfilePage() {
     setError(null);
     setPinged(false);
     try {
-      const payload = await signAndPayload({ forPing: true });
+      const payload = await signAndPayload();
       const res = await fetch("/api/studio/webhook/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -173,19 +205,44 @@ export default function StudioProfilePage() {
             maxLength={500}
           />
         </label>
-        <label className="block space-y-2 text-sm font-medium">
-          <span>Sale webhook URL</span>
+        <div className="space-y-2">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="text-sm font-medium">Sale webhook URL</span>
+            {!webhookUnlocked && (
+              <button
+                type="button"
+                disabled={busy}
+                onClick={() => void unlockWebhook()}
+                className="text-xs underline underline-offset-4 text-muted hover:text-foreground"
+              >
+                Unlock private settings
+              </button>
+            )}
+          </div>
           <input
             className={inputClass}
             value={webhookUrl}
             onChange={(e) => setWebhookUrl(e.target.value)}
             placeholder="https://…"
             maxLength={500}
+            disabled={!webhookUnlocked && webhookUrl === ""}
           />
-          <span className="block text-xs font-normal text-muted">
+          <p className="text-xs text-muted">
             Optional. We POST a sale receipt when an unlock completes.
-          </span>
-        </label>
+            {!webhookUnlocked
+              ? " Unlock once to load a saved URL, or paste a new one and save."
+              : ""}
+          </p>
+          {!webhookUnlocked && (
+            <button
+              type="button"
+              className="text-xs text-muted underline underline-offset-4"
+              onClick={() => setWebhookUnlocked(true)}
+            >
+              Enter a new webhook without loading the saved one
+            </button>
+          )}
+        </div>
         {error && <p className="text-sm text-red-700">{error}</p>}
         {saved && <p className="text-sm text-muted">Saved.</p>}
         {pinged && <p className="text-sm text-muted">Test ping sent.</p>}

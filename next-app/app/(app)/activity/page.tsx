@@ -4,7 +4,10 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAccount, useSignMessage } from "wagmi";
-import { buildSignedReadChallenge } from "@/lib/auth/signedReadChallenge";
+import {
+  ensureSignedReadSession,
+  signedReadQuery,
+} from "@/lib/auth/signedReadSession";
 import { statusLabel } from "@/lib/format/usdc";
 import type { RequestRow } from "@/lib/types/catalog";
 
@@ -13,43 +16,47 @@ export default function ActivityPage() {
   const { signMessageAsync } = useSignMessage();
   const [requests, setRequests] = useState<RequestRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [needsUnlock, setNeedsUnlock] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const load = useCallback(async () => {
-    if (!address) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const issuedAt = Math.floor(Date.now() / 1000);
-      const challenge = buildSignedReadChallenge({
-        purpose: "activity",
-        address,
-        issuedAt,
-      });
-      const signature = await signMessageAsync({ message: challenge });
-      const qs = new URLSearchParams({
-        address,
-        signature,
-        issuedAt: String(issuedAt),
-      });
-      const res = await fetch(`/api/me/requests?${qs}`);
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Could not load activity");
-        return;
+  const load = useCallback(
+    async (opts?: { prompt?: boolean }) => {
+      if (!address) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const session = await ensureSignedReadSession({
+          address,
+          signMessageAsync,
+          silent: opts?.prompt === false,
+        });
+        if (!session) {
+          setNeedsUnlock(true);
+          setRequests([]);
+          return;
+        }
+        setNeedsUnlock(false);
+        const res = await fetch(`/api/me/requests?${signedReadQuery(session)}`);
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error || "Could not load activity");
+          return;
+        }
+        setRequests(data.requests ?? []);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Could not load activity",
+        );
+      } finally {
+        setLoading(false);
       }
-      setRequests(data.requests ?? []);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Could not load activity",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [address, signMessageAsync]);
+    },
+    [address, signMessageAsync],
+  );
 
+  // Prefer cached session on mount — no wallet popup unless user unlocks
   useEffect(() => {
-    void load();
+    void load({ prompt: false });
   }, [load]);
 
   return (
@@ -66,10 +73,10 @@ export default function ActivityPage() {
         {isConnected && (
           <button
             type="button"
-            onClick={() => void load()}
+            onClick={() => void load({ prompt: true })}
             className="h-10 border border-line bg-surface px-4 text-sm"
           >
-            Refresh
+            {needsUnlock ? "Unlock activity" : "Refresh"}
           </button>
         )}
       </div>
@@ -80,7 +87,21 @@ export default function ActivityPage() {
           <ConnectButton />
         </div>
       ) : loading ? (
-        <p className="mt-12 text-muted">Confirm in wallet to load…</p>
+        <p className="mt-12 text-muted">Loading…</p>
+      ) : needsUnlock ? (
+        <div className="mt-12 flex flex-col items-start gap-3">
+          <p className="text-muted">
+            Confirm once in your wallet to view private activity. We won’t ask
+            again for about an hour while you browse.
+          </p>
+          <button
+            type="button"
+            onClick={() => void load({ prompt: true })}
+            className="h-11 bg-accent px-5 text-sm font-medium text-surface"
+          >
+            Unlock activity
+          </button>
+        </div>
       ) : error ? (
         <p className="mt-12 text-sm text-red-700">{error}</p>
       ) : requests.length === 0 ? (

@@ -4,7 +4,10 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAccount, useSignMessage } from "wagmi";
-import { buildSignedReadChallenge } from "@/lib/auth/signedReadChallenge";
+import {
+  ensureSignedReadSession,
+  signedReadQuery,
+} from "@/lib/auth/signedReadSession";
 import { formatUsdcWei, statusLabel } from "@/lib/format/usdc";
 import type { RequestRow } from "@/lib/types/catalog";
 
@@ -14,40 +17,43 @@ export default function StudioSalesPage() {
   const [sales, setSales] = useState<RequestRow[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [needsUnlock, setNeedsUnlock] = useState(false);
 
-  const load = useCallback(async () => {
-    if (!address) return;
-    setLoading(true);
-    setError(null);
-    try {
-      const issuedAt = Math.floor(Date.now() / 1000);
-      const challenge = buildSignedReadChallenge({
-        purpose: "sales",
-        address,
-        issuedAt,
-      });
-      const signature = await signMessageAsync({ message: challenge });
-      const qs = new URLSearchParams({
-        address,
-        signature,
-        issuedAt: String(issuedAt),
-      });
-      const res = await fetch(`/api/studio/sales?${qs}`);
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || "Could not load sales");
-        return;
+  const load = useCallback(
+    async (opts?: { prompt?: boolean }) => {
+      if (!address) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const session = await ensureSignedReadSession({
+          address,
+          signMessageAsync,
+          silent: opts?.prompt === false,
+        });
+        if (!session) {
+          setNeedsUnlock(true);
+          setSales([]);
+          return;
+        }
+        setNeedsUnlock(false);
+        const res = await fetch(`/api/studio/sales?${signedReadQuery(session)}`);
+        const data = await res.json();
+        if (!res.ok) {
+          setError(data.error || "Could not load sales");
+          return;
+        }
+        setSales(data.sales ?? []);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Could not load sales");
+      } finally {
+        setLoading(false);
       }
-      setSales(data.sales ?? []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not load sales");
-    } finally {
-      setLoading(false);
-    }
-  }, [address, signMessageAsync]);
+    },
+    [address, signMessageAsync],
+  );
 
   useEffect(() => {
-    void load();
+    void load({ prompt: false });
   }, [load]);
 
   if (!isConnected) {
@@ -70,15 +76,30 @@ export default function StudioSalesPage() {
         </div>
         <button
           type="button"
-          onClick={() => void load()}
+          onClick={() => void load({ prompt: true })}
           className="h-10 border border-line bg-surface px-4 text-sm"
         >
-          Refresh
+          {needsUnlock ? "Unlock sales" : "Refresh"}
         </button>
       </div>
-      {loading && <p className="mt-10 text-muted">Confirm in wallet to load…</p>}
+      {loading && <p className="mt-10 text-muted">Loading…</p>}
+      {!loading && needsUnlock && (
+        <div className="mt-10 flex flex-col items-start gap-3">
+          <p className="text-muted">
+            Confirm once in your wallet to view sales. One signature covers
+            Activity and Sales for about an hour.
+          </p>
+          <button
+            type="button"
+            onClick={() => void load({ prompt: true })}
+            className="h-11 bg-accent px-5 text-sm font-medium text-surface"
+          >
+            Unlock sales
+          </button>
+        </div>
+      )}
       {error && <p className="mt-10 text-sm text-red-700">{error}</p>}
-      {!loading && !error && (
+      {!loading && !needsUnlock && !error && (
         <ul className="mt-10 divide-y divide-line border-y border-line">
           {sales.length === 0 && (
             <li className="py-8 text-muted">No sales yet.</li>

@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { recoverMessageAddress, type Hex } from "viem";
 import { z } from "zod";
+import {
+  buildSignedReadChallenge,
+  SIGNED_READ_TTL_SEC,
+  type SignedReadPurpose,
+} from "@/lib/auth/signedReadChallenge";
 import { buildUpdateProfileChallenge } from "@/lib/auth/updateProfileChallenge";
 import { getProfile, upsertProfile } from "@/lib/catalog/store";
 
@@ -36,7 +41,7 @@ function publicProfile(profile: {
   };
 }
 
-async function verifyOwnerRead(params: {
+async function verifyOwnerSession(params: {
   address: string;
   signature: string | null;
   issuedAt: string | null;
@@ -45,22 +50,30 @@ async function verifyOwnerRead(params: {
   const issuedAt = Number(params.issuedAt);
   if (!Number.isFinite(issuedAt)) return false;
   const now = Math.floor(Date.now() / 1000);
-  if (Math.abs(now - issuedAt) > 300) return false;
-  const challenge = buildUpdateProfileChallenge({
-    owner_address: params.address,
-    display_name: "",
-    webhook_url: "",
-    issuedAt,
-  });
-  try {
-    const recovered = await recoverMessageAddress({
-      message: challenge,
-      signature: params.signature as Hex,
-    });
-    return recovered.toLowerCase() === params.address.toLowerCase();
-  } catch {
+  if (now - issuedAt > SIGNED_READ_TTL_SEC || issuedAt - now > 120) {
     return false;
   }
+
+  const purposes: SignedReadPurpose[] = ["session", "activity", "sales"];
+  for (const purpose of purposes) {
+    const challenge = buildSignedReadChallenge({
+      purpose,
+      address: params.address,
+      issuedAt,
+    });
+    try {
+      const recovered = await recoverMessageAddress({
+        message: challenge,
+        signature: params.signature as Hex,
+      });
+      if (recovered.toLowerCase() === params.address.toLowerCase()) {
+        return true;
+      }
+    } catch {
+      // next
+    }
+  }
+  return false;
 }
 
 export async function GET(request: Request) {
@@ -80,7 +93,7 @@ export async function GET(request: Request) {
       },
     );
 
-    const ownerOk = await verifyOwnerRead({
+    const ownerOk = await verifyOwnerSession({
       address,
       signature: url.searchParams.get("signature"),
       issuedAt: url.searchParams.get("issuedAt"),
