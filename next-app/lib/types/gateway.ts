@@ -5,7 +5,7 @@ export const ARC_RPC_URL_DEFAULT = "https://rpc.mainnet.arc.io" as const;
 export const NATIVE_USDC_DECIMALS = 18 as const;
 
 /** 0.01 USDC in Arc native 18-decimal wei */
-export const GATEWAY_FEE_WEI_DEFAULT = 10_000_000_000_000_000n;
+export const GATEWAY_FEE_WEI_DEFAULT = BigInt("10000000000000000");
 export const GATEWAY_FEE_USDC = "0.01" as const;
 
 export type GatewayErrorCode =
@@ -20,7 +20,9 @@ export type GatewayErrorCode =
   | "PAYMENT_ID_UNUSED"
   | "PAYLOAD_INVALID"
   | "UPSTREAM_FAILED"
-  | "GATEWAY_NOT_CONFIGURED";
+  | "GATEWAY_NOT_CONFIGURED"
+  | "AMOUNT_MISMATCH"
+  | "SERVICE_NOT_FOUND";
 
 export interface GatewayTargetPayload {
   service: string;
@@ -44,7 +46,7 @@ export interface GatewayPaymentInstructions {
   chainId: typeof ARC_CHAIN_ID;
   gateway: `0x${string}`;
   feeWei: string;
-  feeUsdc: typeof GATEWAY_FEE_USDC;
+  feeUsdc: string;
   method: "depositPayment";
   paymentIdHint: string;
   rpcUrl: string;
@@ -83,6 +85,8 @@ export interface Gateway200Body {
     service: string;
     latencyMs: number;
     mock: boolean;
+    /** True when unlocked via DEMO_AGENT_SECRET (not an on-chain payment). */
+    demo: boolean;
   };
 }
 

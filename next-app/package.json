@@ -6,14 +6,19 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "agent:demo": "npx tsx scripts/agent-request.ts"
   },
   "dependencies": {
+    "@rainbow-me/rainbowkit": "^2.2.11",
+    "@supabase/supabase-js": "^2.109.0",
+    "@tanstack/react-query": "^5.103.1",
     "lucide-react": "^1.47.0",
     "next": "16.3.5",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "viem": "^2.56.8",
+    "wagmi": "^2.16.9",
     "zod": "^4.6.5"
   },
   "devDependencies": {

@@ -28,31 +28,49 @@ export async function mockCompleteReply(prompt: string): Promise<string> {
  * Call Gemini Flash. Falls back to mock when MOCK_MODE or missing key.
  * Uses the Generative Language REST API (no extra SDK required for v1).
  */
-export async function completeWithGemini(prompt: string): Promise<{
+export async function completeWithGemini(
+  prompt: string,
+  systemPrompt?: string,
+): Promise<{
   text: string;
   mock: boolean;
 }> {
+  const fullPrompt = systemPrompt
+    ? `${systemPrompt}\n\nUser request:\n${prompt}`
+    : prompt;
+
   if (isMockMode()) {
-    return { text: await mockCompleteReply(prompt), mock: true };
+    return { text: await mockCompleteReply(fullPrompt), mock: true };
   }
 
   const key = process.env.GEMINI_API_KEY!;
   const model = process.env.GEMINI_MODEL ?? "gemini-2.0-flash";
   const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
 
+  const contents: Array<{ role: string; parts: Array<{ text: string }> }> = [];
+  if (systemPrompt) {
+    contents.push({
+      role: "user",
+      parts: [{ text: `System instructions:\n${systemPrompt}` }],
+    });
+    contents.push({
+      role: "model",
+      parts: [{ text: "Understood. I will follow those instructions." }],
+    });
+  }
+  contents.push({ role: "user", parts: [{ text: prompt }] });
+
   const res = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-    }),
+    body: JSON.stringify({ contents }),
   });
 
   if (!res.ok) {
     const errText = await res.text().catch(() => "");
     console.error("Gemini error", res.status, errText);
     if (process.env.MOCK_MODE_ON_ERROR === "true") {
-      return { text: await mockCompleteReply(prompt), mock: true };
+      return { text: await mockCompleteReply(fullPrompt), mock: true };
     }
     throw new Error(`Gemini request failed (${res.status})`);
   }

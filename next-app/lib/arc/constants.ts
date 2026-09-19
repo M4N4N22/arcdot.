@@ -7,15 +7,24 @@ import {
 
 export const ARC = {
   chainId: ARC_CHAIN_ID,
-  rpcUrl: process.env.ARC_RPC_URL ?? ARC_RPC_URL_DEFAULT,
+  rpcUrl:
+    process.env.ARC_RPC_URL ??
+    process.env.NEXT_PUBLIC_ARC_RPC_URL ??
+    ARC_RPC_URL_DEFAULT,
   explorerTxBase: "https://explorer.arc.io/tx/",
-  gatewayAddress: (process.env.PROMPT_GATEWAY_ADDRESS ??
+  gatewayAddress: (process.env.PROMPT_GATEWAY_ADDRESS ||
+    process.env.NEXT_PUBLIC_PROMPT_GATEWAY_ADDRESS ||
     "") as `0x${string}`,
-  feeWei: BigInt(process.env.GATEWAY_FEE_WEI ?? GATEWAY_FEE_WEI_DEFAULT.toString()),
+  /** Platform minimum fee (on-chain floor). */
+  feeWei: BigInt(
+    process.env.GATEWAY_FEE_WEI ??
+      process.env.NEXT_PUBLIC_GATEWAY_MIN_FEE_WEI ??
+      GATEWAY_FEE_WEI_DEFAULT.toString(),
+  ),
   feeUsdc: GATEWAY_FEE_USDC,
 } as const;
 
-/** Minimal ABI fragment for PromptGateway */
+/** Minimal ABI fragment for PromptGateway (minFee era). */
 export const promptGatewayAbi = [
   {
     type: "function",
@@ -30,6 +39,13 @@ export const promptGatewayAbi = [
     stateMutability: "view",
     inputs: [{ name: "paymentId", type: "bytes32" }],
     outputs: [{ name: "", type: "bool" }],
+  },
+  {
+    type: "function",
+    name: "minFee",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
   },
   {
     type: "function",

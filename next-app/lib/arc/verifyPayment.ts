@@ -32,7 +32,8 @@ export class PaymentVerificationError extends Error {
       | "TX_NOT_CONFIRMED"
       | "WRONG_RECIPIENT"
       | "INSUFFICIENT_AMOUNT"
-      | "PAYMENT_ID_UNUSED",
+      | "PAYMENT_ID_UNUSED"
+      | "AMOUNT_MISMATCH",
     message: string,
   ) {
     super(message);
@@ -65,10 +66,12 @@ function parsePaymentDeposited(log: Log): {
 
 /**
  * Verify a deposit receipt on Arc against PromptGateway.
+ * @param expectedAmount Exact catalog price in native wei (18 decimals).
  */
 export async function verifyArcPayment(params: {
   txHash: Hex;
   expectedPayer: `0x${string}`;
+  expectedAmount: bigint;
 }): Promise<VerifiedArcPayment> {
   if (!ARC.gatewayAddress || ARC.gatewayAddress.length !== 42) {
     throw new PaymentVerificationError(
@@ -108,7 +111,13 @@ export async function verifyArcPayment(params: {
     if (parsed.amount < ARC.feeWei) {
       throw new PaymentVerificationError(
         "INSUFFICIENT_AMOUNT",
-        `Paid ${parsed.amount}, required ${ARC.feeWei}`,
+        `Paid ${parsed.amount}, platform minimum ${ARC.feeWei}`,
+      );
+    }
+    if (parsed.amount !== params.expectedAmount) {
+      throw new PaymentVerificationError(
+        "AMOUNT_MISMATCH",
+        `Paid ${parsed.amount}, service price ${params.expectedAmount}`,
       );
     }
 

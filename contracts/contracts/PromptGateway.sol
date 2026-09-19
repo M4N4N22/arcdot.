@@ -3,10 +3,12 @@ pragma solidity ^0.8.28;
 
 /// @title PromptGateway
 /// @notice Minimal native-USDC escrow for arcdot. API micropayments on Arc.
-/// @dev On Arc, native USDC uses 18 decimals. 0.01 USDC = 1e16 wei.
+/// @dev On Arc, native USDC uses 18 decimals. minFee default = 0.01 USDC = 1e16 wei.
+///      Catalog prices are enforced off-chain; on-chain enforces msg.value >= minFee.
 contract PromptGateway {
     address public immutable owner;
-    uint256 public immutable feeAmount;
+    /// @notice Minimum accepted native USDC payment (18 decimals).
+    uint256 public immutable minFee;
 
     mapping(bytes32 => bool) public usedPaymentId;
 
@@ -21,20 +23,20 @@ contract PromptGateway {
     error OnlyOwner();
     error InvalidPaymentId();
     error PaymentAlreadyUsed();
-    error IncorrectFee();
+    error BelowMinFee();
     error WithdrawFailed();
 
-    constructor(uint256 feeAmount_) {
-        require(feeAmount_ > 0, "fee=0");
+    constructor(uint256 minFee_) {
+        require(minFee_ > 0, "minFee=0");
         owner = msg.sender;
-        feeAmount = feeAmount_;
+        minFee = minFee_;
     }
 
-    /// @notice Pay the exact gateway fee with native USDC and reserve a payment id.
+    /// @notice Pay at least minFee in native USDC and reserve a payment id.
     function depositPayment(bytes32 paymentId) external payable {
         if (paymentId == bytes32(0)) revert InvalidPaymentId();
         if (usedPaymentId[paymentId]) revert PaymentAlreadyUsed();
-        if (msg.value != feeAmount) revert IncorrectFee();
+        if (msg.value < minFee) revert BelowMinFee();
 
         usedPaymentId[paymentId] = true;
         emit PaymentDeposited(msg.sender, paymentId, msg.value);
@@ -53,5 +55,10 @@ contract PromptGateway {
 
     function isUsed(bytes32 paymentId) external view returns (bool) {
         return usedPaymentId[paymentId];
+    }
+
+    /// @dev Back-compat alias for older clients reading feeAmount().
+    function feeAmount() external view returns (uint256) {
+        return minFee;
     }
 }

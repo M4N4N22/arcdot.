@@ -49,12 +49,19 @@ Docs: [Arc documentation](https://docs.arc.io) · [Gas & fees](https://docs.arc.
 
 ## How it works
 
-1. **Agent requests** a gated service (`POST /api/gateway`) with a wallet signature and a payment confirmation.
-2. **Server verifies** the Arc transaction: success, correct gateway contract, exact fee, matching payer, unused payment id.
-3. **On success**, the server proxies to Gemini (or mock fallback) and returns the result.
-4. **On failure**, the server responds with **HTTP 402** and machine-readable payment instructions so the agent can pay and retry.
+### For humans (platform)
 
-Default gate price: **0.01 USDC** per request.
+1. **Browse** published services or **Create** your own (wallet-signed).
+2. **Connect** an Arc wallet and **pay** the service price in native USDC.
+3. arcdot. **verifies** the payment on Arc, runs the service, and shows the reply.
+4. **Activity** lists your recent unlocks (stored in Supabase when configured).
+
+### For agents (machine)
+
+1. Discover a service via `GET /api/services` or `GET /api/services/:slug`.
+2. Call `depositPayment(paymentId)` on `PromptGateway` with `msg.value` equal to the service `price_wei` (must be ≥ platform `minFee` of **0.01 USDC** / `1e16` wei).
+3. `POST /api/gateway` with payment confirmation headers + EIP-191 signature.
+4. On failure, read **HTTP 402** payment instructions and retry.
 
 ---
 
@@ -64,47 +71,56 @@ Default gate price: **0.01 USDC** per request.
 
 ```text
 arcdot./
-├── README.md                 # You are here
-├── contracts/                # Hardhat — PromptGateway.sol (Arc Mainnet)
-│   ├── contracts/
-│   ├── scripts/deploy.ts
-│   └── test/
-└── next-app/                 # Next.js App Router (Vercel)
-    ├── app/api/gateway/      # Payment verification + LLM proxy
-    ├── app/dashboard/        # Live activity console
-    ├── app/page.tsx          # Product landing
-    └── lib/                  # Arc RPC, auth, Gemini
+├── README.md
+├── contracts/                 # Hardhat — PromptGateway.sol (minFee)
+└── next-app/
+    ├── app/
+    │   ├── services/          # Catalog + pay UI
+    │   ├── create/            # Publish a service
+    │   ├── activity/          # Request history
+    │   └── api/
+    │       ├── gateway/       # Pay → verify → Gemini
+    │       ├── services/      # Catalog CRUD API
+    │       └── me/requests/   # Activity API
+    ├── lib/                   # Arc, catalog, supabase, agent helpers
+    └── supabase/schema.sql    # Run in Supabase SQL editor
 ```
 
 ### System diagram
 
 ```mermaid
 flowchart TB
-  subgraph Client["Agent / Client"]
-    A[AI Agent or App]
+  subgraph Humans["Web app"]
+    Browse[Browse / Create]
+    PayUI[Wallet pay on Arc]
+    Activity[Activity history]
   end
 
-  subgraph ArcNet["Arc Mainnet — chainId 5042"]
-    W[Agent wallet — native USDC]
-    G[PromptGateway.sol<br/>depositPayment / withdrawFees]
-    W -->|payable msg.value = 0.01 USDC| G
+  subgraph Data["Supabase"]
+    Services[(services)]
+    Profiles[(profiles)]
+    Requests[(requests)]
   end
 
-  subgraph Vercel["next-app on Vercel"]
+  subgraph ArcNet["Arc Mainnet 5042"]
+    W[Wallet USDC]
+    G[PromptGateway minFee]
+    W -->|depositPayment value ge minFee| G
+  end
+
+  subgraph Vercel["API"]
     API["POST /api/gateway"]
-    VFY[Verify EIP-191 signature]
-    RPC[Arc RPC — receipt + PaymentDeposited]
-    SPENT[In-memory spent txHash map]
-    LLM[Gemini Flash / MOCK_MODE]
-    UI[Landing + Activity dashboard]
-    API --> VFY --> RPC --> SPENT --> LLM
+    LLM[Gemini / mock]
   end
 
-  A -->|1. depositPayment on Arc| W
-  A -->|2. POST + payment confirmation headers| API
-  RPC -.->|eth_getTransactionReceipt| G
-  LLM -->|3. streamed / JSON result| A
-  UI -.->|demo console| API
+  Browse --> Services
+  PayUI --> G
+  PayUI --> API
+  API --> G
+  API --> Services
+  API --> LLM
+  API --> Requests
+  Activity --> Requests
 ```
 
 ### Payment + unlock sequence
@@ -136,9 +152,10 @@ sequenceDiagram
 
 | Layer | Responsibility |
 |---|---|
-| **PromptGateway** | Escrow exact fee; mark `paymentId` used once; owner withdraws |
-| **API route** | Signature check, receipt verification, one-time redeem of tx hash, upstream proxy |
-| **Client** | Sign challenge, pay on Arc, attach confirmation on retry |
+| **PromptGateway** | Escrow `msg.value >= minFee`; mark `paymentId` used once; owner withdraws |
+| **API route** | Load service price from catalog; signature + receipt checks; Gemini; persist request |
+| **Supabase** | Public catalog, profiles, request history (no secrets) |
+| **Client** | Connect wallet, pay on Arc, sign challenge |
 
 ---
 
@@ -148,9 +165,11 @@ sequenceDiagram
 |---|---|
 | App | Next.js (App Router), TypeScript, Tailwind CSS |
 | Chain | Arc Mainnet (`5042`), native USDC |
-| Contracts | Solidity `0.8.28`, Hardhat |
+| Contracts | Solidity `0.8.28`, Hardhat (`minFee`) |
+| Wallet | RainbowKit + wagmi v2 + viem (Arc custom chain) |
+| Data | Supabase (Postgres) — optional local in-memory seed if unset |
 | RPC / crypto | [viem](https://viem.sh) |
-| LLM | Google [Gemini](https://ai.google.dev) Flash (`GEMINI_API_KEY`) |
+| LLM | Google [Gemini](https://ai.google.dev) Flash |
 | Hosting | Vercel |
 
 ---
@@ -161,7 +180,7 @@ sequenceDiagram
 
 - Node.js 20+
 - npm
-- An Arc Mainnet wallet funded with **USDC** (gas + deploy + test payments)
+- An Arc Mainnet wallet funded with **USDC** (gas + deploy + test payments) — required for on-chain deploy, optional for local Activity demo
 - A [Gemini API key](https://aistudio.google.com/apikey) (optional if `MOCK_MODE=true`)
 
 ### 1. Clone
@@ -183,7 +202,13 @@ npm run compile
 npm run deploy:arc
 ```
 
-Copy the printed `PromptGateway` address for the next step.
+The deploy script prints an explorer link and a ready-to-paste `.env.local` block.
+
+Smoke-test a deposit after deploy:
+
+```bash
+GATEWAY_ADDRESS=0xYourGateway npm run deposit:arc
+```
 
 Network defaults (see `hardhat.config.ts`):
 
@@ -191,23 +216,36 @@ Network defaults (see `hardhat.config.ts`):
 - Chain ID: `5042`
 - Constructor fee: `10000000000000000` (0.01 USDC native)
 
-### 3. Web app (`next-app/`)
+### 3. Supabase (recommended)
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. Open **SQL Editor** and run [`next-app/supabase/schema.sql`](next-app/supabase/schema.sql) (creates tables + demo services).
+3. Copy Project URL, anon key, and service role into `next-app/.env.local`
+4. Create a free [WalletConnect Cloud](https://cloud.walletconnect.com) project id → `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` (required for RainbowKit mobile wallets)
+
+Without Supabase env vars, the app falls back to a built-in in-memory seed catalog so local UI still works.
+
+### 4. Web app (`next-app/`)
 
 ```bash
 cd ../next-app
 cp .env.example .env.local
 ```
 
-Fill in:
+Fill in Arc + Supabase + Gemini:
 
 ```env
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
+SUPABASE_SERVICE_ROLE_KEY=
+PROMPT_GATEWAY_ADDRESS=
+NEXT_PUBLIC_PROMPT_GATEWAY_ADDRESS=
 ARC_RPC_URL=https://rpc.mainnet.arc.io
-PROMPT_GATEWAY_ADDRESS=0xYourGateway
+NEXT_PUBLIC_ARC_RPC_URL=https://rpc.mainnet.arc.io
 GATEWAY_FEE_WEI=10000000000000000
-GEMINI_API_KEY=your_key
-GEMINI_MODEL=gemini-2.0-flash
+GEMINI_API_KEY=
 MOCK_MODE=false
-MOCK_MODE_ON_ERROR=true
+DEMO_AGENT_SECRET=arcdot-demo-local
 ```
 
 ```bash
@@ -215,11 +253,18 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) (landing) and [http://localhost:3000/dashboard](http://localhost:3000/dashboard) (activity console).
+Open:
 
-### 4. Deploy app to Vercel
+- [http://localhost:3000](http://localhost:3000) — landing  
+- [http://localhost:3000/services](http://localhost:3000/services) — catalog  
+- [http://localhost:3000/create](http://localhost:3000/create) — publish  
+- [http://localhost:3000/activity](http://localhost:3000/activity) — history  
 
-From `next-app/`, import the project in [Vercel](https://vercel.com) (root directory = `next-app`), set the same env vars, and deploy. Point your Arc Microgrant submission at the **live URL**.
+Connect a wallet on **Arc Mainnet**, open a service, pay, and unlock.
+
+### 5. Deploy app to Vercel
+
+From `next-app/`, import the project in [Vercel](https://vercel.com) (root directory = `next-app`), set the same env vars, and deploy.
 
 ---
 
@@ -227,12 +272,22 @@ From `next-app/`, import the project in [Vercel](https://vercel.com) (root direc
 
 | Milestone | Status | Deliverable |
 |---|---|---|
-| **M1 — Gateway contract** | In progress | Gas-optimized `PromptGateway.sol` deployed on **Arc Mainnet** |
-| **M2 — Settlement API** | In progress | `POST /api/gateway` verifies Arc payment + proxies Gemini |
-| **M3 — Demo experience** | In progress | Landing + activity console showing pay → unlock → complete |
-| **M4 — Live submission** | Planned | Public repo + live Vercel app + explorer contract link |
+| **M1 — Gateway contract** | Code ready · redeploy for `minFee` | `PromptGateway` accepts `msg.value >= minFee` |
+| **M2 — Settlement API** | Done | `/api/gateway` verifies catalog price + Arc payment |
+| **M3 — Platform UI** | Done | Browse / Create / Pay / Activity + wallet connect |
+| **M4 — Persistence** | Done (schema) | Supabase schema + seed; wire your project keys |
+| **M5 — Live submission** | Next | Arc deploy + Vercel + README live links |
 
----
+### Your next actions (submission)
+
+1. Create Supabase project → run `schema.sql` → paste keys into `.env.local` / Vercel  
+2. Fund deployer → `cd contracts && npm run deploy:arc` (minFee build)  
+3. Paste `PROMPT_GATEWAY_ADDRESS` + `NEXT_PUBLIC_PROMPT_GATEWAY_ADDRESS`  
+4. Set `GEMINI_API_KEY`, `MOCK_MODE=false`  
+5. Deploy `next-app` to Vercel; update README live links  
+6. Submit to [Arc Microgrants](#arc-microgrants--what-you-must-have-to-qualify)
+
+**v1 note:** Platform owner withdraws escrow via `withdrawFees`. Per-seller splits are not in this release.
 
 ## Arc Microgrants — what you must have to qualify
 
