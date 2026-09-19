@@ -1,6 +1,8 @@
 import Link from "next/link";
+import { Faq } from "@/components/marketing/Faq";
 import { FinalCta } from "@/components/marketing/FinalCta";
 import { HowItWorks } from "@/components/marketing/HowItWorks";
+import { MarketingFooter } from "@/components/marketing/MarketingFooter";
 import { PublishEarn } from "@/components/marketing/PublishEarn";
 import { SeeItSettle } from "@/components/marketing/SeeItSettle";
 import { TrustedRails } from "@/components/marketing/TrustedRails";
@@ -52,14 +54,9 @@ export default function Home() {
       <WhatYouGet />
       <SeeItSettle />
       <PublishEarn />
+      <Faq />
       <FinalCta />
-
-      <footer className="border-t border-line/80">
-        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-8 text-sm text-muted">
-          <span className="font-display text-lg text-foreground">arcdot.</span>
-          <span>Settled in USDC on Circle’s Arc</span>
-        </div>
-      </footer>
+      <MarketingFooter />
     </main>
   );
 }

@@ -1,10 +1,9 @@
 import { ethers } from "hardhat";
 
 /**
- * Smoke deposit (V2): GATEWAY_ADDRESS=0x... SELLER=0x... npx hardhat run scripts/deposit.ts --network arcMainnet
+ * Smoke deposit (V3): GATEWAY_ADDRESS=0x... SELLER=0x... npx hardhat run scripts/deposit.ts --network arcMainnet
  */
 
-const FEE_AMOUNT = 10_000_000_000_000_000n;
 const EXPLORER_TX = "https://explorer.arc.io/tx/";
 
 async function main() {

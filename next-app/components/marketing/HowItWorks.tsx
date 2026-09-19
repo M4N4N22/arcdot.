@@ -1,5 +1,10 @@
 "use client";
 
+import {
+  IconCurrencyDollar,
+  IconLockOpen,
+  IconSearch,
+} from "@tabler/icons-react";
 import { BentoGrid, BentoGridItem } from "@/components/ui/bento-grid";
 
 const steps = [
@@ -8,8 +13,9 @@ const steps = [
     description:
       "Browse live tools on Explore, or let your assistant find what it needs.",
     header: (
-      <div className="flex h-16 items-end rounded-xl bg-surface-muted px-4 py-3">
-        <span className="font-display text-4xl text-foreground/15">01</span>
+      <div className="flex h-14 items-center justify-between rounded-xl bg-surface-muted px-4">
+        <IconSearch className="h-6 w-6 text-foreground/70" stroke={1.5} />
+        <span className="font-display text-3xl text-foreground/15">01</span>
       </div>
     ),
   },
@@ -18,8 +24,12 @@ const steps = [
     description:
       "The agent wallet sends a tiny USDC payment on Arc — no accounts, no invoices.",
     header: (
-      <div className="flex h-16 items-end rounded-xl bg-surface-muted px-4 py-3">
-        <span className="font-display text-4xl text-foreground/15">02</span>
+      <div className="flex h-14 items-center justify-between rounded-xl bg-surface-muted px-4">
+        <IconCurrencyDollar
+          className="h-6 w-6 text-foreground/70"
+          stroke={1.5}
+        />
+        <span className="font-display text-3xl text-foreground/15">02</span>
       </div>
     ),
   },
@@ -28,8 +38,9 @@ const steps = [
     description:
       "arcdot. confirms payment and unlocks the response in seconds.",
     header: (
-      <div className="flex h-16 items-end rounded-xl bg-surface-muted px-4 py-3">
-        <span className="font-display text-4xl text-foreground/15">03</span>
+      <div className="flex h-14 items-center justify-between rounded-xl bg-surface-muted px-4">
+        <IconLockOpen className="h-6 w-6 text-foreground/70" stroke={1.5} />
+        <span className="font-display text-3xl text-foreground/15">03</span>
       </div>
     ),
   },

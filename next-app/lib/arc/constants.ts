@@ -24,7 +24,7 @@ export const ARC = {
   platformFeeBps: Number(process.env.PLATFORM_FEE_BPS ?? "1000"),
 } as const;
 
-/** PromptGateway V2 ABI */
+/** PromptGateway V3 ABI (depositPayment signature unchanged from V2) */
 export const promptGatewayAbi = [
   {
     type: "function",
@@ -52,6 +52,23 @@ export const promptGatewayAbi = [
   },
   {
     type: "function",
+    name: "skimSurplus",
+    stateMutability: "nonpayable",
+    inputs: [],
+    outputs: [],
+  },
+  {
+    type: "function",
+    name: "previewSplit",
+    stateMutability: "view",
+    inputs: [{ name: "amount", type: "uint256" }],
+    outputs: [
+      { name: "sellerAmount", type: "uint256" },
+      { name: "platformAmount", type: "uint256" },
+    ],
+  },
+  {
+    type: "function",
     name: "pendingSeller",
     stateMutability: "view",
     inputs: [{ name: "seller", type: "address" }],
@@ -62,6 +79,20 @@ export const promptGatewayAbi = [
     name: "pendingPlatform",
     stateMutability: "view",
     inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "totalPending",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "paymentAmount",
+    stateMutability: "view",
+    inputs: [{ name: "paymentId", type: "bytes32" }],
     outputs: [{ name: "", type: "uint256" }],
   },
   {
@@ -80,10 +111,31 @@ export const promptGatewayAbi = [
   },
   {
     type: "function",
+    name: "maxFee",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
     name: "platformFeeBps",
     stateMutability: "view",
     inputs: [],
     outputs: [{ name: "", type: "uint256" }],
+  },
+  {
+    type: "function",
+    name: "treasury",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
+  },
+  {
+    type: "function",
+    name: "owner",
+    stateMutability: "view",
+    inputs: [],
+    outputs: [{ name: "", type: "address" }],
   },
   {
     type: "function",

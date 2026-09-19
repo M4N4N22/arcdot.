@@ -1,15 +1,28 @@
 # arcdot. contracts
 
-Hardhat package for `PromptGateway.sol` on **Arc Mainnet** (chain ID `5042`).
+Hardhat package for **PromptGateway V3** on **Arc Mainnet** (chain ID `5042`).
 
-See the **[root README](../README.md)** for architecture and deploy steps.
+Immutable escrow: native USDC deposits, seller / platform split, pull withdrawals. No proxy.
 
-Fee lock: **0.01 USDC** = `1e16` native wei (Arc 18-decimal USDC).
+## Locks
+
+| Param | Default |
+|-------|---------|
+| `minFee` | `1e16` (0.01 USDC, 18-decimal native) |
+| `maxFee` | `10000e18` (fat-finger cap) |
+| `platformFeeBps` | `1000` (10%) |
+| `treasury` | deployer, or `PLATFORM_TREASURY` |
+
+`depositPayment(paymentId, seller)` accepts `minFee ≤ msg.value ≤ maxFee`.
+
+## Commands
 
 ```bash
 cp .env.example .env
 npm install
 npm test
 npm run deploy:arc
-GATEWAY_ADDRESS=0x... npm run deposit:arc
+GATEWAY_ADDRESS=0x... SELLER=0x... npm run deposit:arc
 ```
+
+See the **[root README](../README.md)** for architecture and app wiring.
