@@ -27,11 +27,9 @@ arcdot. is an **API monetization gateway** for the agentic economy. It turns ord
 
 End-to-end walkthrough on **Arc Mainnet**: publish a tool → wire Cursor MCP → agent pays USDC → unlock reply → seller withdraws.
 
-[![arcdot. walkthrough demo](https://img.youtube.com/vi/DEnLHr2haNo/maxresdefault.jpg)](https://youtu.be/DEnLHr2haNo)
+[![Watch the arcdot. demo on YouTube](https://img.youtube.com/vi/DEnLHr2haNo/hqdefault.jpg)](https://youtu.be/DEnLHr2haNo)
 
-<iframe width="720" height="405" src="https://www.youtube.com/embed/DEnLHr2haNo" title="arcdot. walkthrough demo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-
-**Watch:** [https://youtu.be/DEnLHr2haNo](https://youtu.be/DEnLHr2haNo)
+**Watch on YouTube:** [youtu.be/DEnLHr2haNo](https://youtu.be/DEnLHr2haNo)
 
 ### What happens in the video
 
