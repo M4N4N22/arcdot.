@@ -4,6 +4,10 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { usePathname } from "next/navigation";
 
 function titleForPath(pathname: string): string {
+  if (pathname.startsWith("/hub/frameworks")) return "Frameworks";
+  if (pathname.startsWith("/hub/editors")) return "IDEs & clients";
+  if (pathname.startsWith("/hub/wallet")) return "Agent wallet";
+  if (pathname.startsWith("/hub/config")) return "Universal config";
   if (pathname.startsWith("/hub")) return "MCP Hub";
   if (pathname.startsWith("/console")) return "Console";
   if (pathname.startsWith("/docs")) return "Documentation";

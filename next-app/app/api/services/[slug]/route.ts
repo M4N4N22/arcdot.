@@ -8,6 +8,7 @@ import {
 import { ARC } from "@/lib/arc/constants";
 import { buildUpdateChallenge } from "@/lib/auth/updateServiceChallenge";
 import { getProfile, getServiceBySlug, updateService } from "@/lib/catalog/store";
+import { isValidServiceImageUrl } from "@/lib/services/image";
 import { isValidUpstreamUrlShape } from "@/lib/seller/upstream";
 
 export const runtime = "nodejs";
@@ -19,6 +20,7 @@ const patchSchema = z.object({
   system_prompt: z.string().max(2000).optional(),
   upstream_url: z.string().max(500).optional(),
   upstream_bearer: z.string().max(500).optional(),
+  image_url: z.string().max(2_000_000).optional().nullable(),
   paused: z.boolean().optional(),
   owner_address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   signature: z.string().regex(/^0x[a-fA-F0-9]+$/),
@@ -94,6 +96,18 @@ export async function PATCH(
     );
   }
 
+  if (
+    body.image_url !== undefined &&
+    body.image_url !== null &&
+    body.image_url.trim() !== "" &&
+    !isValidServiceImageUrl(body.image_url)
+  ) {
+    return NextResponse.json(
+      { error: "Invalid cover image" },
+      { status: 400 },
+    );
+  }
+
   const challenge = buildUpdateChallenge({
     slug,
     owner_address: body.owner_address,
@@ -122,6 +136,9 @@ export async function PATCH(
   }
   if (body.upstream_bearer !== undefined) {
     patch.upstream_bearer = body.upstream_bearer.trim() || null;
+  }
+  if (body.image_url !== undefined) {
+    patch.image_url = body.image_url?.trim() || null;
   }
   if (body.price_usdc) {
     const priceWei = usdcToWei(body.price_usdc);

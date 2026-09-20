@@ -1,4 +1,4 @@
-import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { isSupabaseAdminConfigured } from "@/lib/supabase/server";
 
 /** Production (or explicit flag) requires Supabase for paid unlocks. */
 export function requiresDurableStore(): boolean {
@@ -7,8 +7,9 @@ export function requiresDurableStore(): boolean {
   return process.env.NODE_ENV === "production";
 }
 
+/** Paid unlocks need the privileged secret key (writes / spent map). */
 export function durableStoreReady(): boolean {
-  return isSupabaseConfigured();
+  return isSupabaseAdminConfigured();
 }
 
 export function durableStoreBlocked(): boolean {

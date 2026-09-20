@@ -265,7 +265,7 @@ export async function callMcpTool(params: {
     error: {
       code: "PAYMENT_REQUIRED",
       message:
-        "Pay depositPayment(paymentId, seller) with msg.value == price_wei on Arc (chain 5042), then retry tools/call with arguments.payment { txHash, address, signature }. Create and fund an agent wallet locally — see /hub#wallet.",
+        "Pay depositPayment(paymentId, seller) with msg.value == price_wei on Arc (chain 5042), then retry tools/call with arguments.payment { txHash, address, signature }. Create and fund an agent wallet locally — see /hub/wallet.",
       payment,
       service: {
         slug: service.slug,

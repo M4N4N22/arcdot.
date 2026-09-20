@@ -19,7 +19,7 @@ export function EditorMcpPanel({ origin }: EditorMcpPanelProps) {
   }, []);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-sm">
+    <div className="overflow-hidden border border-line bg-surface">
       <div className="flex items-center gap-2 border-b border-line px-4 py-3">
         <span
           className={[
@@ -34,17 +34,13 @@ export function EditorMcpPanel({ origin }: EditorMcpPanelProps) {
       </div>
 
       <div className="grid gap-0 md:grid-cols-[7.5rem_1fr]">
-        <aside className="hidden border-r border-line bg-surface-muted/60 px-3 py-4 md:block">
-          <p className="rounded-lg px-2 py-1 text-[11px] text-muted">General</p>
-          <p className="mt-1 rounded-lg px-2 py-1 text-[11px] text-muted">
-            Models
-          </p>
-          <p className="mt-1 rounded-lg bg-foreground px-2 py-1 text-[11px] font-medium text-surface">
+        <aside className="hidden border-r border-line bg-surface-muted/40 px-3 py-4 md:block">
+          <p className="px-2 py-1 text-[11px] text-muted">General</p>
+          <p className="mt-1 px-2 py-1 text-[11px] text-muted">Models</p>
+          <p className="mt-1 bg-foreground px-2 py-1 text-[11px] font-medium text-surface">
             MCP
           </p>
-          <p className="mt-1 rounded-lg px-2 py-1 text-[11px] text-muted">
-            Tools
-          </p>
+          <p className="mt-1 px-2 py-1 text-[11px] text-muted">Tools</p>
         </aside>
 
         <div className="space-y-4 px-4 py-4">
@@ -58,7 +54,7 @@ export function EditorMcpPanel({ origin }: EditorMcpPanelProps) {
             </p>
           </div>
 
-          <div className="rounded-xl border border-line bg-surface-muted/80 p-3.5">
+          <div className="border border-line bg-surface-muted/50 p-3.5">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="font-mono text-sm font-semibold">arcdot</p>
@@ -66,7 +62,7 @@ export function EditorMcpPanel({ origin }: EditorMcpPanelProps) {
                   npx … @arcdot/agent mcp --origin …
                 </p>
               </div>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-muted ring-1 ring-line">
+              <span className="inline-flex items-center gap-1.5 border border-line bg-surface px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-muted">
                 <span
                   className="h-1.5 w-1.5 animate-pulse-line rounded-full bg-foreground"
                   aria-hidden
@@ -80,6 +76,7 @@ export function EditorMcpPanel({ origin }: EditorMcpPanelProps) {
             value={config}
             label="Copy mcp.json"
             variant="primary"
+            className="rounded-none"
           />
         </div>
       </div>

@@ -141,6 +141,12 @@ const pillars: NavPillar[] = [
     href: "/hub",
     label: "MCP Hub",
     icon: <IconHub />,
+    children: [
+      { href: "/hub/config", label: "Universal config" },
+      { href: "/hub/wallet", label: "Agent wallet" },
+      { href: "/hub/editors", label: "IDEs & clients" },
+      { href: "/hub/frameworks", label: "Frameworks" },
+    ],
   },
   {
     id: "explore",
@@ -179,7 +185,16 @@ function pathMatches(pathname: string, href: string): boolean {
     return pathname === "/docs" || pathname.startsWith("/docs/");
   }
   if (href === "/hub") {
-    return pathname === "/hub" || pathname.startsWith("/hub/");
+    // Exact only so nested hub children highlight independently
+    return pathname === "/hub";
+  }
+  if (
+    href === "/hub/config" ||
+    href === "/hub/wallet" ||
+    href === "/hub/editors" ||
+    href === "/hub/frameworks"
+  ) {
+    return pathname === href || pathname.startsWith(`${href}/`);
   }
   if (href === "/create") {
     return pathname === "/create";

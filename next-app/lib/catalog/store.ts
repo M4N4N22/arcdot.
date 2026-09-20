@@ -109,6 +109,7 @@ export async function createService(
       system_prompt: input.system_prompt,
       upstream_url: input.upstream_url?.trim() || null,
       upstream_bearer: input.upstream_bearer?.trim() || null,
+      image_url: input.image_url?.trim() || null,
       status: input.status,
       paused: input.paused ?? false,
     })

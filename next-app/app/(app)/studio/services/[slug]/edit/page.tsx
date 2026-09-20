@@ -5,8 +5,12 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAccount, useSignMessage } from "wagmi";
+import { ServiceImageField } from "@/components/studio/ServiceImageField";
 import { buildUpdateChallenge } from "@/lib/auth/updateServiceChallenge";
 import type { ServiceRow } from "@/lib/types/catalog";
+
+const inputClass =
+  "w-full rounded-2xl border border-line bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-foreground";
 
 export default function EditServicePage() {
   const params = useParams<{ slug: string }>();
@@ -21,6 +25,7 @@ export default function EditServicePage() {
   const [systemPrompt, setSystemPrompt] = useState("");
   const [upstreamUrl, setUpstreamUrl] = useState("");
   const [upstreamBearer, setUpstreamBearer] = useState("");
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -43,6 +48,7 @@ export default function EditServicePage() {
       setSystemPrompt(found.system_prompt);
       setUpstreamUrl(found.upstream_url ?? "");
       setUpstreamBearer(found.upstream_bearer ?? "");
+      setImageUrl(found.image_url ?? null);
     })();
   }, [address, params.slug]);
 
@@ -73,6 +79,7 @@ export default function EditServicePage() {
           system_prompt: systemPrompt,
           upstream_url: upstream,
           upstream_bearer: upstreamBearer.trim(),
+          image_url: imageUrl,
           owner_address: address,
           signature,
           issuedAt,
@@ -91,9 +98,6 @@ export default function EditServicePage() {
     }
   }
 
-  const inputClass =
-    "w-full border border-line bg-surface px-4 py-3 text-sm outline-none focus:border-foreground";
-
   if (!isConnected) {
     return (
       <main className="mx-auto max-w-5xl px-6 py-10 md:px-8">
@@ -106,7 +110,7 @@ export default function EditServicePage() {
     <main className="mx-auto w-full max-w-5xl px-6 pb-16 pt-6 md:px-8">
       <Link
         href="/studio/services"
-        className="text-sm text-muted hover:text-foreground"
+        className="text-sm text-muted transition-colors hover:text-foreground"
       >
         ← Your tools
       </Link>
@@ -114,7 +118,10 @@ export default function EditServicePage() {
       {!service ? (
         <p className="mt-6 text-muted">{error || "Loading…"}</p>
       ) : (
-        <form onSubmit={onSubmit} className="mt-10 max-w-xl space-y-5">
+        <form
+          onSubmit={onSubmit}
+          className="mt-10 max-w-xl space-y-5 rounded-2xl border border-line bg-surface/80 p-5 md:p-6"
+        >
           <label className="block space-y-2 text-sm font-medium">
             <span>Title</span>
             <input
@@ -122,18 +129,30 @@ export default function EditServicePage() {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
+              maxLength={80}
             />
           </label>
           <label className="block space-y-2 text-sm font-medium">
             <span>Description</span>
             <textarea
-              className={inputClass}
+              className={`${inputClass} resize-y`}
               rows={3}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               required
+              maxLength={500}
             />
           </label>
+          <div className="space-y-2 text-sm font-medium">
+            <span>Logo / cover</span>
+            <ServiceImageField
+              value={imageUrl}
+              onChange={setImageUrl}
+              address={address}
+              signMessageAsync={signMessageAsync}
+              disabled={busy}
+            />
+          </div>
           <label className="block space-y-2 text-sm font-medium">
             <span>Price (USDC)</span>
             <input
@@ -170,17 +189,22 @@ export default function EditServicePage() {
           <label className="block space-y-2 text-sm font-medium">
             <span>Instructions for the model</span>
             <textarea
-              className={inputClass}
+              className={`${inputClass} resize-y`}
               rows={4}
               value={systemPrompt}
               onChange={(e) => setSystemPrompt(e.target.value)}
+              maxLength={2000}
             />
           </label>
-          {error && <p className="text-sm text-red-700">{error}</p>}
+          {error && (
+            <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+              {error}
+            </p>
+          )}
           <button
             type="submit"
             disabled={busy}
-            className="h-11 bg-accent px-5 text-sm font-medium text-surface disabled:opacity-50"
+            className="h-11 rounded-2xl bg-accent px-5 text-sm font-medium text-surface disabled:opacity-50"
           >
             {busy ? "Saving…" : "Save changes"}
           </button>

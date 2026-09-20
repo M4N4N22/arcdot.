@@ -8,13 +8,18 @@ import {
   requiresDurableStore,
 } from "@/lib/ops/durable";
 import { probeAnonSystemPromptLeak } from "@/lib/ops/privacy";
-import { isSupabaseConfigured } from "@/lib/supabase/server";
+import {
+  describeSupabaseKeyMode,
+  isSupabaseAdminConfigured,
+  isSupabaseConfigured,
+} from "@/lib/supabase/server";
 import { arcMainnet } from "@/lib/wallet/arcChain";
 
 export const runtime = "nodejs";
 
 export async function GET() {
   const durableStore = durableStoreReady();
+  const keyMode = describeSupabaseKeyMode();
   const checks: Record<string, unknown> = {
     ok: true,
     protocol: "arcdot.gateway",
@@ -32,6 +37,8 @@ export async function GET() {
     ),
     gatewayAddress: ARC.gatewayAddress || null,
     supabaseConfigured: isSupabaseConfigured(),
+    supabaseAdminConfigured: isSupabaseAdminConfigured(),
+    supabaseKeyMode: keyMode,
     durableStore,
     requiresDurableStore: requiresDurableStore(),
     demoUnlock:
@@ -59,19 +66,24 @@ export async function GET() {
     checks.rpcError = err instanceof Error ? err.message : "rpc failed";
   }
 
-  if (isSupabaseConfigured()) {
+  if (isSupabaseAdminConfigured()) {
     checks.supabaseOk = await pingSupabase();
     if (!checks.supabaseOk) checks.ok = false;
   } else {
     checks.supabaseOk = null;
+    if (isSupabaseConfigured() && !isSupabaseAdminConfigured()) {
+      checks.supabaseWarning =
+        "Publishable key present but SUPABASE_SECRET_KEY missing — paid unlocks need the secret key";
+    }
   }
 
   const promptLeak = await probeAnonSystemPromptLeak();
-  checks.anonSystemPromptReadable = promptLeak;
+  checks.publishableSystemPromptReadable = promptLeak;
+  checks.anonSystemPromptReadable = promptLeak; // legacy alias
   if (promptLeak === true && requiresDurableStore()) {
     checks.ok = false;
     checks.privacyError =
-      "Anon can read system_prompt or upstream_bearer — apply schema_v3/v4 column grants";
+      "Publishable key can read system_prompt or upstream_bearer — apply schema_v3/v4 column grants";
   }
 
   return NextResponse.json(checks, {

@@ -15,10 +15,10 @@ function DocsSidebar({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
-    <nav className="px-3 py-6" aria-label="Documentation">
+    <nav className="px-3 py-6 h-screen" aria-label="Documentation">
       {docsNav.map((group) => (
         <div key={group.label} className="mb-6 last:mb-0">
-          <p className="mb-2 px-2.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+          <p className="mb-2 px-2.5 text-[10px] font-semibold uppercase  text-muted/70">
             {group.label}
           </p>
           <ul className="space-y-0.5">
@@ -57,7 +57,7 @@ export function DocsLayoutClient({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   return (
-    <div className="docs-shell relative flex h-svh max-h-svh flex-1 flex-col overflow-hidden bg-background text-foreground">
+    <div className="docs-shell  relative flex h-svh max-h-svh flex-1 flex-col overflow-hidden bg-background text-foreground">
       <header className="relative z-20 flex h-14 shrink-0 items-center justify-between gap-4 border-b border-line bg-surface/90 px-4 backdrop-blur-md md:px-6">
         <div className="flex min-w-0 items-center gap-3">
           <button

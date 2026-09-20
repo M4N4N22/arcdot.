@@ -10,6 +10,7 @@ import {
   listPublishedServices,
   upsertProfile,
 } from "@/lib/catalog/store";
+import { isValidServiceImageUrl } from "@/lib/services/image";
 import { isValidUpstreamUrlShape } from "@/lib/seller/upstream";
 
 export const runtime = "nodejs";
@@ -21,11 +22,12 @@ const createSchema = z.object({
     .max(48)
     .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/),
   title: z.string().min(2).max(80),
-  description: z.string().max(500),
+  description: z.string().min(1).max(500),
   price_usdc: z.string().regex(/^\d+(\.\d{1,6})?$/),
   system_prompt: z.string().max(2000).optional().default(""),
   upstream_url: z.string().max(500).optional().default(""),
   upstream_bearer: z.string().max(500).optional().default(""),
+  image_url: z.string().max(2_000_000).optional().nullable(),
   owner_address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
   signature: z.string().regex(/^0x[a-fA-F0-9]+$/),
   issuedAt: z.number().int().positive(),
@@ -92,6 +94,14 @@ export async function POST(request: Request) {
     );
   }
 
+  const imageRaw = body.image_url?.trim() || null;
+  if (imageRaw && !isValidServiceImageUrl(imageRaw)) {
+    return NextResponse.json(
+      { error: "Invalid cover image" },
+      { status: 400 },
+    );
+  }
+
   const challenge = buildCreateChallenge({
     slug: body.slug,
     title: body.title,
@@ -125,7 +135,7 @@ export async function POST(request: Request) {
       system_prompt: body.system_prompt,
       upstream_url: upstream_url || null,
       upstream_bearer: body.upstream_bearer.trim() || null,
-      image_url: null,
+      image_url: imageRaw,
       status: "published",
       paused: false,
     });

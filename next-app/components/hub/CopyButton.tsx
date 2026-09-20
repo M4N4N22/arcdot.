@@ -43,7 +43,7 @@ export function CopyButton({
       type="button"
       onClick={() => void onCopy()}
       className={[
-        "inline-flex h-9 items-center justify-center rounded-xl px-3.5 text-xs font-semibold transition-all",
+        "inline-flex h-9 items-center justify-center px-3.5 text-xs font-semibold transition-all",
         styles,
         copied ? "scale-[0.98]" : "",
         className,

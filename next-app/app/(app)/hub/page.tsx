@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { McpHub } from "@/components/hub/McpHub";
+import { HubInstall } from "@/components/hub/HubInstall";
 
 export const metadata: Metadata = {
   title: "MCP Hub",
@@ -8,5 +8,5 @@ export const metadata: Metadata = {
 };
 
 export default function HubPage() {
-  return <McpHub />;
+  return <HubInstall />;
 }

@@ -51,7 +51,7 @@ export default function DocsQuickstartPage() {
       <DocsOl>
         <li>
           Create a buyer wallet (see{" "}
-          <Link href="/hub#install" className="underline underline-offset-4">
+          <Link href="/hub" className="underline underline-offset-4">
             Hub → Install
           </Link>
           ).

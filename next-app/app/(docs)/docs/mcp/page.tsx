@@ -99,7 +99,7 @@ ${agentMcpProxyConfig("$ORIGIN")}`}
         Rehearsal only: header{" "}
         <code className="font-mono text-sm">X-Arc-Demo-Secret</code>. Production
         buyers use{" "}
-        <Link href="/hub#wallet" className="underline underline-offset-4">
+        <Link href="/hub/wallet" className="underline underline-offset-4">
           Hub → Agent wallet
         </Link>
         . arcdot. never holds buyer keys.

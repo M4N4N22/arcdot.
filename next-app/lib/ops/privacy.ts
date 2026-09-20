@@ -1,16 +1,20 @@
 import { createClient } from "@supabase/supabase-js";
+import {
+  getSupabasePublishableKey,
+  getSupabaseUrl,
+} from "@/lib/supabase/env";
 
 /**
- * Returns true if the anon key can read secret service columns (privacy regression).
- * null = could not probe (no anon key / network).
+ * Returns true if the publishable (or legacy anon) key can read secret
+ * service columns (privacy regression). null = could not probe.
  */
 export async function probeAnonSystemPromptLeak(): Promise<boolean | null> {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !anon) return null;
+  const url = getSupabaseUrl();
+  const publishable = getSupabasePublishableKey();
+  if (!url || !publishable) return null;
 
   try {
-    const client = createClient(url, anon, {
+    const client = createClient(url, publishable, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
     const { data, error } = await client
