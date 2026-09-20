@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { UsdcOnArcMark } from "@/components/brand/UsdcOnArcMark";
 
 const columns = [
   {
@@ -122,7 +123,10 @@ export function MarketingFooter() {
 
         <div className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t border-line pt-6 text-xs text-muted">
           <span>© {new Date().getFullYear()} arcdot.</span>
-          <span>Settled in USDC on Arc Mainnet</span>
+          <span className="inline-flex items-center gap-2">
+            <UsdcOnArcMark size="sm" showLabel={false} />
+            Settled in USDC on Arc
+          </span>
         </div>
       </div>
     </footer>

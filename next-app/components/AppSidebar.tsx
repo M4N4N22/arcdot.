@@ -365,7 +365,8 @@ export function AppSidebar({ onNavigate }: AppSidebarProps) {
           Docs
         </Link>
         <p className="px-2.5 text-xs leading-relaxed text-muted">
-          Publish tools in Studio. Connect buyers from Hub.
+          Publish tools in Studio. Settle in USDC on Arc. Connect buyers from
+          Hub.
         </p>
       </div>
     </div>

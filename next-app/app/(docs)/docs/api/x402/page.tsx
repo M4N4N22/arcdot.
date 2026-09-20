@@ -61,7 +61,8 @@ export default function DocsApiX402Page() {
       <DocsP>
         <code className="font-mono text-sm">X-Payment-Amount</code> and x402{" "}
         <code className="font-mono text-sm">accepts[].amount</code> are{" "}
-        <strong className="text-foreground">18-decimal wei</strong>. See{" "}
+        <strong className="text-foreground">18-decimal wei</strong> of USDC on
+        Arc. See{" "}
         <Link href="/docs/payment" className="underline underline-offset-4 text-foreground">
           Payment on Arc
         </Link>

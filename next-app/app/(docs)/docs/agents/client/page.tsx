@@ -55,7 +55,7 @@ export default function DocsAgentClientPage() {
           and paste the printed address (or use the deep link with{" "}
           <code className="font-mono text-sm">?address=</code>).
         </li>
-        <li>Send about 0.05 USDC on Arc.</li>
+        <li>Send about 0.05 USDC on Arc (not other networks).</li>
         <li>
           Optional check:{" "}
           <code className="font-mono text-sm">

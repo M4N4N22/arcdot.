@@ -10,6 +10,7 @@ import {
   useWriteContract,
   useWaitForTransactionReceipt,
 } from "wagmi";
+import { UsdcOnArcMark, UsdcOnArcPrice } from "@/components/brand/UsdcOnArcMark";
 import {
   ensureSignedReadSession,
   signedReadQuery,
@@ -105,10 +106,11 @@ export default function StudioPage() {
   if (!isConnected || !address) {
     return (
       <main className="mx-auto max-w-5xl px-6 py-10 md:px-8">
-        <h1 className="font-display text-3xl tracking-tight">Studio</h1>
+        <UsdcOnArcMark size="sm" />
+        <h1 className="mt-3 font-display text-3xl tracking-tight">Studio</h1>
         <p className="mt-2 max-w-md text-muted">
-          Connect your wallet to list tools, set prices, and withdraw USDC
-          earnings.
+          Connect your wallet to list tools, set prices in USDC on Arc, and
+          withdraw earnings.
         </p>
         <div className="mt-6">
           <ConnectButton />
@@ -129,11 +131,12 @@ export default function StudioPage() {
   return (
     <main className="mx-auto w-full max-w-5xl px-6 pb-16 pt-6 md:px-8">
       <div className="animate-fade-up max-w-xl">
-        <h1 className="font-display text-3xl tracking-tight md:text-4xl">
+        <UsdcOnArcMark size="sm" />
+        <h1 className="mt-3 font-display text-3xl tracking-tight md:text-4xl">
           Studio
         </h1>
         <p className="mt-2 text-muted">
-          List tools, set your price, and withdraw USDC to your wallet.
+          List tools, price them in USDC on Arc, and withdraw to your wallet.
         </p>
       </div>
 
@@ -145,20 +148,24 @@ export default function StudioPage() {
           </p>
           <p className="mt-2 font-mono text-sm text-foreground">{shortAddr}</p>
           <p className="mt-1 text-xs text-muted">
-            Earnings from paid requests settle to this connected wallet.
+            Paid unlocks settle as USDC on Arc to this connected wallet — not
+            other networks.
           </p>
         </div>
         <div className="flex flex-wrap items-end justify-between gap-4 px-5 py-5">
           <div>
             <p className="text-xs uppercase tracking-wider text-muted">
-              Available to withdraw
+              Available USDC on Arc
             </p>
             <p className="mt-2 font-mono text-2xl">
-              {!gatewayReady
-                ? "—"
-                : pendingError
-                  ? "—"
-                  : `${formatUsdcWei(pendingWei)} USDC`}
+              {!gatewayReady || pendingError ? (
+                "—"
+              ) : (
+                <UsdcOnArcPrice
+                  amount={formatUsdcWei(pendingWei)}
+                  withMark
+                />
+              )}
             </p>
             {!gatewayReady && (
               <p className="mt-2 max-w-sm text-sm text-amber-800">
@@ -175,7 +182,8 @@ export default function StudioPage() {
                   {rehearsalSales.length === 1 ? "" : "s"}{" "}
                   {rehearsalSales.length === 1 ? "was" : "were"} rehearsal
                   unlocks (Activity / demo). Those do not credit withdrawable
-                  USDC — buyers must pay on Arc for earnings to appear here.
+                  USDC on Arc — buyers must pay on Arc for earnings to appear
+                  here.
                 </p>
               )}
             {gatewayReady &&
@@ -196,7 +204,7 @@ export default function StudioPage() {
             onClick={() => void onWithdraw()}
             className="h-10 bg-accent px-4 text-sm font-medium text-surface disabled:opacity-40"
           >
-            {isPending ? "Confirm in wallet…" : "Withdraw"}
+            {isPending ? "Confirm in wallet…" : "Withdraw USDC on Arc"}
           </button>
         </div>
       </section>
@@ -286,14 +294,22 @@ export default function StudioPage() {
                 >
                   <p className="font-medium">{s.service_slug ?? "Tool"}</p>
                   <p className="font-mono text-xs text-muted">
-                    {rehearsal
-                      ? "Rehearsal"
-                      : statusLabel(s.status)}
-                    {!rehearsal && s.seller_amount_wei
-                      ? ` · ${formatUsdcWei(s.seller_amount_wei)} USDC`
-                      : rehearsal
-                        ? " · no on-chain credit"
-                        : ""}
+                    {rehearsal ? (
+                      <>Rehearsal · no on-chain credit</>
+                    ) : (
+                      <>
+                        {statusLabel(s.status)}
+                        {s.seller_amount_wei ? (
+                          <>
+                            {" · "}
+                            <UsdcOnArcPrice
+                              amount={formatUsdcWei(s.seller_amount_wei)}
+                              className="text-xs"
+                            />
+                          </>
+                        ) : null}
+                      </>
+                    )}
                   </p>
                 </li>
               );

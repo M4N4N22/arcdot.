@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import { useAccount, useSignMessage } from "wagmi";
+import { UsdcOnArcMark } from "@/components/brand/UsdcOnArcMark";
 import { buildUpdateProfileChallenge } from "@/lib/auth/updateProfileChallenge";
 import {
   ensureSignedReadSession,
@@ -209,7 +210,8 @@ export default function StudioProfilePage() {
   if (!isConnected) {
     return (
       <main className="mx-auto max-w-5xl px-6 py-10 md:px-8">
-        <h1 className="font-display text-3xl tracking-tight">Profile</h1>
+        <UsdcOnArcMark size="sm" />
+        <h1 className="mt-3 font-display text-3xl tracking-tight">Profile</h1>
         <p className="mt-2 text-muted">Connect your wallet to edit your profile.</p>
         <div className="mt-6">
           <ConnectButton />
@@ -223,10 +225,11 @@ export default function StudioProfilePage() {
       <Link href="/studio" className="text-sm text-muted hover:text-foreground">
         ← Studio
       </Link>
-      <h1 className="mt-5 font-display text-3xl tracking-tight">Profile</h1>
+      <UsdcOnArcMark size="sm" className="mt-5" />
+      <h1 className="mt-3 font-display text-3xl tracking-tight">Profile</h1>
       <p className="mt-2 max-w-lg text-muted">
-        How buyers see you on public listings. Agents still pay your wallet
-        address.
+        How buyers see you on public listings. Agents pay USDC on Arc to your
+        wallet address.
       </p>
       {address && (
         <p className="mt-3 font-mono text-xs text-muted">

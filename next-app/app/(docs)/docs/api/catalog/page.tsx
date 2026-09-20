@@ -19,7 +19,7 @@ export default function DocsApiCatalogPage() {
       <CodeBlock title="http" code={`GET $ORIGIN/api/services`} />
       <DocsP>
         Returns protocol metadata (version 2), chainId, gateway, currency
-        (USDC, 18 decimals), endpoints, x402 hints, and{" "}
+        (USDC on Arc, 18 decimals), endpoints, x402 hints, and{" "}
         <code className="font-mono text-sm">services[]</code> with slug,
         price_usdc, price_wei, seller, seller_name, input schema, and example.
       </DocsP>

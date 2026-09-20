@@ -75,7 +75,7 @@ BACKUP (do this now)
 • This site never stores your key. Losing the backup = losing access to funds.
 
 NEXT STEPS
-1. Fund ${wallet.address} with native USDC on Arc.
+1. Fund ${wallet.address} with USDC on Arc (not other networks).
    ${ARC_EXPLORER}/address/${wallet.address}
    Or open /fund?address=${wallet.address} for a QR + live balance.
 2. Check: arcdot wallet status

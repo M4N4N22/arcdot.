@@ -11,6 +11,7 @@ import {
 } from "@/components/hub/HubProse";
 import { HubShell } from "@/components/hub/HubShell";
 import { useHubOrigin } from "@/components/hub/useHubOrigin";
+import { UsdcOnArcMark } from "@/components/brand/UsdcOnArcMark";
 import {
   AGENT_GITHUB_URL,
   agentInstallCommands,
@@ -103,11 +104,14 @@ export function HubInstall() {
       />
 
       <HubH2>2. Fund it</HubH2>
+      <div className="mb-2">
+        <UsdcOnArcMark size="sm" />
+      </div>
       <HubP>
         Paste the printed address on{" "}
         <Link href="/fund">/fund</Link>, send about{" "}
-        <strong className="font-medium text-foreground">0.05 USDC</strong> on
-        Arc, then refresh balance.
+        <strong className="font-medium text-foreground">0.05 USDC on Arc</strong>
+        , then refresh balance. Other networks will not credit this wallet.
       </HubP>
 
       <HubH2>3. Connect your IDE</HubH2>

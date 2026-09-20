@@ -25,7 +25,8 @@ export default function DocsCliPage() {
       <DocsCallout title="Create a wallet first">
         Run{" "}
         <code>{agentInstallCommands.npxWalletCreate}</code> once (no project{" "}
-        <code>npm install</code>), then fund the printed address on{" "}
+        <code>npm install</code>), then fund the printed address with USDC on Arc
+        on{" "}
         <Link href="/fund" className="underline underline-offset-4">
           /fund
         </Link>

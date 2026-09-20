@@ -6,7 +6,7 @@ const MOCK_STREAM = [
   "Payment confirmed. ",
   "Unlocking your request… ",
   "Thinking through the prompt… ",
-  "Here is a concise answer: arcdot. lets agents pay a few cents in USDC, ",
+  "Here is a concise answer: arcdot. lets agents pay a few cents in USDC on Arc, ",
   "reach gated APIs instantly, and keep going without human checkout friction.",
 ];
 

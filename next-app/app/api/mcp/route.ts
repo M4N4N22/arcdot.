@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       note: "Paid tools settle on Arc via PromptGateway. Unpaid tools/call returns 402-shaped JSON. The buyer agent wallet lives in the client runtime — arcdot. never holds user keys. See /fund.",
       clientPayment: [
         "Create agent wallet locally",
-        "Fund with native USDC on Arc",
+        "Fund with USDC on Arc (not other networks)",
         "depositPayment + EIP-191 in your agent",
         "Retry tools/call with arguments.payment",
       ],

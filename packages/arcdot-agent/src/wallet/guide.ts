@@ -20,7 +20,7 @@ export function hostAgentShellDirective(command: string): string {
     "HOST AGENT (Cursor / IDE) — do this next for smooth UX:",
     `→ Immediately propose running this shell command (so the user gets the normal pending-approval UI):`,
     `     ${command}`,
-    "→ After it succeeds, open/show the fundUrl link and ask them to send ~0.05 USDC.",
+    "→ After it succeeds, open/show the fundUrl link and ask them to send ~0.05 USDC on Arc (not other chains).",
     "→ Then retry arcdot_unlock with the same service + prompt.",
     "→ Do NOT invent an answer. Do NOT only paste the command as plain text if you can run the terminal tool.",
   ].join("\n");
@@ -36,7 +36,7 @@ export function formatNoWalletGuide(origin: string, detail?: string): {
     "",
     "For you (human):",
     `1. Approve the wallet-create command when your IDE asks (or run: ${WALLET_CREATE_CMD}).`,
-    `2. Open ${fundUrl} and send about 0.05 USDC to the printed address.`,
+    `2. Open ${fundUrl} and send about 0.05 USDC on Arc to the printed address.`,
     "3. We’ll retry the unlock automatically after that — don’t invent an answer.",
     "",
     hostAgentShellDirective(WALLET_CREATE_CMD),

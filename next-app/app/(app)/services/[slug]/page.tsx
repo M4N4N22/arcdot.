@@ -12,6 +12,7 @@ import {
   useSwitchChain,
   useWriteContract,
 } from "wagmi";
+import { UsdcOnArcPrice } from "@/components/brand/UsdcOnArcMark";
 import { BrandMark } from "@/components/explore/BrandMark";
 import {
   buildGatewayAuthMessage,
@@ -290,7 +291,12 @@ export default function ServiceDetailPage() {
           </h1>
           {meta.tagline && <p className="mt-2 text-muted">{meta.tagline}</p>}
           <p className="mt-4 font-mono text-sm">
-            {service.price_usdc} USDC per request
+            <UsdcOnArcPrice
+              amount={service.price_usdc}
+              withMark
+              className="font-mono"
+            />{" "}
+            per request
           </p>
           <p className="mt-2 font-mono text-xs text-muted">{service.slug}</p>
           {sellerAddress && (
@@ -335,7 +341,7 @@ export default function ServiceDetailPage() {
           Try in browser
         </h2>
         <p className="mt-2 text-muted">
-          Pay a few cents in USDC, unlock a reply — same path agents use.
+          Pay a few cents in USDC on Arc, unlock a reply — same path agents use.
         </p>
 
         <ol className="mt-8 flex flex-wrap gap-3 text-xs uppercase tracking-wider text-muted">
@@ -382,7 +388,9 @@ export default function ServiceDetailPage() {
               onClick={() => void runPaidRequest()}
               className="h-11 bg-accent px-5 text-sm font-medium text-surface disabled:opacity-50"
             >
-              {busy ? "Working…" : `Pay ${service.price_usdc} USDC & unlock`}
+              {busy
+                ? "Working…"
+                : `Pay ${service.price_usdc} USDC on Arc & unlock`}
             </button>
           )}
 

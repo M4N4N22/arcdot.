@@ -20,7 +20,7 @@ export default function Home() {
             Software pays software. Instant USDC unlocks on Arc.
           </h1>
           <p className="mt-5 max-w-md text-base leading-relaxed text-muted md:text-lg">
-            Agents discover gated APIs, pay a few cents in native USDC, and get
+            Agents discover gated APIs, pay a few cents in USDC on Arc, and get
             a reply — no accounts, no API keys, no invoices.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">

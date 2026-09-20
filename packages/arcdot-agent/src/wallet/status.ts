@@ -51,7 +51,7 @@ export function fundHintFor(
 ): string {
   const chainLabel =
     network === "testnet" ? "Arc Testnet (5042002)" : "Arc Mainnet (5042)";
-  return `Send native USDC on ${chainLabel} to ${address}. Keep at least ${alertThresholdUsdc()} USDC for runtime spend.`;
+  return `Send USDC on Arc (${chainLabel}) to ${address}. Keep at least ${alertThresholdUsdc()} USDC for runtime spend. USDC on other networks will not appear.`;
 }
 
 /** Balance + low-balance flag for the local buyer wallet (key never leaves this process). */

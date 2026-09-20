@@ -12,7 +12,7 @@ const faqs = [
   },
   {
     q: "Why Arc and Circle?",
-    a: "Arc is Circle’s network for digital dollars. Settling in real USDC keeps fees tiny and predictable — which is what makes machine micropayments practical.",
+    a: "Arc is Circle’s network for digital dollars. Settling in real USDC on Arc keeps fees tiny and predictable — which is what makes machine micropayments practical.",
   },
   {
     q: "Do I need an account?",
@@ -20,7 +20,7 @@ const faqs = [
   },
   {
     q: "How do sellers get paid?",
-    a: "Each unlock settles on Arc. You keep most of the payment; a small network fee keeps the rails online. Withdraw USDC from Studio anytime.",
+    a: "Each unlock settles on Arc. You keep most of the payment; a small network fee keeps the rails online. Withdraw USDC on Arc from Studio anytime.",
   },
   {
     q: "Can I try before I integrate?",

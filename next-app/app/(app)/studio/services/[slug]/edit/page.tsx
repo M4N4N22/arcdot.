@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { useAccount, useSignMessage } from "wagmi";
+import { UsdcOnArcMark, UsdcOnArcPrice } from "@/components/brand/UsdcOnArcMark";
 import { ServiceImageField } from "@/components/studio/ServiceImageField";
 import { buildUpdateChallenge } from "@/lib/auth/updateServiceChallenge";
 import { upstreamUrlError } from "@/lib/seller/upstreamUrl";
@@ -132,9 +133,11 @@ export default function EditServicePage() {
         >
           ← Your tools
         </Link>
-        <h1 className="mt-5 font-display text-3xl tracking-tight">Edit tool</h1>
+        <UsdcOnArcMark size="sm" className="mt-5" />
+        <h1 className="mt-3 font-display text-3xl tracking-tight">Edit tool</h1>
         <p className="mt-2 text-muted">
-          Update listing, price, and the HTTPS endpoint buyers unlock.
+          Update listing, USDC on Arc price, and the HTTPS endpoint buyers
+          unlock.
         </p>
       </div>
 
@@ -225,11 +228,14 @@ export default function EditServicePage() {
 
           <section className="rounded-2xl border border-line bg-surface/80 p-5 md:p-6">
             <h2 className="text-sm font-medium uppercase tracking-wider text-muted">
-              Pricing & payout
+              Pricing & payout (USDC on Arc)
             </h2>
             <div className="mt-5 space-y-5">
               <label className="block space-y-2 text-sm font-medium">
-                <span>Price per request (USDC)</span>
+                <span className="inline-flex items-center gap-2">
+                  Price per request
+                  <UsdcOnArcMark size="sm" />
+                </span>
                 <input
                   className={`${inputClass} font-mono`}
                   value={priceUsdc}
@@ -238,7 +244,8 @@ export default function EditServicePage() {
                   placeholder="0.01"
                 />
                 <span className="block text-xs font-normal text-muted">
-                  Minimum 0.01 USDC per request.
+                  Minimum 0.01 USDC on Arc per request. Other networks will not
+                  settle.
                 </span>
               </label>
 
@@ -250,21 +257,24 @@ export default function EditServicePage() {
                   <ul className="mt-3 space-y-1.5 text-muted">
                     <li className="flex justify-between gap-3">
                       <span>Buyers pay</span>
-                      <span className="font-mono text-foreground">
-                        {formatUsdcAmount(tariff.buyer)} USDC
-                      </span>
+                      <UsdcOnArcPrice
+                        amount={formatUsdcAmount(tariff.buyer)}
+                        className="font-mono text-foreground"
+                      />
                     </li>
                     <li className="flex justify-between gap-3">
                       <span>You receive ~</span>
-                      <span className="font-mono text-foreground">
-                        {formatUsdcAmount(tariff.seller)} USDC
-                      </span>
+                      <UsdcOnArcPrice
+                        amount={formatUsdcAmount(tariff.seller)}
+                        className="font-mono text-foreground"
+                      />
                     </li>
                     <li className="flex justify-between gap-3">
                       <span>Network fee</span>
-                      <span className="font-mono text-foreground">
-                        {formatUsdcAmount(tariff.network)} USDC
-                      </span>
+                      <UsdcOnArcPrice
+                        amount={formatUsdcAmount(tariff.network)}
+                        className="font-mono text-foreground"
+                      />
                     </li>
                   </ul>
                 ) : (
@@ -281,7 +291,8 @@ export default function EditServicePage() {
                 </p>
                 <p className="mt-2 font-mono text-sm">{shortAddr}</p>
                 <p className="mt-1 text-xs text-muted">
-                  Connected wallet receives your share after each unlock.
+                  Connected wallet receives your share as USDC on Arc after each
+                  unlock.
                 </p>
               </div>
             </div>

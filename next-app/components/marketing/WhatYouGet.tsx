@@ -26,7 +26,7 @@ const pillars: {
   {
     title: "Studio",
     description:
-      "Publish a tool, set your price, and earn USDC when agents unlock it.",
+      "Publish a tool, set your price, and earn USDC on Arc when agents unlock it.",
     link: "/studio",
     icon: <IconTools className="h-5 w-5" stroke={1.5} />,
   },

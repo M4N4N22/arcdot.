@@ -4,6 +4,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAccount, useSignMessage } from "wagmi";
+import { UsdcOnArcMark, UsdcOnArcPrice } from "@/components/brand/UsdcOnArcMark";
 import {
   ensureSignedReadSession,
   signedReadQuery,
@@ -72,9 +73,10 @@ export default function StudioSalesPage() {
       </Link>
       <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl tracking-tight">Sales</h1>
+          <UsdcOnArcMark size="sm" />
+          <h1 className="mt-3 font-display text-3xl tracking-tight">Sales</h1>
           <p className="mt-2 text-muted">
-            Paid unlocks credit your withdrawable balance. Rehearsal unlocks do
+            Paid unlocks credit withdrawable USDC on Arc. Rehearsal unlocks do
             not.
           </p>
         </div>
@@ -118,13 +120,21 @@ export default function StudioSalesPage() {
                     {rehearsal ? "Rehearsal" : statusLabel(s.status)}
                   </p>
                 </div>
-                <p className="mt-1 text-xs text-muted">
-                  {new Date(s.created_at).toLocaleString()}
-                  {rehearsal
-                    ? " · no withdrawable credit"
-                    : s.seller_amount_wei
-                      ? ` · ${formatUsdcWei(s.seller_amount_wei)} USDC to you`
-                      : ""}
+                <p className="mt-1 flex flex-wrap items-center gap-x-2 text-xs text-muted">
+                  <span>{new Date(s.created_at).toLocaleString()}</span>
+                  {rehearsal ? (
+                    <span>· no withdrawable credit</span>
+                  ) : s.seller_amount_wei ? (
+                    <>
+                      <span>·</span>
+                      <UsdcOnArcPrice
+                        amount={formatUsdcWei(s.seller_amount_wei)}
+                        withMark
+                        className="text-xs"
+                      />
+                      <span>to you</span>
+                    </>
+                  ) : null}
                 </p>
                 {s.prompt && (
                   <p className="mt-2 text-sm text-muted line-clamp-2">

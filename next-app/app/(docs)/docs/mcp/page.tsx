@@ -47,7 +47,7 @@ export default function DocsMcpPage() {
           </code>
         </li>
         <li>
-          Fund on{" "}
+          Fund with USDC on Arc on{" "}
           <Link href="/fund" className="underline underline-offset-4">
             /fund
           </Link>
@@ -121,7 +121,7 @@ curl -s -X POST "$ORIGIN/api/mcp" \\
       <DocsP>
         Rehearsal only: header{" "}
         <code className="font-mono text-sm">X-Arc-Demo-Secret</code>. Production
-        buyers fund on{" "}
+        buyers fund with USDC on Arc on{" "}
         <Link href="/fund" className="underline underline-offset-4">
           /fund
         </Link>

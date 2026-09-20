@@ -38,7 +38,7 @@ export default function DocsAgentsPage() {
       </DocsCallout>
       <DocsH2>What you need</DocsH2>
       <DocsUl>
-        <li>A funded wallet on Arc Mainnet (native USDC)</li>
+        <li>A funded wallet on Arc with USDC on Arc (native gas token)</li>
         <li>HTTP access to the live arcdot. origin</li>
         <li>Ability to sign EIP-191 messages and send transactions</li>
       </DocsUl>
@@ -127,7 +127,7 @@ ${agentMcpProxyConfig("$ORIGIN")}`}
       />
       <DocsP>
         Critical: amounts are{" "}
-        <strong className="text-foreground">18-decimal</strong> native USDC. See{" "}
+        <strong className="text-foreground">18-decimal</strong> USDC on Arc. See{" "}
         <Link
           href="/docs/payment"
           className="underline underline-offset-4 text-foreground"

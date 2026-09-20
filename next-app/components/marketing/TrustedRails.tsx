@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { UsdcOnArcMark } from "@/components/brand/UsdcOnArcMark";
 import { InfiniteMovingCards } from "@/components/ui/infinite-moving-cards";
 
 const rails = [
@@ -12,8 +12,8 @@ const rails = [
   },
   {
     quote:
-      "Settle in real USDC. Tiny fees make micropayments practical for agents buying API access.",
-    name: "USDC",
+      "Settle in USDC on Arc. Tiny fees make micropayments practical for agents buying API access.",
+    name: "USDC on Arc",
     title: "Native digital dollars on Arc",
   },
   {
@@ -24,7 +24,7 @@ const rails = [
   },
   {
     quote:
-      "No middleman tokens. No accounts to provision. Just wallets, USDC, and instant unlocks.",
+      "No middleman tokens. No accounts to provision. Just wallets, USDC on Arc, and instant unlocks.",
     name: "Instant unlocks",
     title: "Built for software that pays software",
   },
@@ -35,19 +35,13 @@ export function TrustedRails() {
     <section className="border-t border-line/80 bg-surface/40 py-16 md:py-24">
       <div className="mx-auto w-full max-w-6xl px-6">
         <div className="flex flex-wrap items-center gap-3">
-          <Image
-            src="/brand/arc-network.png"
-            alt=""
-            width={28}
-            height={28}
-            className="h-7 w-7 rounded-full"
-          />
+          <UsdcOnArcMark size="sm" showLabel={false} />
           <p className="text-sm font-medium uppercase tracking-wider text-muted">
             Trusted rails
           </p>
         </div>
         <h2 className="mt-3 max-w-2xl font-display text-3xl tracking-tight md:text-4xl">
-          Built on Circle’s Arc. Settled in USDC.
+          Built on Circle’s Arc. Settled in USDC on Arc.
         </h2>
         <p className="mt-3 max-w-xl text-muted">
           Real digital dollars on a network designed for money — so agents can

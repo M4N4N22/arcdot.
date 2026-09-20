@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UsdcOnArcMark } from "@/components/brand/UsdcOnArcMark";
 import { ExploreBrowser } from "@/components/explore/ExploreBrowser";
 import type { ExploreToolItem } from "@/components/explore/types";
 import {
@@ -41,12 +42,13 @@ export default async function ExplorePage() {
     <main className="mx-auto w-full max-w-[90rem] px-4 pb-16 pt-5 md:px-6 md:pt-6">
       <div className="animate-fade-up flex flex-wrap items-end justify-between gap-3 px-1">
         <div>
-          <h1 className="font-display text-3xl tracking-tight md:text-4xl">
+          <UsdcOnArcMark size="sm" />
+          <h1 className="mt-3 font-display text-3xl tracking-tight md:text-4xl">
             Explore
           </h1>
           <p className="mt-1.5 max-w-lg text-sm text-muted">
-            Browse live tools on Arc — search, filter, and try any of them in
-            the browser.
+            Browse live tools priced in USDC on Arc — search, filter, and try
+            any of them in the browser.
           </p>
         </div>
       </div>

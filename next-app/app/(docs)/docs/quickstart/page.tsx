@@ -40,7 +40,7 @@ export default function DocsQuickstartPage() {
           <Link href="/fund" className="underline underline-offset-4">
             /fund
           </Link>{" "}
-          (~0.05 USDC on Arc).
+          (~0.05 USDC on Arc — not other networks).
         </li>
       </DocsOl>
 

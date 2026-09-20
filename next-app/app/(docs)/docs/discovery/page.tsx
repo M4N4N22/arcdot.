@@ -72,8 +72,8 @@ curl -s "$ORIGIN/.well-known/ai-plugin.json" | jq .`}
       <DocsP>
         Field <code className="font-mono text-sm">amount_units</code> /{" "}
         <code className="font-mono text-sm">price_wei</code> is always{" "}
-        <strong className="text-foreground">18-decimal wei</strong> (0.01 USDC =
-        1e16). Never treat it as 6-decimal ERC-20 units.
+        <strong className="text-foreground">18-decimal wei</strong> (0.01 USDC on
+        Arc = 1e16). Never treat it as 6-decimal ERC-20 units.
       </DocsP>
     </DocsProse>
   );

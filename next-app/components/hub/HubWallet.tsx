@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { UsdcOnArcMark } from "@/components/brand/UsdcOnArcMark";
 import { AgentFundPanel } from "@/components/fund/AgentFundPanel";
 import { AgentWalletBackupHint } from "@/components/fund/AgentWalletBackupHint";
 import { CopyButton } from "@/components/hub/CopyButton";
@@ -22,7 +23,7 @@ export function HubWallet() {
     <HubShell
       showBack
       title="Wallet help"
-      description="Create → fund → connect. Same wallet the MCP proxy uses to pay — arcdot. never holds your key."
+      description="Create → fund with USDC on Arc → connect. Same wallet the MCP proxy uses to pay — arcdot. never holds your key."
     >
       <HubCallout title="Prefer the short links?">
         Day-to-day top-ups: <Link href="/fund">/fund</Link>. Full path from
@@ -55,12 +56,17 @@ export function HubWallet() {
         />
       </div>
 
-      <HubH2 id="fund">2. Fund</HubH2>
+      <HubH2 id="fund">2. Fund with USDC on Arc</HubH2>
+      <div className="mb-3">
+        <UsdcOnArcMark size="md" />
+      </div>
       <HubP>
-        Paste the address below (or use{" "}
-        <Link href="/fund">/fund</Link>). Send about{" "}
-        <strong className="font-medium text-foreground">0.05 USDC</strong> on
-        Arc.
+        Paste the address below (or use <Link href="/fund">/fund</Link>). Send
+        about{" "}
+        <strong className="font-medium text-foreground">
+          0.05 USDC on Arc
+        </strong>
+        . Other networks will not credit this wallet.
       </HubP>
       <AgentFundPanel />
       <AgentWalletBackupHint className="mt-6" />
@@ -93,7 +99,7 @@ export function HubWallet() {
           {
             href: "/fund",
             title: "Fund",
-            description: "Short link for top-ups.",
+            description: "Short link for USDC on Arc top-ups.",
           },
         ]}
       />

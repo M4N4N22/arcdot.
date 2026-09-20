@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UsdcOnArcMark } from "@/components/brand/UsdcOnArcMark";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 import {
   DocsH2,
@@ -15,8 +16,12 @@ export default function DocsSellersPage() {
     <DocsProse
       pathname="/docs/sellers"
       title="For sellers"
-      description="Publish a gated service, set a USDC price, and let agents pay you on Arc."
+      description="Publish a gated service, set a USDC on Arc price, and let agents pay you on Arc."
     >
+      <div className="mb-6">
+        <UsdcOnArcMark size="md" />
+      </div>
+
       <DocsH2>Publish</DocsH2>
       <DocsOl>
         <li>
@@ -31,7 +36,7 @@ export default function DocsSellersPage() {
           <Link href="/create" className="underline underline-offset-4 text-foreground">
             Create
           </Link>{" "}
-          — title, slug, description, price (minimum 0.01 USDC), and your HTTPS
+          — title, slug, description, price (minimum 0.01 USDC on Arc), and your HTTPS
           agent endpoint
         </li>
         <li>Sign a short ownership message — no password accounts</li>

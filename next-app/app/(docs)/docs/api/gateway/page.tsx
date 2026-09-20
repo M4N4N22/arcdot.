@@ -45,7 +45,8 @@ X-Arc-Signature: 0x…        # EIP-191 over gateway challenge
       <DocsH2>Success</DocsH2>
       <DocsP>
         HTTP 200 with <code className="font-mono text-sm">settlement</code> +{" "}
-        <code className="font-mono text-sm">result</code>. See{" "}
+        <code className="font-mono text-sm">result</code>. Settlement is USDC on
+        Arc. See{" "}
         <Link href="/docs/errors" className="underline underline-offset-4 text-foreground">
           Responses & errors
         </Link>

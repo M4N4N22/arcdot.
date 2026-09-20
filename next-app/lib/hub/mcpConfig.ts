@@ -72,7 +72,7 @@ export function langchainStyleSnippet(origin: string): string {
   return `# Buyer agent — keys stay on YOUR machine (never on arcdot. server)
 #
 # 1) ${agentInstallCommands.npxWalletCreate}
-# 2) Fund the printed address with native USDC on Arc
+# 2) Fund the printed address with USDC on Arc (not other networks)
 # 3) Use the SDK or CLI (auto-settle)
 
 # Node:

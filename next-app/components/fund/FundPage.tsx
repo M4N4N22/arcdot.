@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { UsdcOnArcMark } from "@/components/brand/UsdcOnArcMark";
 import { AgentFundPanel } from "@/components/fund/AgentFundPanel";
 import { AgentWalletBackupHint } from "@/components/fund/AgentWalletBackupHint";
 import { CopyButton } from "@/components/hub/CopyButton";
@@ -24,16 +25,22 @@ function FundPageInner() {
     <HubShell
       showBack
       title="Fund your agent"
-      description="Top up the local agent wallet so unlocks can settle. This page only needs the address — never a private key."
+      description="Top up the local agent wallet with USDC on Arc so unlocks can settle. This page only needs the address — never a private key."
       eyebrow="Step 2 of 3"
     >
+      <div className="mb-2">
+        <UsdcOnArcMark size="lg" />
+      </div>
+
       <HubCallout title="Came from MCP?">
         Keep the address from the link or message, send about{" "}
-        <strong className="font-medium text-foreground">0.05 USDC</strong> on
-        Arc, refresh balance, then retry unlock in your IDE.
+        <strong className="font-medium text-foreground">
+          0.05 USDC on Arc
+        </strong>
+        , refresh balance, then retry unlock in your IDE.
       </HubCallout>
 
-      <HubH2>Receive USDC</HubH2>
+      <HubH2>Receive USDC on Arc</HubH2>
       <AgentFundPanel initialAddress={addressParam} />
       <AgentWalletBackupHint className="mt-6" />
 
@@ -73,7 +80,7 @@ function FundPageInner() {
           {
             href: "/hub/editors",
             title: "3. Connect IDE",
-            description: "Paste Cursor MCP proxy after funding.",
+            description: "Paste the MCP proxy after funding with USDC on Arc.",
           },
           {
             href: "/hub",

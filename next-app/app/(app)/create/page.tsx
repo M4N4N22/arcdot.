@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { useAccount, useSignMessage } from "wagmi";
+import { UsdcOnArcMark, UsdcOnArcPrice } from "@/components/brand/UsdcOnArcMark";
 import { PublishPreview } from "@/components/studio/PublishPreview";
 import { ServiceImageField } from "@/components/studio/ServiceImageField";
 import { buildCreateChallenge } from "@/lib/auth/createServiceChallenge";
@@ -117,12 +118,13 @@ export default function CreateServicePage() {
         >
           ← Studio
         </Link>
-        <h1 className="mt-4 font-display text-3xl tracking-tight md:text-4xl">
+        <UsdcOnArcMark size="sm" className="mt-4" />
+        <h1 className="mt-3 font-display text-3xl tracking-tight md:text-4xl">
           Publish a tool
         </h1>
         <p className="mt-2 text-muted">
           Point agents at your HTTPS endpoint, set a per-request price, and earn
-          USDC when they unlock it.
+          USDC on Arc when they unlock it.
         </p>
       </div>
 
@@ -249,11 +251,14 @@ export default function CreateServicePage() {
             {/* Pricing */}
             <section className="rounded-2xl border border-line bg-surface/80 p-5 md:p-6">
               <h2 className="text-sm font-medium uppercase tracking-wider text-muted">
-                Pricing & payout
+                Pricing & payout (USDC on Arc)
               </h2>
               <div className="mt-5 space-y-5">
                 <label className="block space-y-2 text-sm font-medium">
-                  <span>Price per request (USDC)</span>
+                  <span className="inline-flex items-center gap-2">
+                    Price per request
+                    <UsdcOnArcMark size="sm" />
+                  </span>
                   <input
                     required
                     value={priceUsdc}
@@ -262,7 +267,8 @@ export default function CreateServicePage() {
                     placeholder="0.01"
                   />
                   <span className="block text-xs font-normal text-muted">
-                    Minimum 0.01 USDC per request.
+                    Minimum 0.01 USDC on Arc per request. Other networks will not
+                    settle.
                   </span>
                 </label>
 
@@ -274,21 +280,24 @@ export default function CreateServicePage() {
                     <ul className="mt-3 space-y-1.5 text-muted">
                       <li className="flex justify-between gap-3">
                         <span>Buyers pay</span>
-                        <span className="font-mono text-foreground">
-                          {formatUsdcAmount(tariff.buyer)} USDC
-                        </span>
+                        <UsdcOnArcPrice
+                          amount={formatUsdcAmount(tariff.buyer)}
+                          className="font-mono text-foreground"
+                        />
                       </li>
                       <li className="flex justify-between gap-3">
                         <span>You receive ~</span>
-                        <span className="font-mono text-foreground">
-                          {formatUsdcAmount(tariff.seller)} USDC
-                        </span>
+                        <UsdcOnArcPrice
+                          amount={formatUsdcAmount(tariff.seller)}
+                          className="font-mono text-foreground"
+                        />
                       </li>
                       <li className="flex justify-between gap-3">
                         <span>Network fee</span>
-                        <span className="font-mono text-foreground">
-                          {formatUsdcAmount(tariff.network)} USDC
-                        </span>
+                        <UsdcOnArcPrice
+                          amount={formatUsdcAmount(tariff.network)}
+                          className="font-mono text-foreground"
+                        />
                       </li>
                     </ul>
                   ) : (
@@ -307,7 +316,8 @@ export default function CreateServicePage() {
                   </p>
                   <p className="mt-2 font-mono text-sm">{shortAddr}</p>
                   <p className="mt-1 text-xs text-muted">
-                    Connected wallet receives your share after each unlock.
+                    Connected wallet receives your share as USDC on Arc after
+                    each unlock.
                   </p>
                 </div>
               </div>

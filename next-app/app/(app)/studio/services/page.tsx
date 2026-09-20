@@ -4,6 +4,7 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAccount, useSignMessage } from "wagmi";
+import { UsdcOnArcMark, UsdcOnArcPrice } from "@/components/brand/UsdcOnArcMark";
 import { buildUpdateChallenge } from "@/lib/auth/updateServiceChallenge";
 import type { ServiceRow } from "@/lib/types/catalog";
 
@@ -80,8 +81,11 @@ export default function StudioServicesPage() {
       </Link>
       <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl tracking-tight">Your tools</h1>
-          <p className="mt-2 text-muted">Pause, edit, or open a listing.</p>
+          <UsdcOnArcMark size="sm" />
+          <h1 className="mt-3 font-display text-3xl tracking-tight">Your tools</h1>
+          <p className="mt-2 text-muted">
+            Pause, edit, or open a listing. Prices are in USDC on Arc.
+          </p>
         </div>
         <Link
           href="/create"
@@ -115,8 +119,9 @@ export default function StudioServicesPage() {
                   </span>
                 )}
               </p>
-              <p className="text-sm text-muted">
-                {s.price_usdc} USDC · /{s.slug}
+              <p className="mt-1 flex flex-wrap items-center gap-x-2 text-sm text-muted">
+                <UsdcOnArcPrice amount={s.price_usdc} withMark />
+                <span>· /{s.slug}</span>
               </p>
             </div>
             <div className="flex flex-wrap gap-2">

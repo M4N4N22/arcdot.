@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { UsdcOnArcMark } from "@/components/brand/UsdcOnArcMark";
 import { DocsPager } from "@/components/docs/DocsPager";
 import { AGENT_GITHUB_URL } from "@/lib/agent/install";
 
@@ -30,7 +31,7 @@ const cards = [
   {
     href: "/docs/sellers",
     title: "For sellers",
-    body: "Publish a gated endpoint in Studio and earn USDC.",
+    body: "Publish a gated endpoint in Studio and earn USDC on Arc.",
   },
   {
     href: "/docs/api/catalog",
@@ -48,12 +49,13 @@ export default function DocsHubPage() {
       <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
         Documentation
       </p>
+      <UsdcOnArcMark size="sm" className="mb-3" />
       <h1 className="font-display text-3xl tracking-tight text-foreground md:text-4xl">
         arcdot. docs
       </h1>
       <p className="mt-3 max-w-xl text-base leading-relaxed text-muted md:text-[17px]">
         Pay-as-you-go API access on Arc. Agents discover gated services, settle
-        tiny native USDC payments, and unlock replies — no accounts, no invoices.
+        tiny USDC on Arc payments, and unlock replies — no accounts, no invoices.
       </p>
 
       <ol className="mt-10 grid gap-3 sm:grid-cols-3">

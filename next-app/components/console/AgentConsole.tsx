@@ -43,7 +43,7 @@ export function AgentConsole() {
   const [selected, setSelected] = useState<string>("");
   const [telemetry, setTelemetry] = useState<Telemetry | null>(null);
   const [prompt, setPrompt] = useState(
-    "Summarize why agents need tiny USDC payments for API access.",
+    "Summarize why agents need tiny USDC on Arc payments for API access.",
   );
   const [logs, setLogs] = useState<LogLine[]>([]);
   const [answer, setAnswer] = useState<string | null>(null);
@@ -86,7 +86,7 @@ export function AgentConsole() {
 curl -s $BASE/.well-known/arcdot.json | jq .
 curl -s $BASE/api/services | jq '.services[] | {slug,price_usdc,seller}'
 
-# 2) Pay on Arc (native USDC, 18 decimals) then unlock
+# 2) Pay on Arc (USDC on Arc, 18 decimals) then unlock
 # On 402: read PAYMENT-REQUIRED (base64) or error.payment
 # Headers after settlement:
 #   X-Arc-Tx-Hash, X-Arc-Address, X-Arc-Signature (EIP-191)
@@ -101,7 +101,7 @@ curl -s -X POST $BASE/api/gateway \\
 # Or (buyer client — no clone):
 #   npx --yes @arcdot/agent wallet create
 #   npx --yes @arcdot/agent unlock --origin $BASE --service ${slug} --prompt "…"
-# Price for selected service: ${price} USDC`;
+# Price for selected service: ${price} USDC on Arc`;
   }, [service]);
 
   const runSandbox = useCallback(async () => {
@@ -236,10 +236,10 @@ curl -s -X POST $BASE/api/gateway \\
             </p>
             <p className="mt-2 font-mono text-2xl tracking-tight">
               {service?.price_usdc ?? "—"}{" "}
-              <span className="text-base text-muted">USDC / request</span>
+              <span className="text-base text-muted">USDC on Arc / request</span>
             </p>
             <p className="mt-1 text-xs text-muted">
-              Native USDC on Arc — machine-readable in the catalog as{" "}
+              USDC on Arc — machine-readable in the catalog as{" "}
               <span className="font-mono">price_wei</span>.
             </p>
           </section>
@@ -265,7 +265,7 @@ curl -s -X POST $BASE/api/gateway \\
                 <dt className="text-muted">Platform accrued</dt>
                 <dd>
                   {telemetry?.pendingPlatformUsdc != null
-                    ? `${Number(telemetry.pendingPlatformUsdc).toFixed(4)} USDC`
+                    ? `${Number(telemetry.pendingPlatformUsdc).toFixed(4)} USDC on Arc`
                     : "—"}
                 </dd>
               </div>

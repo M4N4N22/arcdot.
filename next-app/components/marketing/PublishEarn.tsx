@@ -11,7 +11,7 @@ import {
 const beats = [
   {
     title: "List a tool",
-    body: "Publish once in Studio with a clear price in USDC.",
+    body: "Publish once in Studio with a clear price in USDC on Arc.",
     icon: IconUpload,
   },
   {
@@ -34,7 +34,7 @@ export function PublishEarn() {
           Publish & earn
         </p>
         <h2 className="mt-3 max-w-xl font-display text-3xl tracking-tight md:text-4xl">
-          List a tool. Agents pay. You withdraw USDC.
+          List a tool. Agents pay. You withdraw USDC on Arc.
         </h2>
         <p className="mt-3 max-w-lg text-muted">
           You keep most of every payment. The network takes a small cut so the

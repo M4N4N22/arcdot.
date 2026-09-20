@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { UsdcOnArcPrice } from "@/components/brand/UsdcOnArcMark";
 import { BrandMark } from "@/components/explore/BrandMark";
 
 type PublishPreviewProps = {
@@ -53,7 +54,7 @@ export function PublishPreview({
           <p className="truncate font-semibold tracking-tight">{displayTitle}</p>
           <p className="mt-0.5 line-clamp-2 text-sm text-muted">{displayDesc}</p>
           <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
-            <span className="font-mono">{displayPrice} USDC</span>
+            <UsdcOnArcPrice amount={displayPrice} withMark className="text-xs" />
             <span className="truncate">{ownerLabel}</span>
           </div>
           <p className="mt-1 truncate font-mono text-[11px] text-muted">

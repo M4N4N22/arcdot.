@@ -22,7 +22,7 @@ function humanizeLog(text: string): string {
     lower.includes("pay") ||
     lower.includes("deposit")
   ) {
-    return "Confirming a small USDC payment on Arc…";
+    return "Confirming a small USDC on Arc payment…";
   }
   if (
     lower.includes("unlock") ||
@@ -87,7 +87,7 @@ export function LiveUnlockStrip({ withSpotlight = false }: LiveUnlockStripProps)
     try {
       const catalogRes = await fetch("/api/services");
       if (!catalogRes.ok) throw new Error("catalog");
-      pushLog("Confirming a small USDC payment on Arc…");
+      pushLog("Confirming a small USDC on Arc payment…");
       setPhase("pay");
 
       const res = await fetch("/api/demo/run", {
@@ -95,7 +95,7 @@ export function LiveUnlockStrip({ withSpotlight = false }: LiveUnlockStripProps)
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt:
-            "In two short sentences, explain why tiny USDC payments help agents buy API access.",
+            "In two short sentences, explain why tiny USDC on Arc payments help agents buy API access.",
         }),
       });
 

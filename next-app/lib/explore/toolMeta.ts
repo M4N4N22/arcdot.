@@ -65,7 +65,7 @@ export function getToolMeta(
     tagline: fallbackDescription?.slice(0, 120) || undefined,
     useCases: fallbackDescription
       ? [fallbackDescription]
-      : ["Pay a few cents in USDC to unlock a reply from this tool."],
+      : ["Pay a few cents in USDC on Arc to unlock a reply from this tool."],
     imagePath: null,
   };
 }

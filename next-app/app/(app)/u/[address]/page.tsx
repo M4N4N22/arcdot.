@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { UsdcOnArcPrice } from "@/components/brand/UsdcOnArcMark";
 import {
   getProfile,
   listServicesForOwner,
@@ -61,7 +62,9 @@ export default async function PublicSellerPage({
                 </p>
                 <p className="mt-1 text-sm text-muted">{s.description}</p>
               </div>
-              <p className="shrink-0 font-mono text-sm">{s.price_usdc} USDC</p>
+              <p className="shrink-0 font-mono text-sm">
+                <UsdcOnArcPrice amount={s.price_usdc} />
+              </p>
             </Link>
           </li>
         ))}

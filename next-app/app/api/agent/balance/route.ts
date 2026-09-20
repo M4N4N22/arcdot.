@@ -59,7 +59,7 @@ export async function GET(req: Request) {
       chainId: ARC.chainId,
       explorerUrl,
       fundHint: lowBalance
-        ? `Send native USDC on Arc (${ARC.network}) to this address. Keep at least ${alertThresholdUsdc} USDC available.`
+        ? `Send USDC on Arc (${ARC.network}) to this address. Keep at least ${alertThresholdUsdc} USDC available. USDC on other networks will not appear.`
         : null,
     });
   } catch (err) {

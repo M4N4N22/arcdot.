@@ -38,11 +38,11 @@ export function formatFundsNeededMessage(params: {
     : "";
 
   const text = [
-    `Payment needed${serviceBit}: your agent wallet has ${have} USDC but this unlock costs ${need} USDC on ${networkLabel}.`,
+    `Payment needed${serviceBit}: your agent wallet has ${have} USDC on Arc but this unlock costs ${need} USDC on ${networkLabel}.`,
     "",
     "For you (human):",
     `1. Open ${fundUrl} (QR + live balance).`,
-    `2. Send at least 0.05 USDC on ${networkLabel} to:`,
+    `2. Send at least 0.05 USDC on ${networkLabel} (USDC on Arc only — not Ethereum, Base, or other chains) to:`,
     `   ${params.status.address}`,
     "3. After the balance updates, say you’re funded so we can retry — do not invent an answer.",
     "",

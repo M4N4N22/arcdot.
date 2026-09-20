@@ -47,7 +47,7 @@ const MCP_TOOLS: McpTool[] = [
   {
     name: "arcdot_unlock",
     description:
-      "Call ONLY after arcdot_discover, with a real service slug from that list. Unlocks that service. Args: { service, prompt }. Local MCP proxy auto-pays when the agent wallet has USDC. If NO_WALLET: tell the human briefly, then run createCommand via the terminal tool (user approval UI), open fundUrl, then retry unlock. If INSUFFICIENT_FUNDS: show fundUrl/address and retry after funding. Never invent an answer.",
+      "Call ONLY after arcdot_discover, with a real service slug from that list. Unlocks that service. Args: { service, prompt }. Local MCP proxy auto-pays when the agent wallet has USDC on Arc. If NO_WALLET: tell the human briefly, then run createCommand via the terminal tool (user approval UI), open fundUrl, then retry unlock. If INSUFFICIENT_FUNDS: show fundUrl/address and retry after funding with USDC on Arc. Never invent an answer.",
     inputSchema: {
       type: "object",
       required: ["service", "prompt"],
@@ -254,7 +254,7 @@ export async function callMcpTool(params: {
       chainId: ARC.chainId,
       gateway: ARC.gatewayAddress || null,
       mcp: `${origin}/api/mcp`,
-      note: "Prices are in USDC. Next: arcdot_unlock with { service, prompt }. If the wallet needs funds, relay the fund checklist to the human — do not invent an answer.",
+      note: "Prices are in USDC on Arc. Next: arcdot_unlock with { service, prompt }. If the wallet needs funds, relay the fund checklist to the human — do not invent an answer.",
       next: "arcdot_unlock",
       services,
     };

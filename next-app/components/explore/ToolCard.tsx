@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { UsdcOnArcPrice } from "@/components/brand/UsdcOnArcMark";
 import { BrandMark } from "@/components/explore/BrandMark";
 import { getToolMeta, resolveToolImage } from "@/lib/explore/toolMeta";
 
@@ -76,7 +77,7 @@ export function ToolCard({
             <p className="truncate text-xs text-muted">{blurb}</p>
           </div>
           <p className="shrink-0 font-mono text-xs text-muted">
-            {priceUsdc} USDC
+            <UsdcOnArcPrice amount={priceUsdc} />
           </p>
         </Link>
         <Link
@@ -159,9 +160,10 @@ export function ToolCard({
 
         <p className="mt-2.5 flex items-center gap-1.5 text-[12px] text-muted">
           <PriceDot />
-          <span className="font-medium text-foreground/80">
-            {priceUsdc} USDC
-          </span>
+          <UsdcOnArcPrice
+            amount={priceUsdc}
+            className="font-medium text-foreground/80"
+          />
           <span className="text-muted/50">·</span>
           <span className="truncate">{category}</span>
         </p>

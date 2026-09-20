@@ -21,7 +21,7 @@ export const BUYER_STEPS = [
   {
     n: "2",
     title: "Fund it",
-    body: "Send about 0.05 USDC on Arc. Use /fund for QR and live balance.",
+    body: "Send about 0.05 USDC on Arc (not other chains). Use /fund for QR and live balance.",
     href: "/fund",
   },
   {

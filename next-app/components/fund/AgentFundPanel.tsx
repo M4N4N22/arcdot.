@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { isAddress } from "viem";
+import { UsdcOnArcCallout, UsdcOnArcMark } from "@/components/brand/UsdcOnArcMark";
 import { CopyButton } from "@/components/hub/CopyButton";
 
 export const AGENT_WALLET_ADDRESS_KEY = "arcdot.hub.agentWalletAddress";
@@ -121,6 +122,11 @@ export function AgentFundPanel({ initialAddress }: AgentFundPanelProps) {
 
   return (
     <div className="rounded-xl border border-line bg-surface p-4 md:p-5">
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+        <UsdcOnArcMark size="md" />
+        <p className="text-[12px] text-muted">Wrong network = invisible funds</p>
+      </div>
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
         <label className="block min-w-0 flex-1 text-sm">
           <span className="text-[13px] font-medium text-foreground">
@@ -231,17 +237,18 @@ export function AgentFundPanel({ initialAddress }: AgentFundPanelProps) {
                     {Number(balance.balanceUsdc).toLocaleString(undefined, {
                       maximumFractionDigits: 4,
                     })}{" "}
-                    <span className="text-base text-muted">USDC</span>
+                    <span className="text-base text-muted">USDC on Arc</span>
                   </p>
                   <p className="mt-1 text-sm text-muted">
                     {balance.network}
                     {funded
                       ? " · ready to spend"
-                      : ` · needs at least ${balance.alertThresholdUsdc} USDC`}
+                      : ` · needs at least ${balance.alertThresholdUsdc} USDC on Arc`}
                   </p>
                   {!funded && (
                     <p className="mt-2 text-sm text-foreground">
                       Send USDC on Arc to the address above, then hit Refresh.
+                      Other networks will not credit this balance.
                     </p>
                   )}
                 </>
@@ -251,11 +258,13 @@ export function AgentFundPanel({ initialAddress }: AgentFundPanelProps) {
                 </p>
               )}
             </div>
+
+            <UsdcOnArcCallout />
           </div>
         </div>
       ) : (
         <p className="mt-4 text-[13px] text-muted">
-          Save an address to show a QR code and live balance here.
+          Save an address to show a QR code and live USDC on Arc balance here.
         </p>
       )}
     </div>
