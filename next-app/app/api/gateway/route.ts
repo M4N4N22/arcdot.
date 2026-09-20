@@ -301,11 +301,17 @@ async function fulfillUpstream(params: {
       }
     }
 
+    const upstreamDetail =
+      err instanceof Error && err.message.trim()
+        ? err.message.trim().slice(0, 300)
+        : null;
+
     logGateway({
       outcome: "upstream_failed",
       requestId: params.requestId,
       service: params.serviceKey,
       creditIssued,
+      upstreamDetail,
       latencyMs: Date.now() - params.started,
     });
     return NextResponse.json(
@@ -318,6 +324,7 @@ async function fulfillUpstream(params: {
             ? "Paid request failed after settlement. Retry the same payment within 24h to redeem a one-time unlock credit (no second deposit)."
             : "Paid request could not be completed. Contact support with requestId.",
           creditIssued,
+          ...(upstreamDetail ? { detail: upstreamDetail } : {}),
         },
         requestId: params.requestId,
         timestamp: new Date().toISOString(),
@@ -532,6 +539,7 @@ export async function POST(request: Request) {
       service: serviceRow.slug,
     });
     const split = splitAmounts(expectedAmount);
+    // Re-issue credit if fulfill fails so a broken upstream does not burn the free retry.
     return fulfillUpstream({
       serviceRow,
       serviceKey: body.data.service,
@@ -553,7 +561,7 @@ export async function POST(request: Request) {
       amountWei: serviceRow.price_wei,
       sellerAmountWei: split.sellerAmountWei.toString(),
       platformAmountWei: split.platformAmountWei.toString(),
-      issueCreditOnFail: false,
+      issueCreditOnFail: true,
     });
   }
 
