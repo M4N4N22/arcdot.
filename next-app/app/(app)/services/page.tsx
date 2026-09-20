@@ -1,8 +1,6 @@
 import Link from "next/link";
-import {
-  ExploreBrowser,
-  type ExploreToolItem,
-} from "@/components/explore/ExploreBrowser";
+import { ExploreBrowser } from "@/components/explore/ExploreBrowser";
+import type { ExploreToolItem } from "@/components/explore/types";
 import {
   getProfilesByAddresses,
   listPublishedServices,
@@ -47,8 +45,8 @@ export default async function ExplorePage() {
             Explore
           </h1>
           <p className="mt-1.5 max-w-lg text-sm text-muted">
-            Browse live tools on the network — search, filter, and try any of
-            them in the browser.
+            Browse live tools on Arc — search, filter, and try any of them in
+            the browser.
           </p>
         </div>
       </div>

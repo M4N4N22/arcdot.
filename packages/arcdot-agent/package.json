@@ -52,5 +52,13 @@
     "url": "git+https://github.com/M4N4N22/arcdot..git",
     "directory": "packages/arcdot-agent"
   },
+  "homepage": "https://github.com/M4N4N22/arcdot./tree/main/packages/arcdot-agent",
+  "bugs": {
+    "url": "https://github.com/M4N4N22/arcdot./issues"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
   "license": "MIT"
 }

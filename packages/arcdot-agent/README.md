@@ -4,16 +4,14 @@ Buyer agent client for **arcdot.** — local wallet, auto-settle on Arc, MCP pro
 
 **Buyer keys never leave your machine.** The arcdot. server does not hold or spend your USDC.
 
-## Install (GitHub)
-
-npm publish is not live yet. Install from this repo:
+## Install
 
 ```bash
 # one-shot CLI
-npx --yes --package="github:M4N4N22/arcdot.#path:packages/arcdot-agent" arcdot wallet create
+npx --yes @arcdot/agent wallet create
 
 # as a dependency
-npm install "github:M4N4N22/arcdot.#path:packages/arcdot-agent"
+npm install @arcdot/agent
 ```
 
 From this monorepo (contributors):
@@ -27,7 +25,7 @@ arcdot wallet create
 
 ```bash
 # 1) Create a dedicated agent wallet (saved to ~/.arcdot/wallet.json)
-npx --yes --package="github:M4N4N22/arcdot.#path:packages/arcdot-agent" arcdot wallet create
+npx --yes @arcdot/agent wallet create
 
 # 2) Fund the printed address with native USDC on Arc Mainnet (chain 5042)
 
@@ -37,20 +35,13 @@ npx --yes --package="github:M4N4N22/arcdot.#path:packages/arcdot-agent" arcdot w
 #   "mcpServers": {
 #     "arcdot": {
 #       "command": "npx",
-#       "args": [
-#         "--yes",
-#         "--package=github:M4N4N22/arcdot.#path:packages/arcdot-agent",
-#         "arcdot",
-#         "mcp",
-#         "--origin",
-#         "https://YOUR_HOST"
-#       ]
+#       "args": ["--yes", "@arcdot/agent", "mcp", "--origin", "https://YOUR_HOST"]
 #     }
 #   }
 # }
 
 # 3b) Or unlock from the CLI
-npx --yes --package="github:M4N4N22/arcdot.#path:packages/arcdot-agent" arcdot unlock \
+npx --yes @arcdot/agent unlock \
   --origin https://YOUR_HOST --service quick-brief --prompt "Hi"
 ```
 

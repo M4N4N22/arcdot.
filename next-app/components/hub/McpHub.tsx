@@ -7,7 +7,7 @@ import { EditorMcpPanel } from "@/components/hub/EditorMcpPanel";
 import { HubCodePanel } from "@/components/hub/HubCodePanel";
 import {
   AGENT_GITHUB_URL,
-  AGENT_GIT_PACKAGE,
+  AGENT_NPM_PACKAGE,
   agentInstallCommands,
 } from "@/lib/agent/install";
 import {
@@ -91,7 +91,7 @@ export function McpHub() {
         <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted md:text-base">
           Point editors and frameworks at arcdot. with{" "}
           <span className="font-medium text-foreground">@arcdot/agent</span>{" "}
-          (GitHub install) — local wallet, auto-settle, no API keys on our
+          from npm — local wallet, auto-settle, no API keys on our
           server.
         </p>
 
@@ -167,15 +167,15 @@ export function McpHub() {
           Install buyer client
         </h2>
         <p className="mt-2 max-w-xl text-sm text-muted">
-          Distributed from GitHub for now (npm publish later). One command
-          creates a local wallet — no clone required for day-to-day use.
+          Distributed from npm. One command creates a local wallet — no clone
+          required for day-to-day use.
         </p>
 
         <div className="mt-6">
           <HubCodePanel
             title="bash"
             filename="install.sh"
-            code={`# Create wallet (GitHub package)\n${agentInstallCommands.npxWalletCreate}\n\n# Add as a dependency\n${agentInstallCommands.npmInstall}\n\n# Package: ${AGENT_GIT_PACKAGE}`}
+            code={`# Create wallet\n${agentInstallCommands.npxWalletCreate}\n\n# Add as a dependency\n${agentInstallCommands.npmInstall}\n\n# Package: ${AGENT_NPM_PACKAGE}`}
             accentCopy
           />
         </div>
@@ -251,7 +251,7 @@ export function McpHub() {
           Give your agent a wallet
         </h2>
         <p className="mt-2 max-w-xl text-sm text-muted">
-          No repo clone. Install from GitHub, fund a local wallet, then connect
+          No repo clone. Install from npm, fund a local wallet, then connect
           via the MCP proxy — arcdot. never holds your key.
         </p>
 
@@ -305,7 +305,7 @@ export function McpHub() {
         </div>
 
         <p className="mt-4 text-xs text-muted">
-          Package from GitHub: {AGENT_GIT_PACKAGE}. Keys stay in ~/.arcdot or
+          Package: {AGENT_NPM_PACKAGE}. Keys stay in ~/.arcdot or
           ARCDOT_PRIVATE_KEY on the buyer host only.
         </p>
       </section>
@@ -343,7 +343,7 @@ export function McpHub() {
                 <span className="pt-0.5">
                   Run the{" "}
                   <span className="font-medium text-foreground">
-                    GitHub install
+                    npm install
                   </span>{" "}
                   wallet command and fund the address
                 </span>

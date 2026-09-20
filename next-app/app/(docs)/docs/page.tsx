@@ -10,7 +10,7 @@ const cards = [
   {
     href: "/docs/agents/client",
     title: "Install buyer client",
-    body: "GitHub-only @arcdot/agent — wallet, auto-settle, MCP proxy.",
+    body: "@arcdot/agent on npm — wallet, auto-settle, MCP proxy.",
   },
   {
     href: "/hub",

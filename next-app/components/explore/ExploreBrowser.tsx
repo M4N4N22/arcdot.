@@ -3,26 +3,17 @@
 import Link from "next/link";
 import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import { ToolCard } from "@/components/explore/ToolCard";
+import type { ExploreToolItem } from "@/components/explore/types";
 import { FEATURED_TOOL_SLUGS } from "@/lib/explore/toolMeta";
 
-export type ExploreToolItem = {
-  id: string;
-  slug: string;
-  title: string;
-  description: string;
-  priceUsdc: string;
-  priceNum: number;
-  ownerLabel: string;
-  ownerAddress: string;
-  imageUrl?: string | null;
-  category: string;
-  createdAt: string;
-};
+export type { ExploreToolItem } from "@/components/explore/types";
 
 type SortKey = "featured" | "price-asc" | "price-desc" | "name" | "newest";
 type PriceFilter = "all" | "starter" | "paid";
 type ViewMode = "grid" | "list";
 type QuickChip = "all" | "featured" | "newest" | string;
+
+const PAGE_SIZE = 24;
 
 type ExploreBrowserProps = {
   tools: ExploreToolItem[];
@@ -35,6 +26,7 @@ export function ExploreBrowser({ tools }: ExploreBrowserProps) {
   const [sort, setSort] = useState<SortKey>("featured");
   const [view, setView] = useState<ViewMode>("grid");
   const [chip, setChip] = useState<QuickChip>("all");
+  const [page, setPage] = useState(1);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const deferredQuery = useDeferredValue(query);
 
@@ -79,6 +71,7 @@ export function ExploreBrowser({ tools }: ExploreBrowserProps) {
     setPriceFilter("all");
     setChip("all");
     setSort("featured");
+    setPage(1);
   }
 
   const filtered = useMemo(() => {
@@ -137,6 +130,38 @@ export function ExploreBrowser({ tools }: ExploreBrowserProps) {
     return list;
   }, [tools, deferredQuery, categories, priceFilter, sort, chip]);
 
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageStart = (currentPage - 1) * PAGE_SIZE;
+  const pageItems = filtered.slice(pageStart, pageStart + PAGE_SIZE);
+
+  useEffect(() => {
+    setPage(1);
+  }, [deferredQuery, categories, priceFilter, sort, chip]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
+  function goToPage(next: number) {
+    const clamped = Math.min(Math.max(1, next), totalPages);
+    setPage(clamped);
+    document
+      .getElementById("explore-results")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  const pageNumbers = useMemo(() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    const pages = new Set<number>([1, totalPages, currentPage]);
+    for (const n of [currentPage - 1, currentPage + 1]) {
+      if (n >= 1 && n <= totalPages) pages.add(n);
+    }
+    return Array.from(pages).sort((a, b) => a - b);
+  }, [totalPages, currentPage]);
+
   const quickChips: { id: QuickChip; label: string }[] = [
     { id: "all", label: "All tools" },
     { id: "featured", label: "Featured" },
@@ -159,7 +184,7 @@ export function ExploreBrowser({ tools }: ExploreBrowserProps) {
   }
 
   const filterPanel = (
-    <div className="flex h-full flex-col">
+    <div className="flex h-fit flex-col">
       <div className="flex items-center justify-between px-1 pb-4">
         <p className="text-sm font-semibold tracking-tight">Filters</p>
         <button
@@ -171,7 +196,7 @@ export function ExploreBrowser({ tools }: ExploreBrowserProps) {
         </button>
       </div>
 
-      <div className="space-y-6 overflow-y-auto pb-4">
+      <div className="space-y-6 pb-4">
         <section>
           <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.12em] text-muted">
             Category
@@ -242,21 +267,24 @@ export function ExploreBrowser({ tools }: ExploreBrowserProps) {
       <button
         type="button"
         onClick={clearFilters}
-        className="mt-auto inline-flex h-10 w-full items-center justify-center rounded-full border border-line bg-surface text-sm font-medium transition-colors hover:bg-surface-muted"
+        className="inline-flex h-10 w-full items-center justify-center rounded-full border border-line bg-surface text-sm font-medium transition-colors hover:bg-surface-muted"
       >
         Clear all filters
       </button>
     </div>
   );
 
+  const rangeLabel =
+    filtered.length === 0
+      ? null
+      : `${(pageStart + 1).toLocaleString()}–${Math.min(pageStart + PAGE_SIZE, filtered.length).toLocaleString()}`;
+
   return (
-    <div className="mt-6 grid gap-5 lg:grid-cols-[15.5rem_minmax(0,1fr)] lg:gap-6">
-      {/* Desktop filter rail */}
-      <aside className="hidden rounded-3xl border border-line bg-surface p-5 shadow-sm lg:block">
+    <div className="mt-6 grid items-start gap-5 lg:grid-cols-[15.5rem_minmax(0,1fr)] lg:gap-6">
+      <aside className="hidden h-fit rounded-3xl border border-line bg-surface p-5 shadow-sm lg:block">
         {filterPanel}
       </aside>
 
-      {/* Main directory */}
       <div className="min-w-0">
         <div className="rounded-3xl border border-line bg-surface p-4 shadow-sm sm:p-5">
           <label className="relative block">
@@ -295,12 +323,21 @@ export function ExploreBrowser({ tools }: ExploreBrowserProps) {
             })}
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+          <div
+            id="explore-results"
+            className="mt-4 flex flex-wrap items-center justify-between gap-3 scroll-mt-4"
+          >
             <p className="text-sm font-medium tracking-tight">
               {filtered.length.toLocaleString()}{" "}
               <span className="font-normal text-muted">
                 tool{filtered.length === 1 ? "" : "s"}
               </span>
+              {rangeLabel && totalPages > 1 && (
+                <span className="font-normal text-muted">
+                  {" "}
+                  · showing {rangeLabel}
+                </span>
+              )}
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <button
@@ -369,45 +406,103 @@ export function ExploreBrowser({ tools }: ExploreBrowserProps) {
               Clear filters
             </button>
           </div>
-        ) : view === "grid" ? (
-          <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filtered.map((t) => (
-              <li key={t.id} className="min-w-0">
-                <ToolCard
-                  slug={t.slug}
-                  title={t.title}
-                  description={t.description}
-                  priceUsdc={t.priceUsdc}
-                  ownerLabel={t.ownerLabel}
-                  ownerAddress={t.ownerAddress}
-                  imageUrl={t.imageUrl}
-                  category={t.category}
-                />
-              </li>
-            ))}
-          </ul>
         ) : (
-          <ul className="mt-5 space-y-2">
-            {filtered.map((t) => (
-              <li key={t.id}>
-                <ToolCard
-                  slug={t.slug}
-                  title={t.title}
-                  description={t.description}
-                  priceUsdc={t.priceUsdc}
-                  ownerLabel={t.ownerLabel}
-                  ownerAddress={t.ownerAddress}
-                  imageUrl={t.imageUrl}
-                  category={t.category}
-                  compact
-                />
-              </li>
-            ))}
-          </ul>
+          <>
+            {view === "grid" ? (
+              <ul className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {pageItems.map((t) => (
+                  <li key={t.id} className="min-w-0">
+                    <ToolCard
+                      slug={t.slug}
+                      title={t.title}
+                      description={t.description}
+                      priceUsdc={t.priceUsdc}
+                      ownerLabel={t.ownerLabel}
+                      ownerAddress={t.ownerAddress}
+                      imageUrl={t.imageUrl}
+                      category={t.category}
+                    />
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <ul className="mt-5 space-y-2">
+                {pageItems.map((t) => (
+                  <li key={t.id}>
+                    <ToolCard
+                      slug={t.slug}
+                      title={t.title}
+                      description={t.description}
+                      priceUsdc={t.priceUsdc}
+                      ownerLabel={t.ownerLabel}
+                      ownerAddress={t.ownerAddress}
+                      imageUrl={t.imageUrl}
+                      category={t.category}
+                      compact
+                    />
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {totalPages > 1 && (
+              <nav
+                aria-label="Pagination"
+                className="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-line bg-surface px-4 py-3 shadow-sm"
+              >
+                <p className="text-xs text-muted">
+                  Page {currentPage} of {totalPages}
+                </p>
+                <div className="flex flex-wrap items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => goToPage(currentPage - 1)}
+                    disabled={currentPage <= 1}
+                    className="inline-flex h-9 items-center rounded-full border border-line px-3 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-40 hover:enabled:bg-surface-muted"
+                  >
+                    Previous
+                  </button>
+                  {pageNumbers.map((n, i) => {
+                    const prev = pageNumbers[i - 1];
+                    const showGap = prev != null && n - prev > 1;
+                    return (
+                      <span key={n} className="contents">
+                        {showGap && (
+                          <span className="px-1 text-xs text-muted" aria-hidden>
+                            …
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => goToPage(n)}
+                          aria-current={n === currentPage ? "page" : undefined}
+                          className={[
+                            "inline-flex h-9 min-w-9 items-center justify-center rounded-full px-2.5 text-xs font-medium",
+                            n === currentPage
+                              ? "bg-foreground text-surface"
+                              : "border border-line hover:bg-surface-muted",
+                          ].join(" ")}
+                        >
+                          {n}
+                        </button>
+                      </span>
+                    );
+                  })}
+                  <button
+                    type="button"
+                    onClick={() => goToPage(currentPage + 1)}
+                    disabled={currentPage >= totalPages}
+                    className="inline-flex h-9 items-center rounded-full border border-line px-3 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-40 hover:enabled:bg-surface-muted"
+                  >
+                    Next
+                  </button>
+                </div>
+              </nav>
+            )}
+          </>
         )}
       </div>
 
-      {/* Mobile filters drawer */}
       {filtersOpen && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <button

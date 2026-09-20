@@ -34,7 +34,7 @@ function OwnerAvatar({ label }: { label: string }) {
   );
 }
 
-/** Marketplace agent card — matches the reference layout (banner, mark, Go). */
+/** Marketplace agent card — banner, mark, try CTA. */
 export function ToolCard({
   slug,
   title,
@@ -50,14 +50,13 @@ export function ToolCard({
   const image = resolveToolImage({ imageUrl, slug });
   const blurb = meta.tagline || description;
   const tier = priceTier(priceUsdc);
+  const href = `/services/${slug}`;
+  const tryHref = `/services/${slug}#try`;
 
   if (compact) {
     return (
       <article className="flex items-center gap-3 rounded-2xl border border-line bg-surface p-3 shadow-sm transition-shadow hover:shadow-md">
-        <Link
-          href={`/services/${slug}`}
-          className="flex min-w-0 flex-1 items-center gap-3"
-        >
+        <Link href={href} className="flex min-w-0 flex-1 items-center gap-3">
           {image ? (
             <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-full border border-line bg-surface">
               <Image
@@ -81,11 +80,11 @@ export function ToolCard({
           </p>
         </Link>
         <Link
-          href={`/services/${slug}#try`}
+          href={tryHref}
           className="inline-flex h-9 shrink-0 items-center gap-1 rounded-xl bg-surface-muted px-3.5 text-xs font-semibold text-foreground ring-1 ring-line transition-colors hover:bg-foreground hover:text-surface"
         >
-          Go
-          <GoIcon />
+          Try
+          <TryIcon />
         </Link>
       </article>
     );
@@ -93,8 +92,7 @@ export function ToolCard({
 
   return (
     <article className="group flex flex-col overflow-hidden rounded-[1.15rem] border border-line bg-surface shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-shadow hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)]">
-      {/* Banner + circular mark (overlaps into body) */}
-      <Link href={`/services/${slug}`} className="relative block">
+      <Link href={href} className="relative block">
         <div
           className="relative h-[7.25rem] overflow-hidden bg-[#eceae6]"
           style={{
@@ -109,7 +107,6 @@ export function ToolCard({
               "100% 100%, 22px 22px, 22px 22px, 18px 18px, 100% 100%",
           }}
         >
-          {/* Soft wave silhouette */}
           <svg
             className="pointer-events-none absolute inset-x-0 bottom-0 h-16 w-full text-foreground/[0.04]"
             viewBox="0 0 320 64"
@@ -141,15 +138,17 @@ export function ToolCard({
             </div>
           ) : (
             <div className="rounded-full border-[3px] border-surface shadow-md">
-              <BrandMark size="xl" className="h-[3.75rem] w-[3.75rem] text-[1.35rem]" />
+              <BrandMark
+                size="xl"
+                className="h-[3.75rem] w-[3.75rem] text-[1.35rem]"
+              />
             </div>
           )}
         </div>
       </Link>
 
-      {/* Body */}
       <div className="flex flex-1 flex-col px-4 pb-4 pt-9">
-        <Link href={`/services/${slug}`} className="min-w-0">
+        <Link href={href} className="min-w-0">
           <h2 className="truncate text-[15px] font-semibold leading-snug tracking-tight text-foreground">
             {title}
           </h2>
@@ -158,7 +157,6 @@ export function ToolCard({
           </p>
         </Link>
 
-        {/* Meta row — price fills the “rating” slot honestly */}
         <p className="mt-2.5 flex items-center gap-1.5 text-[12px] text-muted">
           <PriceDot />
           <span className="font-medium text-foreground/80">
@@ -168,7 +166,6 @@ export function ToolCard({
           <span className="truncate">{category}</span>
         </p>
 
-        {/* Author */}
         <div className="mt-2.5 flex items-center gap-2">
           <OwnerAvatar label={ownerLabel} />
           <Link
@@ -179,17 +176,16 @@ export function ToolCard({
           </Link>
         </div>
 
-        {/* Actions — Go + secondary */}
         <div className="mt-4 flex items-center gap-2">
           <Link
-            href={`/services/${slug}#try`}
+            href={tryHref}
             className="inline-flex h-10 flex-1 items-center justify-center gap-2 rounded-xl bg-[#efeeea] text-[13px] font-semibold text-foreground ring-1 ring-black/[0.04] transition-colors hover:bg-foreground hover:text-surface"
           >
-            <GoIcon />
-            Go
+            <TryIcon />
+            Try
           </Link>
           <Link
-            href={`/services/${slug}`}
+            href={href}
             aria-label={`Open ${title}`}
             className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#efeeea] text-muted ring-1 ring-black/[0.04] transition-colors hover:text-foreground"
           >
@@ -201,7 +197,7 @@ export function ToolCard({
   );
 }
 
-function GoIcon() {
+function TryIcon() {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
       <path

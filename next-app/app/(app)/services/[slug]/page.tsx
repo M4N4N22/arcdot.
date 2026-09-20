@@ -266,7 +266,6 @@ export default function ServiceDetailPage() {
         ← Explore
       </Link>
 
-      {/* Header */}
       <header className="mt-6 flex max-w-2xl animate-fade-up flex-col gap-5 sm:flex-row sm:items-start">
         {image ? (
           <div className="relative h-20 w-20 shrink-0 overflow-hidden border border-line bg-background">
@@ -289,9 +288,7 @@ export default function ServiceDetailPage() {
           <h1 className="mt-1 font-display text-3xl tracking-tight md:text-4xl">
             {service.title}
           </h1>
-          {meta.tagline && (
-            <p className="mt-2 text-muted">{meta.tagline}</p>
-          )}
+          {meta.tagline && <p className="mt-2 text-muted">{meta.tagline}</p>}
           <p className="mt-4 font-mono text-sm">
             {service.price_usdc} USDC per request
           </p>
@@ -316,7 +313,6 @@ export default function ServiceDetailPage() {
         </div>
       </header>
 
-      {/* About */}
       <section className="mt-12 max-w-2xl border-t border-line pt-10">
         <h2 className="font-display text-2xl tracking-tight">About</h2>
         <p className="mt-3 leading-relaxed text-muted">{service.description}</p>
@@ -331,7 +327,6 @@ export default function ServiceDetailPage() {
         </ul>
       </section>
 
-      {/* Try in browser */}
       <section
         id="try"
         className="mt-12 max-w-2xl scroll-mt-24 border-t border-line pt-10"
@@ -412,7 +407,6 @@ export default function ServiceDetailPage() {
         </div>
       </section>
 
-      {/* For agents */}
       <section className="mt-12 max-w-2xl border-t border-line pt-8">
         <p className="text-sm text-muted">
           Building an agent? Connect via the{" "}

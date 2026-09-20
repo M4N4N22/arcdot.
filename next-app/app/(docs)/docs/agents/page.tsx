@@ -9,7 +9,7 @@ import {
   DocsUl,
 } from "@/components/docs/DocsProse";
 import {
-  AGENT_GIT_PACKAGE,
+  AGENT_NPM_PACKAGE,
   agentInstallCommands,
   agentMcpProxyConfig,
 } from "@/lib/agent/install";
@@ -29,7 +29,7 @@ export default function DocsAgentsPage() {
         <Link href="/docs/agents/client" className="underline underline-offset-4">
           @arcdot/agent
         </Link>{" "}
-        from GitHub — it auto-settles and runs the Cursor MCP proxy.
+        from npm — it auto-settles and runs the Cursor MCP proxy.
       </DocsCallout>
       <DocsH2>What you need</DocsH2>
       <DocsUl>
@@ -108,13 +108,13 @@ export default function DocsAgentsPage() {
 
       <DocsH2>Recommended: @arcdot/agent</DocsH2>
       <DocsP>
-        GitHub-distributed buyer client — local wallet, auto-settle, MCP proxy
-        for Cursor. Keys never touch the arcdot. server:
+        Buyer client on npm — local wallet, auto-settle, MCP proxy for Cursor.
+        Keys never touch the arcdot. server:
       </DocsP>
       <CodeBlock
         title="bash"
         code={`${agentInstallCommands.npxWalletCreate}
-npx --yes --package="${AGENT_GIT_PACKAGE}" arcdot unlock --origin "$ORIGIN" --service <slug> --prompt "Your prompt"
+npx --yes ${AGENT_NPM_PACKAGE} unlock --origin "$ORIGIN" --service <slug> --prompt "Your prompt"
 
 # Cursor mcp.json — local proxy (auto-pays):
 ${agentMcpProxyConfig("$ORIGIN")}`}

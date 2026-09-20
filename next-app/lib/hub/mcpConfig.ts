@@ -1,7 +1,7 @@
 /** Client-safe MCP config snippets for the Integration Hub. */
 
 import {
-  AGENT_GIT_PACKAGE,
+  AGENT_NPM_PACKAGE,
   agentInstallCommands,
   agentMcpProxyConfig,
 } from "@/lib/agent/install";
@@ -10,7 +10,7 @@ export function mcpEndpoint(origin: string): string {
   return `${origin.replace(/\/$/, "")}/api/mcp`;
 }
 
-/** Cursor / IDE: local @arcdot/agent proxy via GitHub (until npm publish). */
+/** Cursor / IDE: local @arcdot/agent proxy via npm. */
 export function editorMcpConfig(origin: string): string {
   return agentMcpProxyConfig(origin);
 }
@@ -25,19 +25,12 @@ export function universalMcpConfig(origin: string): string {
       version: "0.1.0",
       protocol: "mcp",
       transport: "stdio-proxy",
-      client: "@arcdot/agent",
-      install: AGENT_GIT_PACKAGE,
+      client: AGENT_NPM_PACKAGE,
+      install: AGENT_NPM_PACKAGE,
       remoteEndpoint: url,
       proxy: {
         command: "npx",
-        args: [
-          "--yes",
-          `--package=${AGENT_GIT_PACKAGE}`,
-          "arcdot",
-          "mcp",
-          "--origin",
-          host,
-        ],
+        args: ["--yes", AGENT_NPM_PACKAGE, "mcp", "--origin", host],
       },
       methods: ["initialize", "tools/list", "tools/call", "ping"],
       discovery: {
@@ -47,7 +40,7 @@ export function universalMcpConfig(origin: string): string {
       payment: {
         chain: "arc-mainnet",
         chainId: 5042,
-        note: `Buyer wallet via GitHub package (${AGENT_GIT_PACKAGE}). Local MCP proxy auto-settles; keys never leave the buyer machine.`,
+        note: `Buyer wallet via ${AGENT_NPM_PACKAGE}. Local MCP proxy auto-settles; keys never leave the buyer machine.`,
       },
       docs: `${host}/hub`,
     },
@@ -58,7 +51,7 @@ export function universalMcpConfig(origin: string): string {
 
 export function pythonHttpSnippet(origin: string): string {
   const host = origin.replace(/\/$/, "");
-  return `# Prefer the buyer client — GitHub install (npm publish coming later)
+  return `# Prefer the buyer client from npm
 #
 #   ${agentInstallCommands.npxWalletCreate}
 #   # fund the address on Arc, then:
@@ -92,7 +85,7 @@ export function langchainStyleSnippet(origin: string): string {
 # CLI one-liner:
 #   ${agentInstallCommands.npxUnlock(host)}
 
-# Cursor: use the MCP proxy JSON from Hub (GitHub-backed npx)
+# Cursor: use the MCP proxy JSON from Hub (npx @arcdot/agent)
 `;
 }
 

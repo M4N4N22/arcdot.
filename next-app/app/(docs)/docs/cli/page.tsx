@@ -8,7 +8,7 @@ import {
   DocsUl,
 } from "@/components/docs/DocsProse";
 import {
-  AGENT_GIT_PACKAGE,
+  AGENT_NPM_PACKAGE,
   agentInstallCommands,
 } from "@/lib/agent/install";
 
@@ -20,7 +20,7 @@ export default function DocsCliPage() {
       pathname="/docs/cli"
       title="CLI"
       eyebrow="Tools"
-      description="@arcdot/agent from GitHub — wallet, unlock, and MCP proxy from any machine."
+      description="@arcdot/agent on npm — wallet, unlock, and MCP proxy from any machine."
     >
       <DocsCallout title="Install first">
         Run{" "}
@@ -31,47 +31,46 @@ export default function DocsCliPage() {
       <DocsH2>Buyer client</DocsH2>
       <DocsP>
         Keys stay under <code className="font-mono text-sm">~/.arcdot/</code>.
-        Package: <code className="font-mono text-sm">{AGENT_GIT_PACKAGE}</code>
+        Package: <code className="font-mono text-sm">{AGENT_NPM_PACKAGE}</code>
       </DocsP>
       <CodeBlock
         title="bash"
         code={`${agentInstallCommands.npxWalletCreate}
-npx --yes --package="${AGENT_GIT_PACKAGE}" arcdot wallet address
-npx --yes --package="${AGENT_GIT_PACKAGE}" arcdot wallet balance
+npx --yes ${AGENT_NPM_PACKAGE} wallet address
+npx --yes ${AGENT_NPM_PACKAGE} wallet balance
 
-npx --yes --package="${AGENT_GIT_PACKAGE}" arcdot unlock --origin "$ORIGIN" --service quick-brief --prompt "One-line summary"
+npx --yes ${AGENT_NPM_PACKAGE} unlock --origin "$ORIGIN" --service quick-brief --prompt "One-line summary"
 
 # stdio MCP proxy for Cursor:
-npx --yes --package="${AGENT_GIT_PACKAGE}" arcdot mcp --origin "$ORIGIN"`}
+npx --yes ${AGENT_NPM_PACKAGE} mcp --origin "$ORIGIN"`}
       />
 
       <DocsH2>Monorepo helpers</DocsH2>
       <DocsP>
         From <code className="font-mono text-sm">next-app/</code> while
-        developing this host:
+        developing this repo:
       </DocsP>
-      <CodeBlock
-        title="bash"
-        code={`npm run agent:probe -- "$ORIGIN"
-npm run agent:demo -- quick-brief "Hello"   # DEMO_AGENT_SECRET only`}
-      />
-
-      <DocsH2>Related</DocsH2>
       <DocsUl>
         <li>
-          <Link href="/hub" className="underline underline-offset-4">
-            MCP Hub
-          </Link>
+          <code className="font-mono text-sm">npm run agent:wallet</code>
         </li>
         <li>
-          <Link
-            href="/docs/agents/client"
-            className="underline underline-offset-4"
-          >
-            Agent client
-          </Link>
+          <code className="font-mono text-sm">npm run agent:pay</code>
+        </li>
+        <li>
+          <code className="font-mono text-sm">npm run agent:probe</code>
         </li>
       </DocsUl>
+      <DocsP>
+        Prefer the npm package for real agents. See{" "}
+        <Link
+          href="/docs/agents/client"
+          className="underline underline-offset-4 text-foreground"
+        >
+          Agent client
+        </Link>
+        .
+      </DocsP>
     </DocsProse>
   );
 }

@@ -28,12 +28,12 @@ Buyer client lives in [`../packages/arcdot-agent`](../packages/arcdot-agent) (`@
 ## Agents (GitHub install)
 
 ```bash
-npx --yes --package="github:M4N4N22/arcdot.#path:packages/arcdot-agent" arcdot wallet create
+npx --yes @arcdot/agent wallet create
 # fund address on Arc (5042), then:
-npx --yes --package="github:M4N4N22/arcdot.#path:packages/arcdot-agent" arcdot unlock \
+npx --yes @arcdot/agent unlock \
   --origin "$ORIGIN" --service quick-brief --prompt "Hi"
 
-# Cursor: copy mcp.json from /hub (GitHub-backed npx)
+# Cursor: copy mcp.json from /hub (npx @arcdot/agent)
 ```
 
 Keys stay on the buyer machine. The arcdot. server never auto-pays.
