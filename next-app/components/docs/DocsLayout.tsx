@@ -97,7 +97,7 @@ export function DocsLayoutClient({ children }: { children: ReactNode }) {
             { href: "/docs/agents/client", label: "Agent client" },
             { href: "/docs/sellers", label: "Sellers" },
             { href: "/docs/api/gateway", label: "API" },
-            { href: "/hub", label: "MCP Hub" },
+            { href: "/hub", label: "Hub" },
           ].map((l) => (
             <Link
               key={l.href}

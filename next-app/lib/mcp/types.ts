@@ -65,14 +65,22 @@ export function jsonRpcError(
   };
 }
 
-/** MCP tool name from service slug (a-z0-9_). */
+/** Legacy helper — services are no longer exposed as MCP tool names. */
 export function toolNameForSlug(slug: string): string {
   const safe = slug.replace(/-/g, "_").replace(/[^a-z0-9_]/gi, "");
   return `arcdot_${safe}`.slice(0, 64);
 }
 
+const RESERVED = new Set([
+  "arcdot_discover",
+  "arcdot_catalog",
+  "arcdot_health",
+  "arcdot_unlock",
+]);
+
+/** @deprecated Per-service MCP tools retired — use arcdot_unlock { service }. */
 export function slugFromToolName(name: string): string | null {
   if (!name.startsWith("arcdot_")) return null;
-  if (name === "arcdot_catalog" || name === "arcdot_health") return null;
+  if (RESERVED.has(name)) return null;
   return name.slice("arcdot_".length).replace(/_/g, "-");
 }

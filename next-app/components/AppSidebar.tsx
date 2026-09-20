@@ -139,13 +139,14 @@ const pillars: NavPillar[] = [
   {
     id: "hub",
     href: "/hub",
-    label: "MCP Hub",
+    label: "Hub",
     icon: <IconHub />,
     children: [
-      { href: "/hub/config", label: "Universal config" },
-      { href: "/hub/wallet", label: "Agent wallet" },
-      { href: "/hub/editors", label: "IDEs & clients" },
+      { href: "/fund", label: "Fund" },
+      { href: "/hub/editors", label: "Connect IDE" },
       { href: "/hub/frameworks", label: "Frameworks" },
+      { href: "/hub/wallet", label: "Wallet help" },
+      { href: "/hub/config", label: "Advanced" },
     ],
   },
   {
@@ -189,6 +190,7 @@ function pathMatches(pathname: string, href: string): boolean {
     return pathname === "/hub";
   }
   if (
+    href === "/fund" ||
     href === "/hub/config" ||
     href === "/hub/wallet" ||
     href === "/hub/editors" ||
@@ -363,7 +365,7 @@ export function AppSidebar({ onNavigate }: AppSidebarProps) {
           Docs
         </Link>
         <p className="px-2.5 text-xs leading-relaxed text-muted">
-          Publish tools in Studio. Connect buyers from MCP Hub.
+          Publish tools in Studio. Connect buyers from Hub.
         </p>
       </div>
     </div>

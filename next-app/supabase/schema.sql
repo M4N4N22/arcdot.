@@ -65,7 +65,7 @@ create policy "Public read requests"
   on public.requests for select
   using (true);
 
--- Seed demo services (platform-owned placeholder owner)
+-- Seed demo services (platform-owned placeholder owner — never the zero address)
 insert into public.profiles (wallet_address, display_name, bio)
 values (
   '0x00000000000000000000000000000000000000a1',
@@ -108,3 +108,7 @@ insert into public.services (
   'published'
 )
 on conflict (slug) do nothing;
+
+-- If a zero-address demo row was inserted by mistake, remove it (real seed ends in …00a1)
+delete from public.profiles
+where wallet_address = '0x0000000000000000000000000000000000000000';

@@ -46,11 +46,11 @@ export function EditorMcpPanel({ origin }: EditorMcpPanelProps) {
         <div className="space-y-4 px-4 py-4">
           <div>
             <p className="text-sm font-semibold tracking-tight">
-              Installed servers
+              MCP servers
             </p>
             <p className="mt-1 text-xs text-muted">
-              Local @arcdot/agent proxy auto-settles paid tools from your
-              wallet.
+              Local npx proxy — pays from your funded agent wallet. No project
+              install.
             </p>
           </div>
 

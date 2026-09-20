@@ -1,7 +1,20 @@
 /** Shared gateway types — server + agent clients. Not for UI copy. */
 
-export const ARC_CHAIN_ID = 5042 as const;
-export const ARC_RPC_URL_DEFAULT = "https://rpc.mainnet.arc.io" as const;
+import {
+  ARC_MAINNET_CHAIN_ID,
+  ARC_MAINNET_RPC_DEFAULT,
+  getArcChainId,
+} from "@/lib/arc/network";
+
+/** @deprecated Prefer getArcChainId() — kept for imports; resolves active network. */
+export const ARC_CHAIN_ID = getArcChainId();
+
+/** Mainnet default RPC (legacy constant name). */
+export const ARC_RPC_URL_DEFAULT = ARC_MAINNET_RPC_DEFAULT;
+
+/** Mainnet chain id constant for docs / static references. */
+export const ARC_MAINNET_ID = ARC_MAINNET_CHAIN_ID;
+
 export const NATIVE_USDC_DECIMALS = 18 as const;
 
 /** 0.01 USDC in Arc native 18-decimal wei */
@@ -24,6 +37,7 @@ export type GatewayErrorCode =
   | "AMOUNT_MISMATCH"
   | "SERVICE_NOT_FOUND"
   | "SERVICE_PAUSED"
+  | "SERVICE_MISCONFIGURED"
   | "RATE_LIMITED"
   | "SELLER_MISMATCH"
   | "DURABLE_STORE_REQUIRED"
@@ -37,7 +51,7 @@ export interface GatewayTargetPayload {
 
 export interface GatewayAuthMessage {
   domain: "arcdot.gateway";
-  chainId: typeof ARC_CHAIN_ID;
+  chainId: number;
   gateway: `0x${string}`;
   txHash: `0x${string}`;
   feeWei: string;
@@ -48,7 +62,7 @@ export interface GatewayAuthMessage {
 }
 
 export interface GatewayPaymentInstructions {
-  chainId: typeof ARC_CHAIN_ID;
+  chainId: number;
   gateway: `0x${string}`;
   /** Seller address for depositPayment(paymentId, seller). Null if unknown. */
   seller: `0x${string}` | null;

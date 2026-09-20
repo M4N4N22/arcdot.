@@ -192,15 +192,27 @@ cd arcdot.
 
 ### 2. Smart contract (`contracts/`)
 
+**Testnet first (E2E):**
+
 ```bash
 cd contracts
 cp .env.example .env
-# Set DEPLOYER_PRIVATE_KEY= (funded on Arc Mainnet)
+# Set DEPLOYER_PRIVATE_KEY_TESTNET= (funded with Arc Testnet USDC)
 npm install
 npm test
-npm run compile
+npm run deploy:testnet
+```
+
+Paste the printed `PROMPT_GATEWAY_ADDRESS_TESTNET=…` block into `next-app/.env.local` and keep `NEXT_PUBLIC_ARC_NETWORK=testnet`.
+
+**Mainnet (submission):**
+
+```bash
+# Set DEPLOYER_PRIVATE_KEY_MAINNET=
 npm run deploy:arc
 ```
+
+Then set `NEXT_PUBLIC_ARC_NETWORK=mainnet` and the `*_MAINNET` gateway vars.
 
 The deploy script prints an explorer link and a ready-to-paste `.env.local` block.
 

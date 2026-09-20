@@ -49,9 +49,9 @@ curl -s "$ORIGIN/.well-known/ai-plugin.json" | jq .`}
         <code className="font-mono text-sm">POST /api/mcp</code>. Setup lives in
         the{" "}
         <Link href="/hub" className="underline underline-offset-4 text-foreground">
-          MCP Hub
-        </Link>
-        ; protocol detail is in the{" "}
+          Hub
+        </Link>{" "}
+        (create → fund → Connect IDE); protocol detail is in the{" "}
         <Link
           href="/docs/mcp"
           className="underline underline-offset-4 text-foreground"

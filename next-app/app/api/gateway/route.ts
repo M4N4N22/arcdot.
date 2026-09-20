@@ -38,6 +38,7 @@ import type {
   GatewaySettlement,
 } from "@/lib/types/gateway";
 import { GATEWAY_FEE_USDC } from "@/lib/types/gateway";
+import { isPlatformDemoService } from "@/lib/catalog/platformDemo";
 import type { ServiceRow } from "@/lib/types/catalog";
 
 export const runtime = "nodejs";
@@ -153,13 +154,35 @@ async function fulfillUpstream(params: {
         settlement: params.settlement,
       });
       text = up.text;
-    } else {
+    } else if (isPlatformDemoService(params.serviceRow)) {
+      // Platform demo tools only — never seller-published tools.
       const gemini = await completeWithGemini(
         prompt,
         params.serviceRow?.system_prompt,
       );
       text = gemini.text;
       mock = gemini.mock;
+    } else {
+      logGateway({
+        outcome: "misconfigured",
+        requestId: params.requestId,
+        service: params.serviceKey,
+        latencyMs: Date.now() - params.started,
+      });
+      return NextResponse.json(
+        {
+          ok: false,
+          status: 503,
+          error: {
+            code: "SERVICE_MISCONFIGURED" as GatewayErrorCode,
+            message:
+              "This tool has no agent endpoint. The seller must publish an HTTPS URL.",
+          },
+          requestId: params.requestId,
+          timestamp: new Date().toISOString(),
+        },
+        { status: 503 },
+      );
     }
 
     if (params.serviceRow) {

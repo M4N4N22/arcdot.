@@ -1,11 +1,13 @@
-import type { Hex } from "viem";
+import { type Hex } from "viem";
 import { slugFromToolName } from "../mcp/toolNames.js";
 import {
   parseMcpPaymentNeeded,
   paymentDepositArgs,
 } from "./paymentParse.js";
-import { settlePayment } from "../settle/pay.js";
-import { resolvePrivateKey } from "../wallet/store.js";
+import { InsufficientFundsError, settlePayment } from "../settle/pay.js";
+import { formatFundsNeededMessage } from "../wallet/fundsNeeded.js";
+import { formatNoWalletGuide } from "../wallet/guide.js";
+import { NoWalletError, resolvePrivateKey } from "../wallet/store.js";
 import { resolveGateway } from "./gateway.js";
 
 export type JsonRpcRequest = {
@@ -21,6 +23,46 @@ export type JsonRpcResponse = {
   result?: unknown;
   error?: { code: number; message: string; data?: unknown };
 };
+
+function toolTextResult(
+  text: string,
+  isError: boolean,
+): JsonRpcResponse {
+  return {
+    jsonrpc: "2.0",
+    id: null,
+    result: {
+      content: [{ type: "text", text }],
+      isError,
+    },
+  };
+}
+
+function insufficientFundsToolResult(
+  err: InsufficientFundsError,
+  opts: { origin: string; serviceSlug?: string },
+): JsonRpcResponse {
+  const { text, payload } = formatFundsNeededMessage({
+    status: err.status,
+    requiredWei: err.requiredWei,
+    origin: opts.origin,
+    serviceSlug: opts.serviceSlug,
+  });
+  return toolTextResult(
+    `${text}\n\n---\n${JSON.stringify(payload, null, 2)}`,
+    true,
+  );
+}
+
+function noWalletToolResult(origin: string, err?: unknown): JsonRpcResponse {
+  const detail =
+    err instanceof Error ? err.message : "No local agent wallet found.";
+  const { text, payload } = formatNoWalletGuide(origin, detail);
+  return toolTextResult(
+    `${text}\n\n---\n${JSON.stringify(payload, null, 2)}`,
+    true,
+  );
+}
 
 export async function mcpRpc(
   origin: string,
@@ -39,7 +81,29 @@ export async function mcpRpc(
       params: params ?? {},
     }),
   });
-  return (await res.json()) as JsonRpcResponse;
+  const raw = await res.text();
+  if (!raw.trim()) {
+    return {
+      jsonrpc: "2.0",
+      id,
+      error: {
+        code: -32000,
+        message: `Empty response from ${endpoint} (HTTP ${res.status}). Is the arcdot. app running?`,
+      },
+    };
+  }
+  try {
+    return JSON.parse(raw) as JsonRpcResponse;
+  } catch {
+    return {
+      jsonrpc: "2.0",
+      id,
+      error: {
+        code: -32000,
+        message: `Invalid JSON from ${endpoint} (HTTP ${res.status}).`,
+      },
+    };
+  }
 }
 
 /**
@@ -66,7 +130,16 @@ export async function callMcpToolWithAutoSettle(params: {
   const needed = parseMcpPaymentNeeded(first.result);
   if (!needed) return first;
 
-  const privateKey = params.privateKey ?? resolvePrivateKey();
+  let privateKey: Hex;
+  try {
+    privateKey = params.privateKey ?? resolvePrivateKey();
+  } catch (err) {
+    if (err instanceof NoWalletError || isNoWalletMessage(err)) {
+      return noWalletToolResult(origin, err);
+    }
+    throw err;
+  }
+
   const deposit = paymentDepositArgs(needed.payment);
   const slug =
     needed.serviceSlug ||
@@ -86,15 +159,30 @@ export async function callMcpToolWithAutoSettle(params: {
   const gateway =
     params.gateway || deposit.gateway || (await resolveGateway(origin));
 
-  const settled = await settlePayment({
-    privateKey,
-    gateway,
-    seller: deposit.seller,
-    service: slug,
-    feeWei: deposit.feeWei,
-    input,
-    rpcUrl: params.rpcUrl,
-  });
+  let settled;
+  try {
+    settled = await settlePayment({
+      privateKey,
+      gateway,
+      seller: deposit.seller,
+      service: slug,
+      feeWei: deposit.feeWei,
+      input,
+      rpcUrl: params.rpcUrl || deposit.rpcUrl,
+      chainId: deposit.chainId,
+    });
+  } catch (err) {
+    if (err instanceof InsufficientFundsError) {
+      return insufficientFundsToolResult(err, {
+        origin,
+        serviceSlug: slug || undefined,
+      });
+    }
+    if (err instanceof NoWalletError || isNoWalletMessage(err)) {
+      return noWalletToolResult(origin, err);
+    }
+    throw err;
+  }
 
   const retryArgs = {
     ...args,
@@ -107,8 +195,24 @@ export async function callMcpToolWithAutoSettle(params: {
     },
   };
 
-  return mcpRpc(origin, "tools/call", {
-    name: params.name,
-    arguments: retryArgs,
-  }, 2);
+  return mcpRpc(
+    origin,
+    "tools/call",
+    {
+      name: params.name,
+      arguments: retryArgs,
+    },
+    2,
+  );
+}
+
+function isNoWalletMessage(err: unknown): boolean {
+  if (!(err instanceof Error)) return false;
+  const m = err.message.toLowerCase();
+  return (
+    m.includes("no agent wallet") ||
+    m.includes("unexpected end of json") ||
+    m.includes("corrupt") ||
+    m.includes("wallet file")
+  );
 }

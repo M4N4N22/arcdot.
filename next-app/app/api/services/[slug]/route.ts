@@ -9,7 +9,7 @@ import { ARC } from "@/lib/arc/constants";
 import { buildUpdateChallenge } from "@/lib/auth/updateServiceChallenge";
 import { getProfile, getServiceBySlug, updateService } from "@/lib/catalog/store";
 import { isValidServiceImageUrl } from "@/lib/services/image";
-import { isValidUpstreamUrlShape } from "@/lib/seller/upstream";
+import { upstreamUrlError } from "@/lib/seller/upstreamUrl";
 
 export const runtime = "nodejs";
 
@@ -85,15 +85,11 @@ export async function PATCH(
     return NextResponse.json({ error: "Signature expired" }, { status: 401 });
   }
 
-  if (
-    body.upstream_url !== undefined &&
-    body.upstream_url.trim() !== "" &&
-    !isValidUpstreamUrlShape(body.upstream_url)
-  ) {
-    return NextResponse.json(
-      { error: "Upstream URL must be https without credentials" },
-      { status: 400 },
-    );
+  if (body.upstream_url !== undefined) {
+    const upstreamErr = upstreamUrlError(body.upstream_url);
+    if (upstreamErr) {
+      return NextResponse.json({ error: upstreamErr }, { status: 400 });
+    }
   }
 
   if (
@@ -132,7 +128,7 @@ export async function PATCH(
   if (body.system_prompt !== undefined) patch.system_prompt = body.system_prompt;
   if (typeof body.paused === "boolean") patch.paused = body.paused;
   if (body.upstream_url !== undefined) {
-    patch.upstream_url = body.upstream_url.trim() || null;
+    patch.upstream_url = body.upstream_url.trim();
   }
   if (body.upstream_bearer !== undefined) {
     patch.upstream_bearer = body.upstream_bearer.trim() || null;

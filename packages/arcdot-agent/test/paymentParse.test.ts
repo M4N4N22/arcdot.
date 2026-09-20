@@ -60,10 +60,13 @@ describe("paymentParse", () => {
 });
 
 describe("toolNames", () => {
-  it("round-trips slug ↔ tool name", () => {
+  it("reserves meta tools and maps legacy per-service names", () => {
     assert.equal(toolNameForSlug("quick-brief"), "arcdot_quick_brief");
     assert.equal(slugFromToolName("arcdot_quick_brief"), "quick-brief");
     assert.equal(slugFromToolName("arcdot_catalog"), null);
+    assert.equal(slugFromToolName("arcdot_discover"), null);
+    assert.equal(slugFromToolName("arcdot_unlock"), null);
+    assert.equal(slugFromToolName("arcdot_health"), null);
   });
 });
 

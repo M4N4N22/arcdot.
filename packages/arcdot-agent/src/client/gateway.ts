@@ -1,11 +1,12 @@
-import type { Hex } from "viem";
+import { type Hex } from "viem";
 import type { PaymentProof } from "../constants.js";
 import { GATEWAY_FEE_WEI_DEFAULT } from "../constants.js";
 import {
   parsePaymentRequired,
   paymentDepositArgs,
 } from "./paymentParse.js";
-import { settlePayment } from "../settle/pay.js";
+import { InsufficientFundsError, settlePayment } from "../settle/pay.js";
+import { formatFundsNeededMessage } from "../wallet/fundsNeeded.js";
 import { resolvePrivateKey } from "../wallet/store.js";
 
 export type GatewayCallResult =
@@ -149,22 +150,51 @@ export async function unlockWithAutoSettle(params: {
 
   let feeWei = BigInt(service.price_wei);
   let seller = service.seller;
+  let chainId: number | undefined;
+  let rpcUrl = params.rpcUrl;
   if (payment) {
     const args = paymentDepositArgs(payment);
     feeWei = args.feeWei;
     seller = args.seller;
+    chainId = args.chainId;
+    rpcUrl = params.rpcUrl || args.rpcUrl;
   }
   if (feeWei <= 0n) feeWei = GATEWAY_FEE_WEI_DEFAULT;
 
-  const settled = await settlePayment({
-    privateKey,
-    gateway: gatewayAddr,
-    seller,
-    service: params.service,
-    feeWei,
-    input: params.input,
-    rpcUrl: params.rpcUrl,
-  });
+  let settled;
+  try {
+    settled = await settlePayment({
+      privateKey,
+      gateway: gatewayAddr,
+      seller,
+      service: params.service,
+      feeWei,
+      input: params.input,
+      rpcUrl,
+      chainId,
+    });
+  } catch (err) {
+    if (err instanceof InsufficientFundsError) {
+      const { text, payload } = formatFundsNeededMessage({
+        status: err.status,
+        requiredWei: err.requiredWei,
+        origin,
+        serviceSlug: params.service,
+      });
+      return {
+        gateway: {
+          ok: false,
+          status: 402,
+          body: {
+            ...payload,
+            message: text,
+          },
+        },
+        settled: false,
+      };
+    }
+    throw err;
+  }
 
   const gateway = await postGatewayPaid({
     origin,

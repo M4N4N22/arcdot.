@@ -1,5 +1,5 @@
 import { keccak256, stringToBytes, type Hex } from "viem";
-import { ARC_CHAIN_ID, type GatewayAuthMessage } from "../constants.js";
+import { getArcChainId, type GatewayAuthMessage } from "../constants.js";
 
 export function hashGatewayInput(input: unknown): Hex {
   return keccak256(stringToBytes(JSON.stringify(input ?? null)));
@@ -27,10 +27,11 @@ export function buildGatewayAuthMessage(params: {
   input: unknown;
   issuedAt: number;
   expiresAt: number;
+  chainId?: number;
 }): GatewayAuthMessage {
   return {
     domain: "arcdot.gateway",
-    chainId: ARC_CHAIN_ID,
+    chainId: params.chainId ?? getArcChainId(),
     gateway: params.gateway,
     txHash: params.txHash,
     feeWei: params.feeWei.toString(),

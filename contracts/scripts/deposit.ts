@@ -1,10 +1,15 @@
 import { ethers } from "hardhat";
 
 /**
- * Smoke deposit (V3): GATEWAY_ADDRESS=0x... SELLER=0x... npx hardhat run scripts/deposit.ts --network arcMainnet
+ * Smoke deposit (V3):
+ *   GATEWAY_ADDRESS=0x... SELLER=0x... npm run deposit:testnet
+ *   GATEWAY_ADDRESS=0x... SELLER=0x... npm run deposit:arc
  */
 
-const EXPLORER_TX = "https://explorer.arc.io/tx/";
+const EXPLORERS: Record<string, string> = {
+  "5042": "https://explorer.arc.io/tx/",
+  "5042002": "https://testnet.arcscan.app/tx/",
+};
 
 async function main() {
   const gatewayAddress = process.env.GATEWAY_ADDRESS;
@@ -16,6 +21,10 @@ async function main() {
     throw new Error("Set SELLER to the service owner address");
   }
 
+  const network = await ethers.provider.getNetwork();
+  const explorer =
+    EXPLORERS[network.chainId.toString()] ?? "https://explorer.arc.io/tx/";
+
   const [payer] = await ethers.getSigners();
   const gateway = await ethers.getContractAt("PromptGateway", gatewayAddress);
   const fee = await gateway.minFee();
@@ -26,6 +35,7 @@ async function main() {
     [payer.address, "llm.chat", nonce],
   );
 
+  console.log("chainId:", network.chainId.toString());
   console.log("Payer:", payer.address);
   console.log("Seller:", seller);
   console.log("paymentId:", paymentId);
@@ -34,7 +44,7 @@ async function main() {
   console.log("Submitted:", tx.hash);
   const receipt = await tx.wait();
   console.log("Block:", receipt?.blockNumber);
-  console.log("Explorer:", `${EXPLORER_TX}${tx.hash}`);
+  console.log("Explorer:", `${explorer}${tx.hash}`);
 }
 
 main().catch((error) => {

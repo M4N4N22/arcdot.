@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { HubInstall } from "@/components/hub/HubInstall";
 
 export const metadata: Metadata = {
-  title: "MCP Hub",
+  title: "Get started · Hub",
   description:
-    "Connect any MCP client to the arcdot. server — paid tools unlock with USDC on Arc.",
+    "Create a local agent wallet, fund it, and connect your IDE — no project install for MCP clients.",
 };
 
 export default function HubPage() {

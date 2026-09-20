@@ -6,12 +6,13 @@ import { ARC } from "@/lib/arc/constants";
 import { buildCreateChallenge } from "@/lib/auth/createServiceChallenge";
 import {
   createService,
+  getProfile,
   getProfilesByAddresses,
   listPublishedServices,
   upsertProfile,
 } from "@/lib/catalog/store";
 import { isValidServiceImageUrl } from "@/lib/services/image";
-import { isValidUpstreamUrlShape } from "@/lib/seller/upstream";
+import { upstreamUrlError } from "@/lib/seller/upstreamUrl";
 
 export const runtime = "nodejs";
 
@@ -25,7 +26,10 @@ const createSchema = z.object({
   description: z.string().min(1).max(500),
   price_usdc: z.string().regex(/^\d+(\.\d{1,6})?$/),
   system_prompt: z.string().max(2000).optional().default(""),
-  upstream_url: z.string().max(500).optional().default(""),
+  upstream_url: z
+    .string()
+    .min(1, "Agent endpoint is required")
+    .max(500),
   upstream_bearer: z.string().max(500).optional().default(""),
   image_url: z.string().max(2_000_000).optional().nullable(),
   owner_address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
@@ -87,11 +91,9 @@ export async function POST(request: Request) {
   }
 
   const upstream_url = body.upstream_url.trim();
-  if (upstream_url && !isValidUpstreamUrlShape(upstream_url)) {
-    return NextResponse.json(
-      { error: "Upstream URL must be https without credentials" },
-      { status: 400 },
-    );
+  const upstreamErr = upstreamUrlError(upstream_url);
+  if (upstreamErr) {
+    return NextResponse.json({ error: upstreamErr }, { status: 400 });
   }
 
   const imageRaw = body.image_url?.trim() || null;
@@ -120,10 +122,12 @@ export async function POST(request: Request) {
   }
 
   try {
-    await upsertProfile({
-      wallet_address: body.owner_address,
-      display_name: body.title.slice(0, 40),
-    });
+    // Ensure a seller profile row exists for catalog attribution.
+    // Never copy the tool title into display_name — that is Studio → Profile only.
+    const existingProfile = await getProfile(body.owner_address);
+    if (!existingProfile) {
+      await upsertProfile({ wallet_address: body.owner_address });
+    }
 
     const service = await createService({
       slug: body.slug,
@@ -132,8 +136,8 @@ export async function POST(request: Request) {
       description: body.description,
       price_wei: priceWei,
       price_usdc: body.price_usdc,
-      system_prompt: body.system_prompt,
-      upstream_url: upstream_url || null,
+      system_prompt: body.system_prompt || "",
+      upstream_url,
       upstream_bearer: body.upstream_bearer.trim() || null,
       image_url: imageRaw,
       status: "published",

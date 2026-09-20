@@ -5,6 +5,7 @@ import {
   agentInstallCommands,
   agentMcpProxyConfig,
 } from "@/lib/agent/install";
+import { getArcChainId, getArcNetwork } from "@/lib/arc/network";
 
 export function mcpEndpoint(origin: string): string {
   return `${origin.replace(/\/$/, "")}/api/mcp`;
@@ -38,8 +39,8 @@ export function universalMcpConfig(origin: string): string {
         wellKnown: `${host}/.well-known/agent.json`,
       },
       payment: {
-        chain: "arc-mainnet",
-        chainId: 5042,
+        chain: getArcNetwork() === "testnet" ? "arc-testnet" : "arc-mainnet",
+        chainId: getArcChainId(),
         note: `Buyer wallet via ${AGENT_NPM_PACKAGE}. Local MCP proxy auto-settles; keys never leave the buyer machine.`,
       },
       docs: `${host}/hub`,
@@ -51,10 +52,10 @@ export function universalMcpConfig(origin: string): string {
 
 export function pythonHttpSnippet(origin: string): string {
   const host = origin.replace(/\/$/, "");
-  return `# Prefer the buyer client from npm
+  return `# Prefer the buyer client — create + fund first, then install only if you import
 #
 #   ${agentInstallCommands.npxWalletCreate}
-#   # fund the address on Arc, then:
+#   # fund on /fund, then for SDK imports:
 #
 #   ${agentInstallCommands.npmInstall}
 #
@@ -71,7 +72,7 @@ export function langchainStyleSnippet(origin: string): string {
   return `# Buyer agent — keys stay on YOUR machine (never on arcdot. server)
 #
 # 1) ${agentInstallCommands.npxWalletCreate}
-# 2) Fund the printed address with native USDC on Arc (5042)
+# 2) Fund the printed address with native USDC on Arc
 # 3) Use the SDK or CLI (auto-settle)
 
 # Node:
@@ -80,7 +81,7 @@ export function langchainStyleSnippet(origin: string): string {
 #   import { createArcdotAgent } from "@arcdot/agent";
 #   const agent = await createArcdotAgent({ origin: "${host}" });
 #   await agent.unlock({ service: "quick-brief", input: { prompt: "Hi" } });
-#   # or: await agent.callMcpTool("arcdot_quick_brief", { prompt: "Hi" });
+#   # or: await agent.callMcpTool("arcdot_unlock", { service: "quick-brief", prompt: "Hi" });
 
 # CLI one-liner:
 #   ${agentInstallCommands.npxUnlock(host)}

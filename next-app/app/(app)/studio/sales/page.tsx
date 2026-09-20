@@ -8,6 +8,7 @@ import {
   ensureSignedReadSession,
   signedReadQuery,
 } from "@/lib/auth/signedReadSession";
+import { isRehearsalRequest } from "@/lib/catalog/requests";
 import { formatUsdcWei, statusLabel } from "@/lib/format/usdc";
 import type { RequestRow } from "@/lib/types/catalog";
 
@@ -72,7 +73,10 @@ export default function StudioSalesPage() {
       <div className="mt-5 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl tracking-tight">Sales</h1>
-          <p className="mt-2 text-muted">Recent unlocks for your tools.</p>
+          <p className="mt-2 text-muted">
+            Paid unlocks credit your withdrawable balance. Rehearsal unlocks do
+            not.
+          </p>
         </div>
         <button
           type="button"
@@ -104,25 +108,32 @@ export default function StudioSalesPage() {
           {sales.length === 0 && (
             <li className="py-8 text-muted">No sales yet.</li>
           )}
-          {sales.map((s) => (
-            <li key={s.id} className="py-5">
-              <div className="flex flex-wrap justify-between gap-2">
-                <p className="font-medium">{s.service_slug ?? "Service"}</p>
-                <p className="font-mono text-xs uppercase text-muted">
-                  {statusLabel(s.status)}
+          {sales.map((s) => {
+            const rehearsal = isRehearsalRequest(s);
+            return (
+              <li key={s.id} className="py-5">
+                <div className="flex flex-wrap justify-between gap-2">
+                  <p className="font-medium">{s.service_slug ?? "Service"}</p>
+                  <p className="font-mono text-xs uppercase text-muted">
+                    {rehearsal ? "Rehearsal" : statusLabel(s.status)}
+                  </p>
+                </div>
+                <p className="mt-1 text-xs text-muted">
+                  {new Date(s.created_at).toLocaleString()}
+                  {rehearsal
+                    ? " · no withdrawable credit"
+                    : s.seller_amount_wei
+                      ? ` · ${formatUsdcWei(s.seller_amount_wei)} USDC to you`
+                      : ""}
                 </p>
-              </div>
-              <p className="mt-1 text-xs text-muted">
-                {new Date(s.created_at).toLocaleString()}
-                {s.seller_amount_wei && (
-                  <> · {formatUsdcWei(s.seller_amount_wei)} USDC to you</>
+                {s.prompt && (
+                  <p className="mt-2 text-sm text-muted line-clamp-2">
+                    {s.prompt}
+                  </p>
                 )}
-              </p>
-              {s.prompt && (
-                <p className="mt-2 text-sm text-muted line-clamp-2">{s.prompt}</p>
-              )}
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
     </main>

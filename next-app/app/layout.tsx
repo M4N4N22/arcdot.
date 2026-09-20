@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { DM_Sans, Instrument_Serif } from "next/font/google";
 import { Providers } from "@/components/Providers";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +41,7 @@ export default function RootLayout({
           <div className="relative flex min-h-full flex-1 flex-col bg-background text-foreground">
             {children}
           </div>
+          <Toaster />
         </Providers>
       </body>
     </html>

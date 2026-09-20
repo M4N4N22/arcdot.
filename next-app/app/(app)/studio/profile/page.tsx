@@ -3,12 +3,17 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useAccount, useSignMessage } from "wagmi";
 import { buildUpdateProfileChallenge } from "@/lib/auth/updateProfileChallenge";
 import {
   ensureSignedReadSession,
   signedReadQuery,
 } from "@/lib/auth/signedReadSession";
+
+function shortAddr(a: string) {
+  return `${a.slice(0, 6)}…${a.slice(-4)}`;
+}
 
 export default function StudioProfilePage() {
   const { address, isConnected } = useAccount();
@@ -17,9 +22,6 @@ export default function StudioProfilePage() {
   const [bio, setBio] = useState("");
   const [webhookUrl, setWebhookUrl] = useState("");
   const [webhookUnlocked, setWebhookUnlocked] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
-  const [pinged, setPinged] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
@@ -58,26 +60,36 @@ export default function StudioProfilePage() {
   async function unlockWebhook() {
     if (!address) return;
     setBusy(true);
-    setError(null);
+    const toastId = toast.loading("Confirm in your wallet to unlock…");
     try {
       const session = await ensureSignedReadSession({
         address,
         signMessageAsync,
         silent: false,
       });
-      if (!session) return;
+      if (!session) {
+        toast.error("Signature cancelled", { id: toastId });
+        return;
+      }
       const res = await fetch(
         `/api/studio/profile?${signedReadQuery(session)}`,
       );
       const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || "Could not unlock", { id: toastId });
+        return;
+      }
       if (data.profile) {
         setDisplayName(data.profile.display_name ?? displayName);
         setBio(data.profile.bio ?? bio);
         setWebhookUrl(data.profile.webhook_url ?? "");
         setWebhookUnlocked(true);
       }
+      toast.success("Private settings unlocked", { id: toastId });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not unlock");
+      toast.error(err instanceof Error ? err.message : "Could not unlock", {
+        id: toastId,
+      });
     } finally {
       setBusy(false);
     }
@@ -105,12 +117,15 @@ export default function StudioProfilePage() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!address) {
+      toast.error("Connect your wallet first");
+      return;
+    }
     setBusy(true);
-    setError(null);
-    setSaved(false);
-    setPinged(false);
+    const toastId = toast.loading("Confirm the signature in your wallet…");
     try {
       const payload = await signAndPayload();
+      toast.loading("Saving profile…", { id: toastId });
       const res = await fetch("/api/studio/profile", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -118,27 +133,52 @@ export default function StudioProfilePage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Could not save");
+        toast.error(data.error || "Could not save profile", { id: toastId });
         return;
       }
-      setSaved(true);
+      if (data.durable === false) {
+        toast.error("Profile was not written to Supabase", {
+          id: toastId,
+          description: "Restart the app after setting Supabase keys in .env.local.",
+        });
+        return;
+      }
+      const savedWallet =
+        typeof data.profile?.wallet_address === "string"
+          ? data.profile.wallet_address
+          : address;
       if (data.profile?.webhook_url !== undefined) {
         setWebhookUrl(data.profile.webhook_url ?? "");
         setWebhookUnlocked(true);
       }
+      toast.success("Profile saved", {
+        id: toastId,
+        description: `Synced for ${shortAddr(savedWallet)}`,
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Save failed");
+      const message =
+        err instanceof Error ? err.message : "Could not save profile";
+      const cancelled =
+        /rejected|denied|cancel/i.test(message) ||
+        (err as { code?: number })?.code === 4001;
+      toast.error(cancelled ? "Signature cancelled" : message, {
+        id: toastId,
+      });
     } finally {
       setBusy(false);
     }
   }
 
   async function onTestPing() {
+    if (!address) {
+      toast.error("Connect your wallet first");
+      return;
+    }
     setBusy(true);
-    setError(null);
-    setPinged(false);
+    const toastId = toast.loading("Confirm the signature in your wallet…");
     try {
       const payload = await signAndPayload();
+      toast.loading("Sending test ping…", { id: toastId });
       const res = await fetch("/api/studio/webhook/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -146,12 +186,18 @@ export default function StudioProfilePage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Ping failed");
+        toast.error(data.error || "Ping failed", { id: toastId });
         return;
       }
-      setPinged(true);
+      toast.success("Test ping sent", { id: toastId });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Ping failed");
+      const message = err instanceof Error ? err.message : "Ping failed";
+      const cancelled =
+        /rejected|denied|cancel/i.test(message) ||
+        (err as { code?: number })?.code === 4001;
+      toast.error(cancelled ? "Signature cancelled" : message, {
+        id: toastId,
+      });
     } finally {
       setBusy(false);
     }
@@ -182,6 +228,11 @@ export default function StudioProfilePage() {
         How buyers see you on public listings. Agents still pay your wallet
         address.
       </p>
+      {address && (
+        <p className="mt-3 font-mono text-xs text-muted">
+          Saving as {shortAddr(address)}
+        </p>
+      )}
 
       <form onSubmit={onSubmit} className="mt-10 max-w-xl space-y-5">
         <label className="block space-y-2 text-sm font-medium">
@@ -243,9 +294,6 @@ export default function StudioProfilePage() {
             </button>
           )}
         </div>
-        {error && <p className="text-sm text-red-700">{error}</p>}
-        {saved && <p className="text-sm text-muted">Saved.</p>}
-        {pinged && <p className="text-sm text-muted">Test ping sent.</p>}
         <div className="flex flex-wrap items-center gap-3">
           <button
             type="submit"

@@ -12,6 +12,7 @@ export {
   getSupabaseSecretKey,
   getSupabaseUrl,
   isSupabaseAdminConfigured,
+  isSupabaseUrlConfigured,
 } from "@/lib/supabase/env";
 
 let admin: SupabaseClient | null = null;

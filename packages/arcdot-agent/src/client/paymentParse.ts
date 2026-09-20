@@ -7,6 +7,7 @@ export type PaymentInstructions = {
   feeWei: string;
   feeUsdc?: string;
   method?: string;
+  rpcUrl?: string;
 };
 
 export function isGateway402Body(value: unknown): boolean {
@@ -85,6 +86,8 @@ export function paymentDepositArgs(payment: PaymentInstructions): {
   feeWei: bigint;
   seller: `0x${string}`;
   gateway: `0x${string}`;
+  chainId?: number;
+  rpcUrl?: string;
 } {
   if (!payment.seller) {
     throw new Error("Payment instructions missing seller address");
@@ -93,5 +96,7 @@ export function paymentDepositArgs(payment: PaymentInstructions): {
     feeWei: BigInt(payment.feeWei),
     seller: payment.seller,
     gateway: payment.gateway,
+    chainId: payment.chainId,
+    rpcUrl: payment.rpcUrl,
   };
 }

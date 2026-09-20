@@ -1,7 +1,6 @@
 /** Machine-readable discovery documents for agents / crawlers. */
 
 import { ARC } from "@/lib/arc/constants";
-import { ARC_CHAIN_ID } from "@/lib/types/gateway";
 import type { ServiceRow } from "@/lib/types/catalog";
 import { publicServiceForAgent, type SellerNameMap } from "@/lib/agent/catalog";
 
@@ -23,7 +22,7 @@ export function buildAiPluginManifest(request: Request) {
     description_for_human:
       "Pay-as-you-go API gateway on Arc. Agents discover gated services, pay native USDC, and unlock replies.",
     description_for_model:
-      "Use arcdot to discover payable API services on Arc Mainnet (chainId 5042), pay exact native USDC (18 decimals) via PromptGateway.depositPayment, then unlock with POST /api/gateway and X-Arc-Tx-Hash, X-Arc-Address, X-Arc-Signature (EIP-191). Catalog: GET /api/services. Unpaid calls return HTTP 402 with PAYMENT-REQUIRED (x402 v2) and JSON error.payment. Never treat amounts as 6-decimal ERC-20 units.",
+      "Use arcdot to discover payable API services on Arc, pay exact native USDC (18 decimals) via PromptGateway.depositPayment, then unlock with POST /api/gateway and X-Arc-Tx-Hash, X-Arc-Address, X-Arc-Signature (EIP-191). Catalog: GET /api/services. Unpaid calls return HTTP 402 with PAYMENT-REQUIRED (x402 v2) and JSON error.payment. Never treat amounts as 6-decimal ERC-20 units.",
     auth: { type: "none" },
     api: {
       type: "openapi",
@@ -60,7 +59,7 @@ export function buildAgentManifest(
     currency: "USDC",
     currency_decimals: 18,
     network: "Arc-Mainnet",
-    caip2: `eip155:${ARC_CHAIN_ID}`,
+    caip2: `eip155:${ARC.chainId}`,
     escrow_contract: gateway,
     catalog: `${origin}/api/services`,
     unlock: `${origin}/api/gateway`,
@@ -84,7 +83,7 @@ export function buildAgentManifest(
         amount_usdc: pub.price_usdc,
         currency_decimals: 18,
         network: "Arc-Mainnet",
-        caip2: `eip155:${ARC_CHAIN_ID}`,
+        caip2: `eip155:${ARC.chainId}`,
         escrow_contract: gateway,
         seller: pub.seller,
         seller_name: pub.seller_name,

@@ -8,8 +8,16 @@ import {
 } from "@/lib/auth/signedReadChallenge";
 import { buildUpdateProfileChallenge } from "@/lib/auth/updateProfileChallenge";
 import { getProfile, upsertProfile } from "@/lib/catalog/store";
+import { isSupabaseAdminConfigured } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
+
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
+const addressSchema = z
+  .string()
+  .regex(/^0x[a-fA-F0-9]{40}$/)
+  .refine((v) => v.toLowerCase() !== ZERO_ADDRESS, "Invalid wallet");
 
 const patchSchema = z.object({
   display_name: z.string().max(80),
@@ -22,7 +30,7 @@ const patchSchema = z.object({
       "Webhook must be an https URL",
     )
     .optional(),
-  owner_address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+  owner_address: addressSchema,
   signature: z.string().regex(/^0x[a-fA-F0-9]+$/),
   issuedAt: z.number().int().positive(),
 });
@@ -129,6 +137,17 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Signature expired" }, { status: 401 });
   }
 
+  // Never claim success for an in-memory profile — Studio expects Supabase.
+  if (!isSupabaseAdminConfigured()) {
+    return NextResponse.json(
+      {
+        error:
+          "Supabase is not connected on the server. Add NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SECRET_KEY to .env.local, then restart next dev.",
+      },
+      { status: 503 },
+    );
+  }
+
   const webhook_url = body.webhook_url ?? "";
   const challenge = buildUpdateProfileChallenge({
     owner_address: body.owner_address,
@@ -150,10 +169,14 @@ export async function PATCH(request: Request) {
   if (recovered.toLowerCase() !== body.owner_address.toLowerCase()) {
     return NextResponse.json({ error: "Wrong signer" }, { status: 401 });
   }
+  if (recovered.toLowerCase() === ZERO_ADDRESS) {
+    return NextResponse.json({ error: "Invalid wallet" }, { status: 400 });
+  }
 
   try {
+    // Persist under the recovered signer — never trust a client-supplied address alone.
     const profile = await upsertProfile({
-      wallet_address: body.owner_address,
+      wallet_address: recovered,
       display_name: body.display_name.trim() || null,
       bio: body.bio.trim() || null,
       webhook_url: webhook_url.trim() || null,
@@ -163,6 +186,7 @@ export async function PATCH(request: Request) {
         ...publicProfile(profile),
         webhook_url: profile.webhook_url ?? null,
       },
+      durable: isSupabaseAdminConfigured(),
     });
   } catch (err) {
     console.error(err);

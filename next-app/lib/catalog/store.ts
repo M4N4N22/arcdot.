@@ -161,6 +161,8 @@ export async function updateService(
   return withPausedDefault(data as ServiceRow);
 }
 
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
+
 export async function upsertProfile(params: {
   wallet_address: string;
   display_name?: string | null;
@@ -168,6 +170,9 @@ export async function upsertProfile(params: {
   webhook_url?: string | null;
 }): Promise<ProfileRow> {
   const wallet = params.wallet_address.toLowerCase();
+  if (!/^0x[a-f0-9]{40}$/.test(wallet) || wallet === ZERO_ADDRESS) {
+    throw new Error("Invalid wallet address");
+  }
   const now = new Date().toISOString();
 
   if (!isSupabaseConfigured()) {
@@ -196,7 +201,7 @@ export async function upsertProfile(params: {
 
   const { data, error } = await getSupabaseAdmin()
     .from("profiles")
-    .upsert(patch)
+    .upsert(patch, { onConflict: "wallet_address" })
     .select("*")
     .single();
   if (error) throw error;

@@ -13,85 +13,77 @@ import { ARC } from "@/lib/arc/constants";
 import { durableStoreReady } from "@/lib/ops/durable";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
 import type { Hex } from "viem";
-import {
-  slugFromToolName,
-  toolNameForSlug,
-  type McpTool,
-  type McpToolResult,
-} from "@/lib/mcp/types";
+import type { McpTool, McpToolResult } from "@/lib/mcp/types";
+
+/**
+ * Fixed MCP surface — services are catalog entries, not MCP tools.
+ * Agents discover via arcdot_discover, then pay/unlock via arcdot_unlock.
+ */
+const MCP_TOOLS: McpTool[] = [
+  {
+    name: "arcdot_discover",
+    description:
+      "ALWAYS call this first for any task that might use arcdot. Free catalog of published payable services (slug, title, description, price). Match the user task to a slug, then call arcdot_unlock. Do not skip discovery. Optional query filters title/description/slug.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description:
+            "Keywords from the user task to filter services (case-insensitive)",
+        },
+      },
+    },
+  },
+  {
+    name: "arcdot_health",
+    description:
+      "Free status only (chain, gateway, durable store). Not for solving user tasks.",
+    inputSchema: {
+      type: "object",
+      properties: {},
+    },
+  },
+  {
+    name: "arcdot_unlock",
+    description:
+      "Call ONLY after arcdot_discover, with a real service slug from that list. Unlocks that service. Args: { service, prompt }. Local MCP proxy auto-pays when the agent wallet has USDC. If NO_WALLET: tell the human briefly, then run createCommand via the terminal tool (user approval UI), open fundUrl, then retry unlock. If INSUFFICIENT_FUNDS: show fundUrl/address and retry after funding. Never invent an answer.",
+    inputSchema: {
+      type: "object",
+      required: ["service", "prompt"],
+      properties: {
+        service: {
+          type: "string",
+          description:
+            "Service slug from arcdot_discover (e.g. quick-brief, test)",
+        },
+        prompt: {
+          type: "string",
+          description: "Natural-language input for the gated service",
+        },
+        payment: {
+          type: "object",
+          description:
+            "On-chain settlement proof after depositPayment (omit to receive payment instructions)",
+          properties: {
+            txHash: { type: "string" },
+            address: { type: "string" },
+            signature: { type: "string" },
+            issuedAt: { type: "number" },
+            expiresAt: { type: "number" },
+          },
+        },
+      },
+    },
+  },
+];
 
 function originFromRequest(request: Request): string {
   return new URL(request.url).origin;
 }
 
 export async function listMcpTools(): Promise<McpTool[]> {
-  const services = await listPublishedServices();
-  const profiles = await getProfilesByAddresses(
-    services.map((s) => s.owner_address),
-  );
-
-  const meta: McpTool[] = [
-    {
-      name: "arcdot_catalog",
-      description:
-        "List payable arcdot. services (slug, price_wei 18-decimal native USDC, seller). Free discovery — no payment.",
-      inputSchema: {
-        type: "object",
-        properties: {},
-      },
-    },
-    {
-      name: "arcdot_health",
-      description:
-        "Check arcdot. gateway health (chain, durable store, gateway address). Free.",
-      inputSchema: {
-        type: "object",
-        properties: {},
-      },
-    },
-  ];
-
-  const serviceTools: McpTool[] = services.map((s) => {
-    const sellerName =
-      profiles.get(s.owner_address.toLowerCase())?.display_name ?? null;
-    return {
-      name: toolNameForSlug(s.slug),
-      description: [
-        s.title,
-        s.description,
-        `Price: ${s.price_usdc} USDC (price_wei=${s.price_wei}, 18 decimals).`,
-        `Seller: ${s.owner_address}${sellerName ? ` (${sellerName})` : ""}.`,
-        s.upstream_url?.trim()
-          ? "Fulfillment: seller upstream API."
-          : "Fulfillment: arcdot. hosted model.",
-        "Pay via Arc PromptGateway.depositPayment then call with payment args, or use X-Arc-Demo-Secret for rehearsal.",
-      ].join(" "),
-      inputSchema: {
-        type: "object",
-        required: ["prompt"],
-        properties: {
-          prompt: {
-            type: "string",
-            description: "Natural-language input for this gated service",
-          },
-          payment: {
-            type: "object",
-            description:
-              "On-chain settlement proof after depositPayment (omit to receive payment instructions)",
-            properties: {
-              txHash: { type: "string" },
-              address: { type: "string" },
-              signature: { type: "string" },
-              issuedAt: { type: "number" },
-              expiresAt: { type: "number" },
-            },
-          },
-        },
-      },
-    };
-  });
-
-  return [...meta, ...serviceTools];
+  return MCP_TOOLS;
 }
 
 function textResult(
@@ -105,84 +97,53 @@ function textResult(
   };
 }
 
-export async function callMcpTool(params: {
+async function discoverServices(query?: string) {
+  const services = await listPublishedServices();
+  const profiles = await getProfilesByAddresses(
+    services.map((s) => s.owner_address),
+  );
+  const q = query?.trim().toLowerCase() ?? "";
+  const rows = services
+    .map((s) => ({
+      slug: s.slug,
+      title: s.title,
+      description: s.description,
+      price_usdc: s.price_usdc,
+      price_wei: s.price_wei,
+      seller: s.owner_address,
+      seller_name:
+        profiles.get(s.owner_address.toLowerCase())?.display_name ?? null,
+      has_upstream: Boolean(s.upstream_url?.trim()),
+    }))
+    .filter((s) => {
+      if (!q) return true;
+      return (
+        s.slug.includes(q) ||
+        s.title.toLowerCase().includes(q) ||
+        s.description.toLowerCase().includes(q) ||
+        (s.seller_name?.toLowerCase().includes(q) ?? false)
+      );
+    });
+  return rows;
+}
+
+async function unlockService(params: {
   request: Request;
-  name: string;
-  args: Record<string, unknown>;
+  origin: string;
+  slug: string;
+  prompt: string;
+  paymentRaw: Record<string, unknown> | null;
 }): Promise<McpToolResult> {
-  const { request, name, args } = params;
-  const origin = originFromRequest(request);
-
-  if (name === "arcdot_catalog") {
-    const services = await listPublishedServices();
-    const profiles = await getProfilesByAddresses(
-      services.map((s) => s.owner_address),
-    );
-    const payload = {
-      protocol: "arcdot.gateway",
-      chainId: ARC.chainId,
-      gateway: ARC.gatewayAddress || null,
-      mcp: `${origin}/api/mcp`,
-      note: "price_wei is 18-decimal native USDC. 0.01 = 1e16.",
-      services: services.map((s) => ({
-        tool: toolNameForSlug(s.slug),
-        slug: s.slug,
-        title: s.title,
-        description: s.description,
-        price_usdc: s.price_usdc,
-        price_wei: s.price_wei,
-        seller: s.owner_address,
-        seller_name:
-          profiles.get(s.owner_address.toLowerCase())?.display_name ?? null,
-        has_upstream: Boolean(s.upstream_url?.trim()),
-      })),
-    };
-    return textResult(JSON.stringify(payload, null, 2));
-  }
-
-  if (name === "arcdot_health") {
-    const payload = {
-      ok: true,
-      protocol: "arcdot.mcp",
-      chainId: ARC.chainId,
-      gateway: ARC.gatewayAddress || null,
-      durableStore: durableStoreReady(),
-      supabaseConfigured: isSupabaseConfigured(),
-      supabaseOk: isSupabaseConfigured() ? await pingSupabase() : null,
-      mcp: `${origin}/api/mcp`,
-      unlock: `${origin}/api/gateway`,
-    };
-    return textResult(JSON.stringify(payload, null, 2));
-  }
-
-  const slug = slugFromToolName(name);
-  if (!slug) {
-    return textResult(`Unknown tool: ${name}`, { isError: true });
-  }
+  const { request, origin, slug, prompt, paymentRaw } = params;
 
   const service = await getServiceBySlug(slug);
   if (!service || service.status !== "published" || service.paused) {
     return textResult(`Service not available: ${slug}`, { isError: true });
   }
 
-  const prompt =
-    typeof args.prompt === "string"
-      ? args.prompt
-      : typeof args.input === "string"
-        ? args.input
-        : "";
-  if (!prompt.trim()) {
-    return textResult("Missing required argument: prompt", { isError: true });
-  }
-
   const input = { prompt: prompt.trim() };
   const demoSecret = request.headers.get("x-arc-demo-secret");
-  const paymentRaw =
-    args.payment && typeof args.payment === "object"
-      ? (args.payment as Record<string, unknown>)
-      : null;
 
-  // 1) Demo unlock via MCP request header
   if (demoSecret) {
     const result = await callGatewayDemo({
       baseUrl: origin,
@@ -199,7 +160,7 @@ export async function callMcpTool(params: {
           ? String((result.body.result as { text: unknown }).text)
           : JSON.stringify(result.body.result);
       return textResult(text, {
-        meta: { settlement: result.body.settlement, demo: true },
+        meta: { settlement: result.body.settlement, demo: true, service: slug },
       });
     }
     return textResult(JSON.stringify(result.body, null, 2), {
@@ -208,7 +169,6 @@ export async function callMcpTool(params: {
     });
   }
 
-  // 2) Explicit payment proof in tool args
   if (
     paymentRaw &&
     typeof paymentRaw.txHash === "string" &&
@@ -246,7 +206,7 @@ export async function callMcpTool(params: {
           ? String((result.body.result as { text: unknown }).text)
           : JSON.stringify(result.body.result);
       return textResult(text, {
-        meta: { settlement: result.body.settlement },
+        meta: { settlement: result.body.settlement, service: slug },
       });
     }
     return textResult(JSON.stringify(result.body, null, 2), {
@@ -255,29 +215,122 @@ export async function callMcpTool(params: {
     });
   }
 
-  // 3) Unpaid → machine-readable pay instructions (402 equivalent).
-  // The buyer agent's own wallet (client-side) must depositPayment + EIP-191,
-  // then retry with arguments.payment. arcdot. never holds user keys.
   const payment = buildPaymentInstructions(service);
   const unpaid = {
     ok: false,
     status: 402,
     error: {
       code: "PAYMENT_REQUIRED",
-      message:
-        "Pay depositPayment(paymentId, seller) with msg.value == price_wei on Arc (chain 5042), then retry tools/call with arguments.payment { txHash, address, signature }. Create and fund an agent wallet locally — see /hub/wallet.",
+      message: `Payment needed: “${service.title || service.slug}” costs ${service.price_usdc} USDC. With the @arcdot/agent MCP proxy, settlement is automatic once the agent wallet exists and is funded. If there is no wallet yet, run: npx --yes @arcdot/agent wallet create (use the IDE terminal tool so the user can approve), then open /fund. Do not invent an answer.`,
       payment,
       service: {
         slug: service.slug,
-        tool: toolNameForSlug(service.slug),
         price_usdc: service.price_usdc,
         price_wei: service.price_wei,
         seller: service.owner_address,
       },
+      next: "If NO_WALLET: run wallet create with user approval, open /fund, retry unlock. If funded wallet empty: open /fund, then retry.",
     },
   };
   return textResult(JSON.stringify(unpaid, null, 2), {
     isError: true,
     meta: { paymentRequired: true, payment },
   });
+}
+
+export async function callMcpTool(params: {
+  request: Request;
+  name: string;
+  args: Record<string, unknown>;
+}): Promise<McpToolResult> {
+  const { request, name, args } = params;
+  const origin = originFromRequest(request);
+
+  if (name === "arcdot_discover" || name === "arcdot_catalog") {
+    const query = typeof args.query === "string" ? args.query : undefined;
+    const services = await discoverServices(query);
+    const payload = {
+      protocol: "arcdot.gateway",
+      chainId: ARC.chainId,
+      gateway: ARC.gatewayAddress || null,
+      mcp: `${origin}/api/mcp`,
+      note: "Prices are in USDC. Next: arcdot_unlock with { service, prompt }. If the wallet needs funds, relay the fund checklist to the human — do not invent an answer.",
+      next: "arcdot_unlock",
+      services,
+    };
+    return textResult(JSON.stringify(payload, null, 2));
+  }
+
+  if (name === "arcdot_health") {
+    const payload = {
+      ok: true,
+      protocol: "arcdot.mcp",
+      chainId: ARC.chainId,
+      gateway: ARC.gatewayAddress || null,
+      durableStore: durableStoreReady(),
+      supabaseConfigured: isSupabaseConfigured(),
+      supabaseOk: isSupabaseConfigured() ? await pingSupabase() : null,
+      mcp: `${origin}/api/mcp`,
+      unlock: `${origin}/api/gateway`,
+      tools: ["arcdot_discover", "arcdot_health", "arcdot_unlock"],
+    };
+    return textResult(JSON.stringify(payload, null, 2));
+  }
+
+  if (name === "arcdot_unlock") {
+    const slug =
+      typeof args.service === "string"
+        ? args.service.trim()
+        : typeof args.slug === "string"
+          ? args.slug.trim()
+          : "";
+    if (!slug) {
+      return textResult(
+        "Missing required argument: service (slug from arcdot_discover)",
+        { isError: true },
+      );
+    }
+    const prompt =
+      typeof args.prompt === "string"
+        ? args.prompt
+        : typeof args.input === "string"
+          ? args.input
+          : "";
+    if (!prompt.trim()) {
+      return textResult("Missing required argument: prompt", { isError: true });
+    }
+    const paymentRaw =
+      args.payment && typeof args.payment === "object"
+        ? (args.payment as Record<string, unknown>)
+        : null;
+    return unlockService({
+      request,
+      origin,
+      slug,
+      prompt,
+      paymentRaw,
+    });
+  }
+
+  // Legacy per-service tool names are retired.
+  if (name.startsWith("arcdot_")) {
+    return textResult(
+      JSON.stringify(
+        {
+          ok: false,
+          error: {
+            code: "TOOL_RETIRED",
+            message:
+              "Per-service MCP tools were removed. Call arcdot_discover, pick a slug, then arcdot_unlock with { service, prompt }.",
+            tools: ["arcdot_discover", "arcdot_health", "arcdot_unlock"],
+          },
+        },
+        null,
+        2,
+      ),
+      { isError: true },
+    );
+  }
+
+  return textResult(`Unknown tool: ${name}`, { isError: true });
 }

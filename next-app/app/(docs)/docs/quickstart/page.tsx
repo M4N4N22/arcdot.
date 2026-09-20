@@ -18,79 +18,75 @@ export default function DocsQuickstartPage() {
       pathname="/docs/quickstart"
       title="Quickstart"
       eyebrow="Get started"
-      description="Call the live arcdot. host — discover the catalog, then unlock a service. No repo clone required."
+      description="Create a local agent wallet, fund it, then unlock a service — from your IDE or the CLI."
     >
-      <DocsCallout title="Buyer client">
-        Install from GitHub:{" "}
-        <code>{agentInstallCommands.npxWalletCreate}</code>. Full guide:{" "}
-        <Link href="/docs/agents/client" className="underline underline-offset-4">
-          Agent client
-        </Link>
-        .
+      <DocsCallout title="Buyer path">
+        <Link href="/hub" className="underline underline-offset-4">
+          Hub → Get started
+        </Link>{" "}
+        walks create → fund → connect IDE. No project{" "}
+        <code>npm install</code> for MCP IDE chat.
       </DocsCallout>
 
-      <DocsH2>1. Discover the catalog</DocsH2>
+      <DocsH2>1. Create + fund the agent wallet</DocsH2>
+      <DocsOl>
+        <li>
+          <code className="font-mono text-sm">
+            {agentInstallCommands.npxWalletCreate}
+          </code>
+        </li>
+        <li>
+          Fund the printed address via{" "}
+          <Link href="/fund" className="underline underline-offset-4">
+            /fund
+          </Link>{" "}
+          (~0.05 USDC on Arc).
+        </li>
+      </DocsOl>
+
+      <DocsH2>2. Unlock from your IDE</DocsH2>
       <DocsP>
-        Against your deployed arcdot. origin, fetch the machine-readable catalog.
-        Replace <code className="font-mono text-sm">$ORIGIN</code> with your
-        host (the same origin as this docs site when you are on production).
+        Paste the MCP proxy from{" "}
+        <Link href="/hub/editors" className="underline underline-offset-4">
+          Connect IDE
+        </Link>
+        into Cursor, VS Code, Claude Desktop, Windsurf, or another stdio MCP
+        client, then ask your agent to discover and unlock a service. The proxy
+        settles payment from your local wallet.
       </DocsP>
+
+      <DocsH2>3. Or unlock from the CLI</DocsH2>
+      <CodeBlock
+        title="bash"
+        code={`${agentInstallCommands.npxWalletCreate}
+# fund on /fund, then:
+${agentInstallCommands.npxUnlock("$ORIGIN")}`}
+      />
+
+      <DocsH2>Optional: browse the catalog</DocsH2>
       <CodeBlock
         title="bash"
         code={`curl -s "$ORIGIN/api/services" | jq '.services[] | {slug, price_usdc, seller}'`}
       />
-      <DocsP>
-        Or start from discovery manifests:{" "}
-        <code className="font-mono text-sm">
-          $ORIGIN/.well-known/arcdot.json
-        </code>
-        .
-      </DocsP>
 
-      <DocsH2>2. Unlock (agents)</DocsH2>
-      <DocsOl>
-        <li>
-          Create a buyer wallet (see{" "}
-          <Link href="/hub" className="underline underline-offset-4">
-            Hub → Install
-          </Link>
-          ).
-        </li>
-        <li>Fund that address with native USDC on Arc (chain 5042).</li>
-        <li>Auto-settle unlock — no manual deposit script:</li>
-      </DocsOl>
-      <CodeBlock
-        title="bash"
-        code={`${agentInstallCommands.npxWalletCreate}
-# fund the printed address on Arc, then:
-${agentInstallCommands.npxUnlock("$ORIGIN")}`}
-      />
-
-      <DocsH2>3. Optional: human rehearsal</DocsH2>
+      <DocsH2>Rehearsal only</DocsH2>
       <DocsUl>
         <li>
           <Link href="/console" className="underline underline-offset-4">
             Console
           </Link>{" "}
-          — sandbox terminal (demo unlock when configured; not production pay)
-        </li>
-        <li>
-          <Link href="/hub" className="underline underline-offset-4">
-            MCP Hub
-          </Link>{" "}
-          — connect Cursor / LangChain and attach your agent wallet
+          — demo unlock when configured (not production pay)
         </li>
       </DocsUl>
 
       <DocsH2>Next</DocsH2>
       <DocsP>
-        Deep dive:{" "}
-        <Link href="/docs/agents" className="underline underline-offset-4">
-          For agents
+        <Link href="/docs/agents/client" className="underline underline-offset-4">
+          Agent client
         </Link>{" "}
         ·{" "}
-        <Link href="/docs/api/gateway" className="underline underline-offset-4">
-          Unlock API
+        <Link href="/docs/mcp" className="underline underline-offset-4">
+          MCP
         </Link>{" "}
         ·{" "}
         <Link href="/docs/payment" className="underline underline-offset-4">

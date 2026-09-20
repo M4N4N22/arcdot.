@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { HubEditors } from "@/components/hub/HubEditors";
 
 export const metadata: Metadata = {
-  title: "IDEs & clients · MCP Hub",
+  title: "Connect IDE · Hub",
   description:
-    "Connect Cursor, VS Code, and other MCP clients to arcdot. with the local settle proxy.",
+    "Paste the local MCP proxy for Cursor and other IDEs — auto-settle from your funded agent wallet.",
 };
 
 export default function HubEditorsPage() {

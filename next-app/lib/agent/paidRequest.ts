@@ -19,8 +19,9 @@ import {
 } from "@/lib/agent/client";
 import { makePaymentId } from "@/lib/agent/paymentId";
 import { promptGatewayAbi } from "@/lib/arc/constants";
+import { getArcRpcUrl } from "@/lib/arc/network";
 import { ARC_CHAIN_ID } from "@/lib/types/gateway";
-import { arcMainnet } from "@/lib/wallet/arcChain";
+import { getActiveArcChain } from "@/lib/wallet/arcChain";
 
 export type PaidAgentService = {
   slug: string;
@@ -95,20 +96,18 @@ async function resolveGateway(
 export async function runPaidAgentRequest(
   params: RunPaidAgentRequestParams,
 ): Promise<RunPaidAgentRequestResult> {
+  const chain = getActiveArcChain();
   const rpcUrl =
-    params.rpcUrl ??
-    process.env.ARC_RPC_URL ??
-    process.env.NEXT_PUBLIC_ARC_RPC_URL ??
-    "https://rpc.mainnet.arc.io";
+    params.rpcUrl ?? getArcRpcUrl();
 
   const account: Account = privateKeyToAccount(params.privateKey);
   const publicClient = createPublicClient({
-    chain: arcMainnet,
+    chain,
     transport: http(rpcUrl),
   });
   const walletClient = createWalletClient({
     account,
-    chain: arcMainnet,
+    chain,
     transport: http(rpcUrl),
   });
 
@@ -130,7 +129,7 @@ export async function runPaidAgentRequest(
     functionName: "depositPayment",
     args: [paymentId, service.seller],
     value: priceWei,
-    chain: arcMainnet,
+    chain,
     account,
   });
 

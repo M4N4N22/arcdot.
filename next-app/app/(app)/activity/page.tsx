@@ -9,6 +9,7 @@ import {
   signedReadQuery,
 } from "@/lib/auth/signedReadSession";
 import { statusLabel } from "@/lib/format/usdc";
+import { ARC } from "@/lib/arc/constants";
 import type { RequestRow } from "@/lib/types/catalog";
 
 export default function ActivityPage() {
@@ -141,7 +142,7 @@ export default function ActivityPage() {
                     <>
                       {" · "}
                       <a
-                        href={`https://explorer.arc.io/tx/${r.tx_hash}`}
+                        href={`${ARC.explorerTxBase}${r.tx_hash}`}
                         target="_blank"
                         rel="noreferrer"
                         className="underline underline-offset-2"

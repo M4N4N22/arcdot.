@@ -31,18 +31,19 @@ export default function DocsSellersPage() {
           <Link href="/create" className="underline underline-offset-4 text-foreground">
             Create
           </Link>{" "}
-          — title, slug, description, price (minimum 0.01 USDC), and either model
-          instructions or your own HTTPS API
+          — title, slug, description, price (minimum 0.01 USDC), and your HTTPS
+          agent endpoint
         </li>
         <li>Sign a short ownership message — no password accounts</li>
       </DocsOl>
 
-      <DocsH2>Your own API (upstream)</DocsH2>
+      <DocsH2>Your agent endpoint</DocsH2>
       <DocsP>
-        Host your tool anywhere (AWS, Vercel, …). Paste an{" "}
-        <code className="font-mono text-sm">https://</code> URL on Create or Edit.
-        After a buyer pays on Arc, arcdot. POSTs to your endpoint and returns the
-        reply. Catalog/MCP show{" "}
+        Host your tool anywhere (AWS, Vercel, …). An{" "}
+        <code className="font-mono text-sm">https://</code> agent URL is{" "}
+        <strong>required</strong> on Create and Edit. After a buyer pays on Arc,
+        arcdot. POSTs to your endpoint and returns the reply. Platform demo tools
+        are the only exception (they run on arcdot.). Catalog/MCP show{" "}
         <code className="font-mono text-sm">has_upstream: true</code> — never your
         URL or bearer token publicly.
       </DocsP>

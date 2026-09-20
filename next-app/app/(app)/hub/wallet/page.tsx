@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { HubWallet } from "@/components/hub/HubWallet";
 
 export const metadata: Metadata = {
-  title: "Agent wallet · MCP Hub",
+  title: "Wallet help · Hub",
   description:
     "Create and fund a local buyer wallet so agents can settle paid tools on arcdot.",
 };

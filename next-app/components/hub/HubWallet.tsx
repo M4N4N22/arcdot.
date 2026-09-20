@@ -1,66 +1,102 @@
 "use client";
 
+import Link from "next/link";
+import { AgentFundPanel } from "@/components/fund/AgentFundPanel";
+import { AgentWalletBackupHint } from "@/components/fund/AgentWalletBackupHint";
+import { CopyButton } from "@/components/hub/CopyButton";
 import { HubCodePanel } from "@/components/hub/HubCodePanel";
+import {
+  HubCallout,
+  HubContinue,
+  HubH2,
+  HubP,
+} from "@/components/hub/HubProse";
 import { HubShell } from "@/components/hub/HubShell";
-import { useHubOrigin } from "@/components/hub/useHubOrigin";
 import {
   AGENT_NPM_PACKAGE,
   agentInstallCommands,
 } from "@/lib/agent/install";
 
-const STEPS = [
-  {
-    title: "Create a wallet (one command)",
-    body: `${agentInstallCommands.npxWalletCreate} — saves to ~/.arcdot/wallet.json on your machine.`,
-  },
-  {
-    title: "Fund it with USDC on Arc",
-    body: "Send a small amount of USDC to that address on Arc. Only fund what you’re willing to spend.",
-  },
-  {
-    title: "Connect with the local MCP proxy",
-    body: "Paste the Cursor JSON from IDEs & clients. The proxy auto-settles paid tools from your wallet — no manual pay step.",
-  },
-  {
-    title: "Or unlock from scripts / LangChain",
-    body: `${agentInstallCommands.npxUnlock("…")} — or import createArcdotAgent from @arcdot/agent.`,
-  },
-] as const;
-
 export function HubWallet() {
-  const origin = useHubOrigin();
-
   return (
     <HubShell
       showBack
-      title="Give your agent a wallet"
-      description="No repo clone. Install from npm, fund a local wallet, then connect via the MCP proxy — arcdot. never holds your key."
+      title="Wallet help"
+      description="Create → fund → connect. Same wallet the MCP proxy uses to pay — arcdot. never holds your key."
     >
-      <ol className="divide-y divide-line border-y border-line">
-        {STEPS.map((step, i) => (
-          <li key={step.title} className="flex gap-4 py-5">
-            <span className="font-mono text-sm text-muted">{i + 1}</span>
-            <div>
-              <p className="text-sm font-medium text-foreground">{step.title}</p>
-              <p className="mt-1 text-sm text-muted">{step.body}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
+      <HubCallout title="Prefer the short links?">
+        Day-to-day top-ups: <Link href="/fund">/fund</Link>. Full path from
+        zero: <Link href="/hub">Get started</Link>.
+      </HubCallout>
 
-      <div className="mt-8">
-        <HubCodePanel
-          title="bash"
-          filename="wallet.sh"
-          code={`# anywhere — no clone\n${agentInstallCommands.npxWalletCreate}\n\n# after funding\n${agentInstallCommands.npxUnlock(origin)}`}
-          accentCopy
+      <HubH2 id="create">1. Create (if you don’t have one)</HubH2>
+      <HubP>
+        One command. No <code>npm install</code> required. Save the recovery
+        key it prints.
+      </HubP>
+      <HubCodePanel
+        title="bash"
+        filename="wallet.sh"
+        code={`# create (once)\n${agentInstallCommands.npxWalletCreate}\n\n# check anytime\n${agentInstallCommands.npxWalletStatus}`}
+        accentCopy
+      />
+      <div className="flex flex-wrap gap-2">
+        <CopyButton
+          value={agentInstallCommands.npxWalletCreate}
+          label="Copy create"
+          variant="primary"
+          className="h-9 rounded-lg px-4 text-sm"
+        />
+        <CopyButton
+          value={agentInstallCommands.npxWalletStatus}
+          label="Copy status"
+          variant="soft"
+          className="h-9 rounded-lg px-4 text-sm"
         />
       </div>
 
-      <p className="mt-4 text-xs text-muted">
-        Package: {AGENT_NPM_PACKAGE}. Keys stay in ~/.arcdot or
-        ARCDOT_PRIVATE_KEY on the buyer host only.
+      <HubH2 id="fund">2. Fund</HubH2>
+      <HubP>
+        Paste the address below (or use{" "}
+        <Link href="/fund">/fund</Link>). Send about{" "}
+        <strong className="font-medium text-foreground">0.05 USDC</strong> on
+        Arc.
+      </HubP>
+      <AgentFundPanel />
+      <AgentWalletBackupHint className="mt-6" />
+
+      <HubH2 id="connect">3. Connect IDE</HubH2>
+      <HubP>
+        After the balance shows ready, paste the MCP proxy in{" "}
+        <Link href="/hub/editors">Connect IDE</Link>. Unlocks settle from this
+        wallet automatically.
+      </HubP>
+
+      <p className="mt-6 text-xs text-muted">
+        Package: {AGENT_NPM_PACKAGE}. Keys stay in ~/.arcdot or{" "}
+        <code className="font-mono">ARCDOT_PRIVATE_KEY</code> on the buyer host
+        only.
       </p>
+
+      <HubContinue
+        links={[
+          {
+            href: "/hub",
+            title: "Get started",
+            description: "Three-step overview with MCP JSON.",
+          },
+          {
+            href: "/hub/editors",
+            title: "Connect IDE",
+            description: "Paste MCP proxy into your IDE.",
+          },
+          {
+            href: "/fund",
+            title: "Fund",
+            description: "Short link for top-ups.",
+          },
+        ]}
+      />
     </HubShell>
   );
 }

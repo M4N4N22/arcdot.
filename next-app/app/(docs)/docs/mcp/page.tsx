@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CodeBlock } from "@/components/docs/CodeBlock";
 import {
+  DocsCallout,
   DocsH2,
   DocsOl,
   DocsP,
@@ -20,26 +21,53 @@ export default function DocsMcpPage() {
       pathname="/docs/mcp"
       title="MCP reference"
       eyebrow="Guides"
-      description="Protocol details for the arcdot. MCP adapter. For setup and copy-paste configs, use the Integration Hub."
+      description="Protocol details for the arcdot. MCP adapter. For the real buyer setup, use Hub Get started."
     >
-      <DocsP>
-        Prefer the visual setup flow? Open the{" "}
-        <Link
-          href="/hub"
-          className="underline underline-offset-4 text-foreground"
-        >
-          MCP Hub
-        </Link>{" "}
-        — IDE setup, framework snippets, and one-click config copy.
-      </DocsP>
+      <DocsCallout title="Two different MCP paths">
+        <strong className="font-medium text-foreground">
+          Local IDE proxy:
+        </strong>{" "}
+        stdio <code>@arcdot/agent</code> in Cursor, VS Code, Claude Desktop,
+        Windsurf, etc. (auto-pay).{" "}
+        <strong className="font-medium text-foreground">Remote host:</strong>{" "}
+        <code>POST /api/mcp</code> lists tools and returns payment instructions —
+        it does not settle for you. Setup:{" "}
+        <Link href="/hub" className="underline underline-offset-4">
+          Hub → Get started
+        </Link>
+        .
+      </DocsCallout>
 
-      <DocsH2>Endpoint</DocsH2>
+      <DocsH2>Buyer setup (auto-pay)</DocsH2>
+      <DocsOl>
+        <li>
+          Create wallet:{" "}
+          <code className="font-mono text-sm">
+            {agentInstallCommands.npxWalletCreate}
+          </code>
+        </li>
+        <li>
+          Fund on{" "}
+          <Link href="/fund" className="underline underline-offset-4">
+            /fund
+          </Link>
+        </li>
+        <li>
+          Paste the local proxy into your IDE’s MCP settings (see{" "}
+          <Link href="/hub/editors" className="underline underline-offset-4">
+            Connect IDE
+          </Link>
+          )
+        </li>
+      </DocsOl>
+      <CodeBlock title="mcp.json" code={agentMcpProxyConfig("$ORIGIN")} />
+
+      <DocsH2>Remote endpoint</DocsH2>
       <DocsP>
         Streamable HTTP JSON-RPC at{" "}
         <code className="font-mono text-sm">POST /api/mcp</code>.{" "}
         <code className="font-mono text-sm">GET /api/mcp</code> returns a short
-        descriptor. This is an adapter over the existing gateway — not a separate
-        marketplace.
+        descriptor. Adapter over the gateway — not a separate marketplace.
       </DocsP>
 
       <DocsH2>Handshake</DocsH2>
@@ -57,31 +85,28 @@ curl -s -X POST "$ORIGIN/api/mcp" \\
       />
 
       <DocsH2>Tools</DocsH2>
+      <DocsP>
+        Published services are <strong>not</strong> MCP tools. Agents discover
+        them, then unlock by slug.
+      </DocsP>
       <DocsUl>
         <li>
-          <code className="font-mono text-sm">arcdot_catalog</code> — free
-          discovery
+          <code className="font-mono text-sm">arcdot_discover</code> — free
+          catalog (optional <code className="font-mono text-sm">query</code>{" "}
+          filter). Alias: <code className="font-mono text-sm">arcdot_catalog</code>
         </li>
         <li>
           <code className="font-mono text-sm">arcdot_health</code> — free health
         </li>
         <li>
-          <code className="font-mono text-sm">arcdot_&lt;slug&gt;</code> — one
-          tool per published service (hyphens → underscores)
+          <code className="font-mono text-sm">arcdot_unlock</code> —{" "}
+          <code className="font-mono text-sm">{`{ service, prompt }`}</code>{" "}
+          then pay / retry with{" "}
+          <code className="font-mono text-sm">payment</code>
         </li>
       </DocsUl>
 
       <DocsH2>Paid call</DocsH2>
-      <DocsP>
-        Prefer the buyer client — it auto-settles so you do not hand-roll deposit
-        + retry:
-      </DocsP>
-      <CodeBlock
-        title="bash"
-        code={`${agentInstallCommands.npxWalletCreate}
-# fund address on Arc, then Cursor mcp.json:
-${agentMcpProxyConfig("$ORIGIN")}`}
-      />
       <DocsOl>
         <li>
           Remote <code className="font-mono text-sm">tools/call</code> without
@@ -89,18 +114,16 @@ ${agentMcpProxyConfig("$ORIGIN")}`}
         </li>
         <li>
           Local <code className="font-mono text-sm">@arcdot/agent</code> proxy /
-          SDK runs{" "}
-          <code className="font-mono text-sm">depositPayment</code> + EIP-191 and
-          retries with{" "}
+          SDK runs deposit + EIP-191 and retries with{" "}
           <code className="font-mono text-sm">arguments.payment</code>
         </li>
       </DocsOl>
       <DocsP>
         Rehearsal only: header{" "}
         <code className="font-mono text-sm">X-Arc-Demo-Secret</code>. Production
-        buyers use{" "}
-        <Link href="/hub/wallet" className="underline underline-offset-4">
-          Hub → Agent wallet
+        buyers fund on{" "}
+        <Link href="/fund" className="underline underline-offset-4">
+          /fund
         </Link>
         . arcdot. never holds buyer keys.
       </DocsP>
@@ -109,7 +132,7 @@ ${agentMcpProxyConfig("$ORIGIN")}`}
         code={`curl -s -X POST "$ORIGIN/api/mcp" \\
   -H 'Content-Type: application/json' \\
   -H "X-Arc-Demo-Secret: $DEMO_AGENT_SECRET" \\
-  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"arcdot_quick_brief","arguments":{"prompt":"Say hello in one line"}}}'`}
+  -d '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"arcdot_unlock","arguments":{"service":"quick-brief","prompt":"Say hello in one line"}}}'`}
       />
 
       <DocsH2>Related</DocsH2>
@@ -119,15 +142,15 @@ ${agentMcpProxyConfig("$ORIGIN")}`}
             href="/hub"
             className="underline underline-offset-4 text-foreground"
           >
-            MCP Hub
+            Hub → Get started
           </Link>
         </li>
         <li>
           <Link
-            href="/docs/agents"
+            href="/docs/agents/client"
             className="underline underline-offset-4 text-foreground"
           >
-            For agents
+            Agent client
           </Link>
         </li>
         <li>
@@ -136,14 +159,6 @@ ${agentMcpProxyConfig("$ORIGIN")}`}
             className="underline underline-offset-4 text-foreground"
           >
             Unlock API
-          </Link>
-        </li>
-        <li>
-          <Link
-            href="/docs/discovery"
-            className="underline underline-offset-4 text-foreground"
-          >
-            Discovery
           </Link>
         </li>
       </DocsUl>

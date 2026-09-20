@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { createPublicClient, formatEther, http } from "viem";
 import { ARC, promptGatewayAbi } from "@/lib/arc/constants";
 import { isSupabaseConfigured, getSupabaseAdmin } from "@/lib/supabase/server";
-import { arcMainnet } from "@/lib/wallet/arcChain";
+import { getActiveArcChain } from "@/lib/wallet/arcChain";
 
 export const runtime = "nodejs";
 
@@ -33,7 +33,7 @@ export async function GET() {
 
   try {
     const client = createPublicClient({
-      chain: arcMainnet,
+      chain: getActiveArcChain(),
       transport: http(ARC.rpcUrl),
     });
     const block = await client.getBlockNumber();

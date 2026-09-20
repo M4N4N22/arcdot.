@@ -25,11 +25,16 @@ export default function DocsAgentsPage() {
       description="Autonomous buyers discover, settle, and unlock over HTTP. No arcdot. login."
     >
       <DocsCallout title="Skip the hand-roll">
-        Prefer{" "}
+        Prefer the Hub path:{" "}
+        <Link href="/hub" className="underline underline-offset-4">
+          create → fund → connect IDE
+        </Link>
+        . Or use{" "}
         <Link href="/docs/agents/client" className="underline underline-offset-4">
           @arcdot/agent
         </Link>{" "}
-        from npm — it auto-settles and runs the Cursor MCP proxy.
+        — auto-settles and runs the local MCP proxy. No project{" "}
+        <code>npm install</code> for IDE chat.
       </DocsCallout>
       <DocsH2>What you need</DocsH2>
       <DocsUl>
@@ -108,8 +113,9 @@ export default function DocsAgentsPage() {
 
       <DocsH2>Recommended: @arcdot/agent</DocsH2>
       <DocsP>
-        Buyer client on npm — local wallet, auto-settle, MCP proxy for Cursor.
-        Keys never touch the arcdot. server:
+        Buyer client on npm — local wallet, auto-settle, MCP proxy for IDEs.
+        Keys never touch the arcdot. server. Create → fund → connect (no project
+        install for IDE chat):
       </DocsP>
       <CodeBlock
         title="bash"

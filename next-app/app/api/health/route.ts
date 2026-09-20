@@ -13,13 +13,14 @@ import {
   isSupabaseAdminConfigured,
   isSupabaseConfigured,
 } from "@/lib/supabase/server";
-import { arcMainnet } from "@/lib/wallet/arcChain";
+import { getActiveArcChain } from "@/lib/wallet/arcChain";
 
 export const runtime = "nodejs";
 
 export async function GET() {
   const durableStore = durableStoreReady();
   const keyMode = describeSupabaseKeyMode();
+  const chain = getActiveArcChain();
   const checks: Record<string, unknown> = {
     ok: true,
     protocol: "arcdot.gateway",
@@ -31,6 +32,7 @@ export async function GET() {
       agent: "/.well-known/arcdot.json",
       openapi: "/.well-known/openapi.json",
     },
+    arcNetwork: ARC.network,
     chainId: ARC.chainId,
     gatewayConfigured: Boolean(
       ARC.gatewayAddress && ARC.gatewayAddress.length === 42,
@@ -54,7 +56,7 @@ export async function GET() {
 
   try {
     const client = createPublicClient({
-      chain: arcMainnet,
+      chain,
       transport: http(ARC.rpcUrl),
     });
     const block = await client.getBlockNumber();

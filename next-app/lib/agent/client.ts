@@ -6,7 +6,8 @@ import type {
   Gateway402Body,
   GatewayAuthMessage,
 } from "@/lib/types/gateway";
-import { ARC_CHAIN_ID, GATEWAY_FEE_WEI_DEFAULT } from "@/lib/types/gateway";
+import { GATEWAY_FEE_WEI_DEFAULT } from "@/lib/types/gateway";
+import { getArcChainId } from "@/lib/arc/network";
 
 export type GatewayCallResult =
   | { ok: true; status: 200; body: Gateway200Body }
@@ -46,7 +47,7 @@ export function buildGatewayAuthMessage(params: {
 }): GatewayAuthMessage {
   return {
     domain: "arcdot.gateway",
-    chainId: ARC_CHAIN_ID,
+    chainId: getArcChainId(),
     gateway: params.gateway,
     txHash: params.txHash,
     feeWei: params.feeWei.toString(),

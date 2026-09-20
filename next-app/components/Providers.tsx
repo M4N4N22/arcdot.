@@ -10,19 +10,20 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
 import { http, WagmiProvider } from "wagmi";
-import { arcMainnet } from "@/lib/wallet/arcChain";
+import { getActiveArcChain } from "@/lib/wallet/arcChain";
 
 const projectId =
-  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID || "arcdot_local_dev_placeholder";
+  process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ||
+  "arcdot_local_dev_placeholder";
+
+const activeChain = getActiveArcChain();
 
 const config = getDefaultConfig({
   appName: "arcdot.",
   projectId,
-  chains: [arcMainnet],
+  chains: [activeChain],
   transports: {
-    [arcMainnet.id]: http(
-      process.env.NEXT_PUBLIC_ARC_RPC_URL ?? "https://rpc.mainnet.arc.io",
-    ),
+    [activeChain.id]: http(activeChain.rpcUrls.default.http[0]),
   },
   ssr: true,
 });
@@ -44,7 +45,7 @@ export function Providers({ children }: { children: ReactNode }) {
         <RainbowKitProvider
           theme={rkTheme}
           modalSize="compact"
-          initialChain={arcMainnet}
+          initialChain={activeChain}
           appInfo={{
             appName: "arcdot.",
             learnMoreUrl: "https://docs.arc.io",

@@ -1,7 +1,6 @@
 /** Machine-readable catalog helpers for agent discovery. Not UI copy. */
 
 import { ARC } from "@/lib/arc/constants";
-import { ARC_CHAIN_ID } from "@/lib/types/gateway";
 import type { ServiceRow } from "@/lib/types/catalog";
 
 const INPUT_HINT = {
@@ -52,7 +51,7 @@ export function agentCatalogEnvelope(
   return {
     protocol: "arcdot.gateway",
     version: 2,
-    chainId: ARC_CHAIN_ID,
+    chainId: ARC.chainId,
     docs: "/docs",
     currency: {
       symbol: "USDC",

@@ -14,13 +14,16 @@ import {
   ensureSignedReadSession,
   signedReadQuery,
 } from "@/lib/auth/signedReadSession";
-import { promptGatewayAbi } from "@/lib/arc/constants";
+import {
+  isOnChainSale,
+  isRehearsalRequest,
+} from "@/lib/catalog/requests";
+import { ARC, promptGatewayAbi } from "@/lib/arc/constants";
 import { formatUsdcWei, statusLabel } from "@/lib/format/usdc";
 import {
   networkFeePercent,
   sellerKeepPercent,
 } from "@/lib/studio/fees";
-import { ARC_CHAIN_ID } from "@/lib/types/gateway";
 import type { RequestRow, ServiceRow } from "@/lib/types/catalog";
 
 const QUICK_LINKS = [
@@ -35,15 +38,14 @@ export default function StudioPage() {
   const { signMessageAsync } = useSignMessage();
   const [services, setServices] = useState<ServiceRow[]>([]);
   const [sales, setSales] = useState<RequestRow[]>([]);
-  const gateway = (process.env.NEXT_PUBLIC_PROMPT_GATEWAY_ADDRESS ||
-    "") as `0x${string}`;
+  const gateway = ARC.gatewayAddress;
 
-  const { data: pending, refetch } = useReadContract({
+  const { data: pending, refetch, isError: pendingError } = useReadContract({
     address: gateway?.length === 42 ? gateway : undefined,
     abi: promptGatewayAbi,
     functionName: "pendingSeller",
     args: address ? [address] : undefined,
-    chainId: ARC_CHAIN_ID,
+    chainId: ARC.chainId,
     query: { enabled: Boolean(address && gateway?.length === 42) },
   });
 
@@ -92,8 +94,8 @@ export default function StudioPage() {
     await writeContractAsync({
       address: gateway,
       abi: promptGatewayAbi,
+      chainId: ARC.chainId,
       functionName: "withdrawSeller",
-      chainId: ARC_CHAIN_ID,
     });
   }
 
@@ -116,9 +118,13 @@ export default function StudioPage() {
   }
 
   const pendingWei = typeof pending === "bigint" ? pending : BigInt(0);
-  const fulfilled = sales.filter((s) => s.status === "fulfilled").length;
+  const paidSales = sales.filter(isOnChainSale);
+  const rehearsalSales = sales.filter(
+    (s) => s.status === "fulfilled" && isRehearsalRequest(s),
+  );
   const recent = sales.slice(0, 5);
   const shortAddr = `${address.slice(0, 6)}…${address.slice(-4)}`;
+  const gatewayReady = Boolean(gateway && gateway.length === 42);
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 pb-16 pt-6 md:px-8">
@@ -148,12 +154,45 @@ export default function StudioPage() {
               Available to withdraw
             </p>
             <p className="mt-2 font-mono text-2xl">
-              {formatUsdcWei(pendingWei)} USDC
+              {!gatewayReady
+                ? "—"
+                : pendingError
+                  ? "—"
+                  : `${formatUsdcWei(pendingWei)} USDC`}
             </p>
+            {!gatewayReady && (
+              <p className="mt-2 max-w-sm text-sm text-amber-800">
+                Payment address is not configured for this network, so balance
+                cannot be read.
+              </p>
+            )}
+            {gatewayReady &&
+              pendingWei === BigInt(0) &&
+              rehearsalSales.length > 0 &&
+              paidSales.length === 0 && (
+                <p className="mt-2 max-w-md text-sm text-muted">
+                  Your {rehearsalSales.length} completed sale
+                  {rehearsalSales.length === 1 ? "" : "s"}{" "}
+                  {rehearsalSales.length === 1 ? "was" : "were"} rehearsal
+                  unlocks (Activity / demo). Those do not credit withdrawable
+                  USDC — buyers must pay on Arc for earnings to appear here.
+                </p>
+              )}
+            {gatewayReady &&
+              pendingWei === BigInt(0) &&
+              paidSales.length > 0 && (
+                <p className="mt-2 max-w-md text-sm text-muted">
+                  Paid sales are on record, but this wallet has nothing pending
+                  on Arc. Confirm you&apos;re connected as the payout wallet,
+                  or that earnings were already withdrawn.
+                </p>
+              )}
           </div>
           <button
             type="button"
-            disabled={isPending || pendingWei === BigInt(0) || !gateway}
+            disabled={
+              isPending || pendingWei === BigInt(0) || !gatewayReady
+            }
             onClick={() => void onWithdraw()}
             className="h-10 bg-accent px-4 text-sm font-medium text-surface disabled:opacity-40"
           >
@@ -184,11 +223,16 @@ export default function StudioPage() {
         </div>
         <div className="border border-line bg-surface p-5">
           <p className="text-xs uppercase tracking-wider text-muted">
-            Completed sales
+            Paid sales
           </p>
           <p className="mt-2 font-mono text-2xl">
-            {sales.length > 0 ? fulfilled : "—"}
+            {sales.length > 0 ? paidSales.length : "—"}
           </p>
+          {rehearsalSales.length > 0 && (
+            <p className="mt-1 text-xs text-muted">
+              + {rehearsalSales.length} rehearsal (no withdraw)
+            </p>
+          )}
           <Link
             href="/studio/sales"
             className="mt-4 inline-block text-sm underline underline-offset-4"
@@ -233,20 +277,27 @@ export default function StudioPage() {
           </div>
         ) : (
           <ul className="mt-4 divide-y divide-line border-y border-line">
-            {recent.map((s) => (
-              <li
-                key={s.id}
-                className="flex flex-wrap justify-between gap-2 py-4"
-              >
-                <p className="font-medium">{s.service_slug ?? "Tool"}</p>
-                <p className="font-mono text-xs text-muted">
-                  {statusLabel(s.status)}
-                  {s.seller_amount_wei
-                    ? ` · ${formatUsdcWei(s.seller_amount_wei)} USDC`
-                    : ""}
-                </p>
-              </li>
-            ))}
+            {recent.map((s) => {
+              const rehearsal = isRehearsalRequest(s);
+              return (
+                <li
+                  key={s.id}
+                  className="flex flex-wrap justify-between gap-2 py-4"
+                >
+                  <p className="font-medium">{s.service_slug ?? "Tool"}</p>
+                  <p className="font-mono text-xs text-muted">
+                    {rehearsal
+                      ? "Rehearsal"
+                      : statusLabel(s.status)}
+                    {!rehearsal && s.seller_amount_wei
+                      ? ` · ${formatUsdcWei(s.seller_amount_wei)} USDC`
+                      : rehearsal
+                        ? " · no on-chain credit"
+                        : ""}
+                  </p>
+                </li>
+              );
+            })}
           </ul>
         )}
       </section>

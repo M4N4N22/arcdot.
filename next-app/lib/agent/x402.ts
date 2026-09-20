@@ -6,7 +6,7 @@
  */
 
 import { ARC } from "@/lib/arc/constants";
-import { ARC_CHAIN_ID, GATEWAY_FEE_USDC } from "@/lib/types/gateway";
+import { GATEWAY_FEE_USDC } from "@/lib/types/gateway";
 import type { GatewayPaymentInstructions } from "@/lib/types/gateway";
 import type { ServiceRow } from "@/lib/types/catalog";
 
@@ -15,7 +15,7 @@ const ZERO_ADDR =
 
 export type X402Accept = {
   scheme: "exact";
-  network: `eip155:${typeof ARC_CHAIN_ID}`;
+  network: `eip155:${number}`;
   asset: "USDC-native";
   amount: string;
   payTo: `0x${string}`;
@@ -92,7 +92,7 @@ export function buildX402PaymentRequired(params: {
     accepts: [
       {
         scheme: "exact",
-        network: `eip155:${ARC_CHAIN_ID}`,
+        network: `eip155:${ARC.chainId}`,
         asset: "USDC-native",
         amount: payment.feeWei,
         payTo: payment.gateway,
@@ -111,7 +111,7 @@ export function buildX402PaymentRequired(params: {
           ],
           auth: "EIP-191",
           paymentIdRequired: true,
-          note: "Arc Mainnet native USDC is 18 decimals. amount is feeWei (e.g. 0.01 USDC = 1e16). Do not use 6-decimal ERC-20 units.",
+          note: "Arc native USDC is 18 decimals. amount is feeWei (e.g. 0.01 USDC = 1e16). Do not use 6-decimal ERC-20 units.",
         },
       },
     ],
@@ -139,7 +139,7 @@ export function withX402Headers(
 ): void {
   headers.set("PAYMENT-REQUIRED", encodePaymentRequiredHeader(x402));
   headers.set("X-Payment-Protocol", "x402");
-  headers.set("X-Payment-Network", `eip155:${ARC_CHAIN_ID}`);
+  headers.set("X-Payment-Network", `eip155:${ARC.chainId}`);
   headers.set("X-Payment-Currency", "USDC");
   headers.set("X-Payment-Decimals", "18");
   headers.set("X-Payment-Amount", payment.feeWei);

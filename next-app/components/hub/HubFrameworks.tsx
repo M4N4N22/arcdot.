@@ -1,9 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { HubCodePanel } from "@/components/hub/HubCodePanel";
+import {
+  HubCallout,
+  HubContinue,
+  HubH2,
+  HubP,
+} from "@/components/hub/HubProse";
 import { HubShell } from "@/components/hub/HubShell";
 import { useHubOrigin } from "@/components/hub/useHubOrigin";
+import { agentInstallCommands } from "@/lib/agent/install";
 import {
   curlHandshakeSnippet,
   langchainStyleSnippet,
@@ -39,9 +47,34 @@ export function HubFrameworks() {
   return (
     <HubShell
       showBack
-      title="Agent frameworks"
-      description="Hook autonomous runners into the same node — list tools, call them, settle from the agent’s wallet when payment is needed, then continue."
+      title="Frameworks"
+      description="For code and agents that import @arcdot/agent — not required for IDE MCP chat."
     >
+      <HubCallout title="When you need this">
+        Use Frameworks if you <code>import</code> the SDK or run custom loops.
+        For IDE chat only, stay on{" "}
+        <Link href="/hub">Get started</Link> → <Link href="/fund">Fund</Link> →{" "}
+        <Link href="/hub/editors">Connect IDE</Link>.
+      </HubCallout>
+
+      <HubH2>1. Install the SDK in your project</HubH2>
+      <HubP>
+        This is the only place <code>npm install</code> is required. Same local
+        wallet file as the MCP proxy (<code>~/.arcdot/wallet.json</code>).
+      </HubP>
+      <HubCodePanel
+        title="bash"
+        filename="sdk.sh"
+        code={`# create + fund first if needed\n${agentInstallCommands.npxWalletCreate}\n# then in your app:\n${agentInstallCommands.npmInstall}`}
+        accentCopy
+      />
+
+      <HubH2>2. Snippets</HubH2>
+      <HubP>
+        Discover is free. Unlock settles from your funded agent wallet via the
+        SDK.
+      </HubP>
+
       <div
         className="flex flex-wrap gap-2"
         role="tablist"
@@ -57,7 +90,7 @@ export function HubFrameworks() {
               aria-selected={selected}
               onClick={() => setFrameworkTab(tab.id)}
               className={[
-                "inline-flex h-10 items-center px-4 text-sm transition-colors",
+                "inline-flex h-9 items-center rounded-lg px-4 text-sm transition-colors",
                 selected
                   ? "bg-foreground font-medium text-surface"
                   : "border border-line bg-surface text-muted hover:text-foreground",
@@ -69,18 +102,32 @@ export function HubFrameworks() {
         })}
       </div>
 
-      <div className="mt-6">
-        <HubCodePanel
-          title={frameworkMeta.title}
-          filename={frameworkMeta.filename}
-          code={frameworkCode}
-        />
-      </div>
+      <HubCodePanel
+        title={frameworkMeta.title}
+        filename={frameworkMeta.filename}
+        code={frameworkCode}
+        accentCopy
+      />
 
-      <p className="mt-4 text-sm text-muted">
-        Free tools like catalog listing work immediately. Paid tools auto-settle
-        through @arcdot/agent (proxy or SDK).
-      </p>
+      <HubContinue
+        links={[
+          {
+            href: "/fund",
+            title: "Fund",
+            description: "Top up before unlock loops.",
+          },
+          {
+            href: "/hub/editors",
+            title: "Connect IDE",
+            description: "IDE MCP path without npm install.",
+          },
+          {
+            href: "/docs/agents/client",
+            title: "Agent client docs",
+            description: "SDK unlock and callMcpTool.",
+          },
+        ]}
+      />
     </HubShell>
   );
 }

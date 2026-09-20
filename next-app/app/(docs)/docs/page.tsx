@@ -8,19 +8,19 @@ export const metadata = {
 
 const cards = [
   {
-    href: "/docs/agents/client",
-    title: "Install buyer client",
-    body: "@arcdot/agent on npm — wallet, auto-settle, MCP proxy.",
-  },
-  {
     href: "/hub",
-    title: "MCP Hub",
-    body: "Wire any MCP client — editors, frameworks, or scripts — with one-click configs.",
+    title: "Get started (Hub)",
+    body: "Create wallet → fund → connect IDE. True MCP IDE path — no project npm install.",
   },
   {
     href: "/docs/quickstart",
     title: "Quickstart",
-    body: "Hit the live catalog and unlock a service in minutes.",
+    body: "Same three steps in docs form, plus CLI unlock.",
+  },
+  {
+    href: "/docs/agents/client",
+    title: "Agent client",
+    body: "@arcdot/agent — wallet, MCP proxy, optional SDK.",
   },
   {
     href: "/docs/agents",
@@ -58,9 +58,9 @@ export default function DocsHubPage() {
 
       <ol className="mt-10 grid gap-3 sm:grid-cols-3">
         {[
-          { n: "01", t: "Discover", d: "Catalog & well-known" },
-          { n: "02", t: "Pay", d: "Native USDC on Arc" },
-          { n: "03", t: "Unlock", d: "POST /api/gateway" },
+          { n: "1", t: "Create wallet", d: "npx … wallet create" },
+          { n: "2", t: "Fund", d: "~0.05 USDC on Arc" },
+          { n: "3", t: "Connect / unlock", d: "IDE proxy or CLI" },
         ].map((s) => (
           <li
             key={s.n}

@@ -9,10 +9,33 @@ export {
   resolvePrivateKey,
   walletPath,
   walletAccountFromKey,
+  NoWalletError,
 } from "./wallet/store.js";
 export type { StoredWallet } from "./wallet/store.js";
 
-export { settlePayment, getNativeBalance } from "./settle/pay.js";
+export {
+  getWalletStatus,
+  formatWalletStatusHuman,
+  DEFAULT_LOW_BALANCE_USDC,
+} from "./wallet/status.js";
+export type { WalletStatus } from "./wallet/status.js";
+export {
+  formatFundsNeededMessage,
+  formatUsdcDisplay,
+} from "./wallet/fundsNeeded.js";
+export {
+  formatNoWalletGuide,
+  fundUrlFor,
+  hostAgentShellDirective,
+  WALLET_CREATE_CMD,
+  WALLET_STATUS_CMD,
+} from "./wallet/guide.js";
+
+export {
+  settlePayment,
+  getNativeBalance,
+  InsufficientFundsError,
+} from "./settle/pay.js";
 export { makePaymentId } from "./settle/paymentId.js";
 
 export {

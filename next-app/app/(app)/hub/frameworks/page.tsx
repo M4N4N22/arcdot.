@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { HubFrameworks } from "@/components/hub/HubFrameworks";
 
 export const metadata: Metadata = {
-  title: "Frameworks · MCP Hub",
+  title: "Frameworks · Hub",
   description:
-    "Wire Python, LangChain, CrewAI, and curl into arcdot. paid tools.",
+    "Install @arcdot/agent in your project for LangChain, Python, and scripts — not required for IDE MCP chat.",
 };
 
 export default function HubFrameworksPage() {

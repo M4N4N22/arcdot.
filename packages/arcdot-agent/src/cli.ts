@@ -3,6 +3,10 @@ import { unlockWithAutoSettle } from "./client/gateway.js";
 import { getNativeBalance } from "./settle/pay.js";
 import { runMcpProxy } from "./mcp/proxy.js";
 import {
+  formatWalletStatusHuman,
+  getWalletStatus,
+} from "./wallet/status.js";
+import {
   createWallet,
   loadWallet,
   resolvePrivateKey,
@@ -18,16 +22,19 @@ Usage:
   arcdot wallet create [--force]
   arcdot wallet address
   arcdot wallet balance
+  arcdot wallet status
   arcdot unlock --origin <url> --service <slug> [--prompt <text>]
   arcdot mcp --origin <url>
 
 Env:
-  ARCDOT_ORIGIN       Default origin for unlock / mcp
-  ARCDOT_PRIVATE_KEY  Override ~/.arcdot/wallet.json
-  AGENT_PRIVATE_KEY   Alias for ARCDOT_PRIVATE_KEY
-  ARC_RPC_URL         Arc RPC (default https://rpc.mainnet.arc.io)
-  ARCDOT_GATEWAY      Override gateway address
-  ARCDOT_HOME         Override config dir (default ~/.arcdot)
+  ARCDOT_ORIGIN            Default origin for unlock / mcp
+  ARCDOT_PRIVATE_KEY       Override ~/.arcdot/wallet.json
+  AGENT_PRIVATE_KEY        Alias for ARCDOT_PRIVATE_KEY
+  ARC_RPC_URL              Arc RPC (default https://rpc.mainnet.arc.io)
+  ARC_NETWORK              mainnet | testnet
+  ARCDOT_GATEWAY           Override gateway address
+  ARCDOT_HOME              Override config dir (default ~/.arcdot)
+  ARCDOT_LOW_BALANCE_USDC  Alert threshold (default 0.05)
 `);
 }
 
@@ -60,15 +67,22 @@ Created agent wallet (local only)
 Address:  ${wallet.address}
 File:     ${walletPath()}
 
+BACKUP (do this now)
+• The recovery key is printed once below — save it in a password manager
+  or encrypted note. Anyone with that key can spend the wallet's USDC.
+• Or copy ${walletPath()} to a safe offline location.
+• A new machine needs that file or ARCDOT_PRIVATE_KEY in MCP env.
+• This site never stores your key. Losing the backup = losing access to funds.
+
 NEXT STEPS
-1. Fund ${wallet.address} with native USDC on Arc Mainnet (chain 5042).
+1. Fund ${wallet.address} with native USDC on Arc.
    ${ARC_EXPLORER}/address/${wallet.address}
-2. Add MCP in Cursor with the local proxy (see Hub), or:
+   Or open /fund?address=${wallet.address} for a QR + live balance.
+2. Check: arcdot wallet status
+3. Add MCP in Cursor with the local proxy (see Hub), or:
    arcdot unlock --origin https://YOUR_HOST --service quick-brief --prompt "Hi"
 
-Private key is stored at ${walletPath()} (mode 0600).
-It was also printed once below — save it offline if you need a backup.
-Do NOT put this key on the arcdot. server.
+Do NOT put this key on the arcdot. server or paste it into the browser.
 
 Private key: ${wallet.privateKey}
 `);
@@ -94,7 +108,15 @@ Private key: ${wallet.privateKey}
       );
       return;
     }
-    console.error("Unknown wallet command. Use create | address | balance");
+    if (sub === "status") {
+      const status = await getWalletStatus();
+      console.log(formatWalletStatusHuman(status));
+      console.log("");
+      console.log(JSON.stringify(status, null, 2));
+      if (status.lowBalance) process.exitCode = 2;
+      return;
+    }
+    console.error("Unknown wallet command. Use create | address | balance | status");
     process.exit(1);
   }
 

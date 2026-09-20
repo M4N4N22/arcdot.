@@ -3,10 +3,17 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAccount, useSignMessage } from "wagmi";
 import { ServiceImageField } from "@/components/studio/ServiceImageField";
 import { buildUpdateChallenge } from "@/lib/auth/updateServiceChallenge";
+import { upstreamUrlError } from "@/lib/seller/upstreamUrl";
+import {
+  formatUsdcAmount,
+  networkFeePercent,
+  sellerKeepPercent,
+  splitPriceUsdc,
+} from "@/lib/studio/fees";
 import type { ServiceRow } from "@/lib/types/catalog";
 
 const inputClass =
@@ -22,12 +29,18 @@ export default function EditServicePage() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priceUsdc, setPriceUsdc] = useState("0.01");
-  const [systemPrompt, setSystemPrompt] = useState("");
   const [upstreamUrl, setUpstreamUrl] = useState("");
   const [upstreamBearer, setUpstreamBearer] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+
+  const tariff = useMemo(() => splitPriceUsdc(priceUsdc), [priceUsdc]);
+  const keepPct = sellerKeepPercent();
+  const feePct = networkFeePercent();
+  const shortAddr = address
+    ? `${address.slice(0, 6)}…${address.slice(-4)}`
+    : "your wallet";
 
   useEffect(() => {
     if (!address) return;
@@ -45,7 +58,6 @@ export default function EditServicePage() {
       setTitle(found.title);
       setDescription(found.description);
       setPriceUsdc(found.price_usdc);
-      setSystemPrompt(found.system_prompt);
       setUpstreamUrl(found.upstream_url ?? "");
       setUpstreamBearer(found.upstream_bearer ?? "");
       setImageUrl(found.image_url ?? null);
@@ -60,6 +72,12 @@ export default function EditServicePage() {
     try {
       const issuedAt = Math.floor(Date.now() / 1000);
       const upstream = upstreamUrl.trim();
+      const urlErr = upstreamUrlError(upstream);
+      if (urlErr) {
+        setError(urlErr);
+        setBusy(false);
+        return;
+      }
       const challenge = buildUpdateChallenge({
         slug: service.slug,
         owner_address: address,
@@ -76,7 +94,6 @@ export default function EditServicePage() {
           title,
           description,
           price_usdc: priceUsdc,
-          system_prompt: systemPrompt,
           upstream_url: upstream,
           upstream_bearer: upstreamBearer.trim(),
           image_url: imageUrl,
@@ -108,106 +125,182 @@ export default function EditServicePage() {
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 pb-16 pt-6 md:px-8">
-      <Link
-        href="/studio/services"
-        className="text-sm text-muted transition-colors hover:text-foreground"
-      >
-        ← Your tools
-      </Link>
-      <h1 className="mt-5 font-display text-3xl tracking-tight">Edit tool</h1>
+      <div className="max-w-xl">
+        <Link
+          href="/studio/services"
+          className="text-sm text-muted transition-colors hover:text-foreground"
+        >
+          ← Your tools
+        </Link>
+        <h1 className="mt-5 font-display text-3xl tracking-tight">Edit tool</h1>
+        <p className="mt-2 text-muted">
+          Update listing, price, and the HTTPS endpoint buyers unlock.
+        </p>
+      </div>
+
       {!service ? (
         <p className="mt-6 text-muted">{error || "Loading…"}</p>
       ) : (
-        <form
-          onSubmit={onSubmit}
-          className="mt-10 max-w-xl space-y-5 rounded-2xl border border-line bg-surface/80 p-5 md:p-6"
-        >
-          <label className="block space-y-2 text-sm font-medium">
-            <span>Title</span>
-            <input
-              className={inputClass}
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              maxLength={80}
-            />
-          </label>
-          <label className="block space-y-2 text-sm font-medium">
-            <span>Description</span>
-            <textarea
-              className={`${inputClass} resize-y`}
-              rows={3}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-              maxLength={500}
-            />
-          </label>
-          <div className="space-y-2 text-sm font-medium">
-            <span>Logo / cover</span>
-            <ServiceImageField
-              value={imageUrl}
-              onChange={setImageUrl}
-              address={address}
-              signMessageAsync={signMessageAsync}
+        <form onSubmit={onSubmit} className="mt-10 max-w-xl space-y-5">
+          <section className="rounded-2xl border border-line bg-surface/80 p-5 md:p-6">
+            <h2 className="text-sm font-medium uppercase tracking-wider text-muted">
+              Identity
+            </h2>
+            <div className="mt-5 space-y-5">
+              <label className="block space-y-2 text-sm font-medium">
+                <span>Tool name</span>
+                <input
+                  className={inputClass}
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required
+                  maxLength={80}
+                />
+              </label>
+              <div className="space-y-2 text-sm font-medium">
+                <span>Tool key</span>
+                <p className={`${inputClass} font-mono text-muted`}>
+                  {service.slug}
+                </p>
+                <span className="block text-xs font-normal text-muted">
+                  Fixed after publish — used in Explore and MCP.
+                </span>
+              </div>
+              <label className="block space-y-2 text-sm font-medium">
+                <span>What it does</span>
+                <textarea
+                  className={`${inputClass} resize-y`}
+                  rows={3}
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  required
+                  maxLength={500}
+                />
+              </label>
+              <div className="space-y-2 text-sm font-medium">
+                <span>Logo / cover</span>
+                <ServiceImageField
+                  value={imageUrl}
+                  onChange={setImageUrl}
+                  address={address}
+                  signMessageAsync={signMessageAsync}
+                  disabled={busy}
+                />
+              </div>
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-line bg-surface/80 p-5 md:p-6">
+            <h2 className="text-sm font-medium uppercase tracking-wider text-muted">
+              Your agent
+            </h2>
+            <div className="mt-5 space-y-5">
+              <label className="block space-y-2 text-sm font-medium">
+                <span>Agent endpoint</span>
+                <input
+                  className={`${inputClass} font-mono`}
+                  value={upstreamUrl}
+                  onChange={(e) => setUpstreamUrl(e.target.value)}
+                  placeholder="https://…"
+                  maxLength={500}
+                  required
+                />
+                <span className="block text-xs font-normal text-muted">
+                  Required. Paid requests POST to this HTTPS URL.
+                </span>
+              </label>
+              <label className="block space-y-2 text-sm font-medium">
+                <span>API bearer token (optional)</span>
+                <input
+                  type="password"
+                  className={`${inputClass} font-mono`}
+                  value={upstreamBearer}
+                  onChange={(e) => setUpstreamBearer(e.target.value)}
+                  maxLength={500}
+                  autoComplete="off"
+                />
+              </label>
+            </div>
+          </section>
+
+          <section className="rounded-2xl border border-line bg-surface/80 p-5 md:p-6">
+            <h2 className="text-sm font-medium uppercase tracking-wider text-muted">
+              Pricing & payout
+            </h2>
+            <div className="mt-5 space-y-5">
+              <label className="block space-y-2 text-sm font-medium">
+                <span>Price per request (USDC)</span>
+                <input
+                  className={`${inputClass} font-mono`}
+                  value={priceUsdc}
+                  onChange={(e) => setPriceUsdc(e.target.value)}
+                  required
+                  placeholder="0.01"
+                />
+                <span className="block text-xs font-normal text-muted">
+                  Minimum 0.01 USDC per request.
+                </span>
+              </label>
+
+              <div className="rounded-2xl border border-line bg-background/80 px-4 py-3 text-sm">
+                <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted">
+                  Tariff preview
+                </p>
+                {tariff ? (
+                  <ul className="mt-3 space-y-1.5 text-muted">
+                    <li className="flex justify-between gap-3">
+                      <span>Buyers pay</span>
+                      <span className="font-mono text-foreground">
+                        {formatUsdcAmount(tariff.buyer)} USDC
+                      </span>
+                    </li>
+                    <li className="flex justify-between gap-3">
+                      <span>You receive ~</span>
+                      <span className="font-mono text-foreground">
+                        {formatUsdcAmount(tariff.seller)} USDC
+                      </span>
+                    </li>
+                    <li className="flex justify-between gap-3">
+                      <span>Network fee</span>
+                      <span className="font-mono text-foreground">
+                        {formatUsdcAmount(tariff.network)} USDC
+                      </span>
+                    </li>
+                  </ul>
+                ) : (
+                  <p className="mt-2 text-muted">Enter a valid price to preview.</p>
+                )}
+                <p className="mt-3 text-xs text-muted">
+                  You keep {keepPct}%; arcdot. keeps {feePct}% per request.
+                </p>
+              </div>
+
+              <div className="rounded-2xl border border-line bg-background/80 px-4 py-3">
+                <p className="text-[11px] font-medium uppercase tracking-[0.12em] text-muted">
+                  Payout wallet
+                </p>
+                <p className="mt-2 font-mono text-sm">{shortAddr}</p>
+                <p className="mt-1 text-xs text-muted">
+                  Connected wallet receives your share after each unlock.
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <div className="rounded-2xl border border-line bg-surface/80 px-5 py-5 md:px-6">
+            {error && (
+              <p className="mb-4 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
+                {error}
+              </p>
+            )}
+            <button
+              type="submit"
               disabled={busy}
-            />
+              className="h-11 rounded-2xl bg-accent px-5 text-sm font-medium text-surface disabled:opacity-50"
+            >
+              {busy ? "Saving…" : "Save changes"}
+            </button>
           </div>
-          <label className="block space-y-2 text-sm font-medium">
-            <span>Price (USDC)</span>
-            <input
-              className={`${inputClass} font-mono`}
-              value={priceUsdc}
-              onChange={(e) => setPriceUsdc(e.target.value)}
-              required
-            />
-          </label>
-          <label className="block space-y-2 text-sm font-medium">
-            <span>Your API URL (optional)</span>
-            <input
-              className={`${inputClass} font-mono`}
-              value={upstreamUrl}
-              onChange={(e) => setUpstreamUrl(e.target.value)}
-              placeholder="https://…"
-              maxLength={500}
-            />
-            <span className="block text-xs font-normal text-muted">
-              Leave blank to use model instructions on arcdot.
-            </span>
-          </label>
-          <label className="block space-y-2 text-sm font-medium">
-            <span>API bearer token (optional)</span>
-            <input
-              type="password"
-              className={`${inputClass} font-mono`}
-              value={upstreamBearer}
-              onChange={(e) => setUpstreamBearer(e.target.value)}
-              maxLength={500}
-              autoComplete="off"
-            />
-          </label>
-          <label className="block space-y-2 text-sm font-medium">
-            <span>Instructions for the model</span>
-            <textarea
-              className={`${inputClass} resize-y`}
-              rows={4}
-              value={systemPrompt}
-              onChange={(e) => setSystemPrompt(e.target.value)}
-              maxLength={2000}
-            />
-          </label>
-          {error && (
-            <p className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-              {error}
-            </p>
-          )}
-          <button
-            type="submit"
-            disabled={busy}
-            className="h-11 rounded-2xl bg-accent px-5 text-sm font-medium text-surface disabled:opacity-50"
-          >
-            {busy ? "Saving…" : "Save changes"}
-          </button>
         </form>
       )}
     </main>

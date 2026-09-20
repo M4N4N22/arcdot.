@@ -8,6 +8,7 @@ import { useAccount, useSignMessage } from "wagmi";
 import { PublishPreview } from "@/components/studio/PublishPreview";
 import { ServiceImageField } from "@/components/studio/ServiceImageField";
 import { buildCreateChallenge } from "@/lib/auth/createServiceChallenge";
+import { upstreamUrlError } from "@/lib/seller/upstreamUrl";
 import {
   formatUsdcAmount,
   networkFeePercent,
@@ -27,9 +28,6 @@ export default function CreateServicePage() {
   const [slug, setSlug] = useState("");
   const [description, setDescription] = useState("");
   const [priceUsdc, setPriceUsdc] = useState("0.01");
-  const [systemPrompt, setSystemPrompt] = useState(
-    "You are a helpful specialist. Keep answers short and clear.",
-  );
   const [upstreamUrl, setUpstreamUrl] = useState("");
   const [upstreamBearer, setUpstreamBearer] = useState("");
   const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -62,10 +60,15 @@ export default function CreateServicePage() {
       setError("Tool key must be lowercase letters, numbers, and hyphens.");
       return;
     }
+    const upstream = upstreamUrl.trim();
+    const urlErr = upstreamUrlError(upstream);
+    if (urlErr) {
+      setError(urlErr);
+      return;
+    }
     setBusy(true);
     try {
       const issuedAt = Math.floor(Date.now() / 1000);
-      const upstream = upstreamUrl.trim();
       const challenge = buildCreateChallenge({
         slug,
         title,
@@ -83,7 +86,7 @@ export default function CreateServicePage() {
           title,
           description,
           price_usdc: priceUsdc,
-          system_prompt: systemPrompt,
+          system_prompt: "",
           upstream_url: upstream,
           upstream_bearer: upstreamBearer.trim(),
           image_url: imageUrl,
@@ -118,8 +121,8 @@ export default function CreateServicePage() {
           Publish a tool
         </h1>
         <p className="mt-2 text-muted">
-          Register your endpoint, set a per-request price, and earn USDC when
-          agents unlock it.
+          Point agents at your HTTPS endpoint, set a per-request price, and earn
+          USDC when they unlock it.
         </p>
       </div>
 
@@ -207,12 +210,13 @@ export default function CreateServicePage() {
             {/* Fulfillment */}
             <section className="rounded-2xl border border-line bg-surface/80 p-5 md:p-6">
               <h2 className="text-sm font-medium uppercase tracking-wider text-muted">
-                How it runs
+                Your agent
               </h2>
               <div className="mt-5 space-y-5">
                 <label className="block space-y-2 text-sm font-medium">
-                  <span>Hosting URL (optional)</span>
+                  <span>Agent endpoint</span>
                   <input
+                    required
                     value={upstreamUrl}
                     onChange={(e) => setUpstreamUrl(e.target.value)}
                     className={`${inputClass} font-mono`}
@@ -220,8 +224,11 @@ export default function CreateServicePage() {
                     maxLength={500}
                   />
                   <span className="block text-xs font-normal text-muted">
-                    If set, paid requests POST to your HTTPS API. Otherwise we
-                    use your instructions below.
+                    Required. After a buyer pays, we POST the request to this
+                    HTTPS URL and return your reply. Local rehearsal:{" "}
+                    <span className="font-mono text-[11px]">
+                      http://localhost:3000/api/agents/demo-brief
+                    </span>
                   </span>
                 </label>
                 <label className="block space-y-2 text-sm font-medium">
@@ -235,20 +242,6 @@ export default function CreateServicePage() {
                     maxLength={500}
                     autoComplete="off"
                   />
-                </label>
-                <label className="block space-y-2 text-sm font-medium">
-                  <span>Instructions</span>
-                  <textarea
-                    value={systemPrompt}
-                    onChange={(e) => setSystemPrompt(e.target.value)}
-                    rows={4}
-                    className={`${inputClass} resize-y`}
-                    maxLength={2000}
-                  />
-                  <span className="block text-xs font-normal text-muted">
-                    Used when you do not set a hosting URL. {systemPrompt.length}
-                    /2000
-                  </span>
                 </label>
               </div>
             </section>

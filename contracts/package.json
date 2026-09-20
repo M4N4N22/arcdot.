@@ -6,7 +6,9 @@
     "compile": "hardhat compile",
     "test": "hardhat test",
     "deploy:arc": "hardhat run scripts/deploy.ts --network arcMainnet",
+    "deploy:testnet": "hardhat run scripts/deploy.ts --network arcTestnet",
     "deposit:arc": "hardhat run scripts/deposit.ts --network arcMainnet",
+    "deposit:testnet": "hardhat run scripts/deposit.ts --network arcTestnet",
     "node": "hardhat node"
   },
   "devDependencies": {

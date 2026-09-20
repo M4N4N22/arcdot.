@@ -22,10 +22,14 @@ export default function DocsCliPage() {
       eyebrow="Tools"
       description="@arcdot/agent on npm — wallet, unlock, and MCP proxy from any machine."
     >
-      <DocsCallout title="Install first">
+      <DocsCallout title="Create a wallet first">
         Run{" "}
-        <code>{agentInstallCommands.npxWalletCreate}</code> once, then fund the
-        printed address on Arc.
+        <code>{agentInstallCommands.npxWalletCreate}</code> once (no project{" "}
+        <code>npm install</code>), then fund the printed address on{" "}
+        <Link href="/fund" className="underline underline-offset-4">
+          /fund
+        </Link>
+        .
       </DocsCallout>
 
       <DocsH2>Buyer client</DocsH2>
@@ -41,7 +45,7 @@ npx --yes ${AGENT_NPM_PACKAGE} wallet balance
 
 npx --yes ${AGENT_NPM_PACKAGE} unlock --origin "$ORIGIN" --service quick-brief --prompt "One-line summary"
 
-# stdio MCP proxy for Cursor:
+# stdio MCP proxy for IDEs (Cursor, VS Code, …):
 npx --yes ${AGENT_NPM_PACKAGE} mcp --origin "$ORIGIN"`}
       />
 

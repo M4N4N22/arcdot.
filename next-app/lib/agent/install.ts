@@ -15,6 +15,7 @@ export const AGENT_PACKAGE_PATH = "packages/arcdot-agent";
 export const agentInstallCommands = {
   /** One-shot CLI via npx */
   npxWalletCreate: `npx --yes ${AGENT_NPM_PACKAGE} wallet create`,
+  npxWalletStatus: `npx --yes ${AGENT_NPM_PACKAGE} wallet status`,
   npxUnlock: (origin: string) =>
     `npx --yes ${AGENT_NPM_PACKAGE} unlock --origin ${origin} --service quick-brief --prompt "Hi"`,
   npxMcp: (origin: string) =>

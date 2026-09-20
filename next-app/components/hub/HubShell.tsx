@@ -9,8 +9,11 @@ type HubShellProps = {
   title: string;
   description: string;
   children: ReactNode;
-  /** Show ← MCP Hub when on a nested hub page */
+  /** Show ← Get started when on a nested hub page */
   showBack?: boolean;
+  eyebrow?: string;
+  /** Wider content for side-by-side tools (e.g. IDE mock + config). */
+  wide?: boolean;
 };
 
 export function HubShell({
@@ -18,30 +21,43 @@ export function HubShell({
   description,
   children,
   showBack = false,
+  eyebrow = "Buyer setup",
+  wide = false,
 }: HubShellProps) {
   const pathname = usePathname();
 
   return (
-    <main className="mx-auto w-full max-w-5xl px-6 pb-16 pt-6 md:px-8">
+    <main
+      className={[
+        "mx-auto w-full px-6 pb-16 pt-6 md:px-8 md:pt-8",
+        wide ? "max-w-5xl" : "max-w-3xl",
+      ].join(" ")}
+    >
       {showBack && (
         <Link
           href="/hub"
           className="text-sm text-muted transition-colors hover:text-foreground"
         >
-          ← MCP Hub
+          ← Get started
         </Link>
       )}
 
-      <div className={["animate-fade-up max-w-xl", showBack ? "mt-4" : ""].join(" ")}>
-        <h1 className="font-display text-3xl tracking-tight md:text-4xl">
+      <article
+        className={["animate-fade-up", showBack ? "mt-4" : ""].join(" ")}
+      >
+        <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted">
+          {eyebrow}
+        </p>
+        <h1 className="font-display text-3xl tracking-tight text-foreground md:text-4xl">
           {title}
         </h1>
-        <p className="mt-2 text-muted">{description}</p>
-      </div>
+        <p className="mt-3 text-base leading-relaxed text-muted md:text-[17px]">
+          {description}
+        </p>
+      </article>
 
-      {/* Section strip — same destinations as sidebar children */}
       <nav
-        className="mt-8 flex flex-wrap gap-2"
+        className="mt-8 flex flex-wrap gap-x-1 gap-y-1 border-b border-line"
         aria-label="Hub sections"
       >
         {HUB_NAV.map((item) => {
@@ -53,10 +69,10 @@ export function HubShell({
               key={item.href}
               href={item.href}
               className={[
-                "inline-flex h-10 items-center px-4 text-sm transition-colors",
+                "-mb-px inline-flex h-9 items-center border-b-2 px-3 text-sm transition-colors",
                 active
-                  ? "bg-accent font-medium text-surface"
-                  : "border border-line bg-surface text-foreground hover:bg-surface-muted",
+                  ? "border-foreground font-medium text-foreground"
+                  : "border-transparent text-muted hover:text-foreground",
               ].join(" ")}
             >
               {item.label}
@@ -65,7 +81,9 @@ export function HubShell({
         })}
       </nav>
 
-      <div className="mt-10">{children}</div>
+      <div className="mt-8 space-y-4 text-[15px] leading-relaxed text-foreground">
+        {children}
+      </div>
     </main>
   );
 }

@@ -2,9 +2,22 @@
  * SSRF-safe proxy to seller-owned upstream APIs after Arc settlement.
  */
 
+import {
+  getFirstPartyAgent,
+  runDemoBriefAgent,
+} from "@/lib/agents/demoBrief";
+import {
+  isLocalDevHost,
+  isValidUpstreamUrlShape,
+} from "@/lib/seller/upstreamUrl";
 import type { GatewaySettlement } from "@/lib/types/gateway";
 import { lookup } from "dns/promises";
 import { isIP } from "net";
+
+export {
+  isValidUpstreamUrlShape,
+  upstreamUrlError,
+} from "@/lib/seller/upstreamUrl";
 
 const MAX_RESPONSE_BYTES = 256 * 1024;
 const TIMEOUT_MS = 15_000;
@@ -23,19 +36,24 @@ function isPrivateOrLocalIp(ip: string): boolean {
   if (v.startsWith("192.168.")) return true;
   if (v.startsWith("169.254.")) return true;
   if (v.startsWith("fc") || v.startsWith("fd") || v.startsWith("fe80")) return true;
-  // 172.16.0.0 – 172.31.255.255
   const m = /^172\.(\d+)\./.exec(v);
   if (m) {
     const second = Number(m[1]);
     if (second >= 16 && second <= 31) return true;
   }
-  // 100.64.0.0/10 CGNAT
   const m100 = /^100\.(\d+)\./.exec(v);
   if (m100) {
     const second = Number(m100[1]);
     if (second >= 64 && second <= 127) return true;
   }
   return false;
+}
+
+function allowLocalUpstreamFetch(): boolean {
+  return (
+    process.env.ALLOW_LOCAL_UPSTREAM === "true" ||
+    process.env.NODE_ENV !== "production"
+  );
 }
 
 /** Validate https URL and resolve host to non-private addresses. */
@@ -46,20 +64,32 @@ export async function assertSafeUpstreamUrl(raw: string): Promise<URL> {
   } catch {
     throw new UpstreamError("Invalid upstream URL");
   }
-  if (url.protocol !== "https:") {
+
+  const localOk =
+    allowLocalUpstreamFetch() &&
+    isLocalDevHost(url.hostname) &&
+    (url.protocol === "http:" || url.protocol === "https:");
+
+  if (!localOk && url.protocol !== "https:") {
     throw new UpstreamError("Upstream URL must be https");
   }
   if (url.username || url.password) {
     throw new UpstreamError("Upstream URL must not include credentials");
   }
+
   const host = url.hostname.toLowerCase();
   if (
-    host === "localhost" ||
-    host.endsWith(".localhost") ||
-    host.endsWith(".local") ||
-    host === "metadata.google.internal"
+    host === "metadata.google.internal" ||
+    (!localOk &&
+      (host === "localhost" ||
+        host.endsWith(".localhost") ||
+        host.endsWith(".local")))
   ) {
     throw new UpstreamError("Upstream host is not allowed");
+  }
+
+  if (localOk) {
+    return url;
   }
 
   const literal = isIP(host);
@@ -97,9 +127,59 @@ export type UpstreamCallParams = {
   settlement: GatewaySettlement;
 };
 
+function parseUpstreamText(json: unknown): string {
+  if (!json || typeof json !== "object") {
+    throw new UpstreamError("Upstream response must be a JSON object");
+  }
+  const obj = json as Record<string, unknown>;
+  if (typeof obj.text === "string") {
+    return obj.text;
+  }
+  if (typeof obj.result === "string") {
+    return obj.result;
+  }
+  throw new UpstreamError(
+    'Upstream JSON must include string field "text" or "result"',
+  );
+}
+
+/**
+ * First-party `/api/agents/*` demos run in-process so local SDK/MCP tests
+ * work without looping through SSRF-blocked localhost.
+ */
+async function tryFirstPartyAgent(
+  params: UpstreamCallParams,
+): Promise<{ text: string } | null> {
+  let pathname: string;
+  try {
+    pathname = new URL(params.upstreamUrl.trim()).pathname;
+  } catch {
+    return null;
+  }
+  const agent = getFirstPartyAgent(pathname);
+  if (!agent) return null;
+
+  const expected = process.env.DEMO_AGENT_BEARER?.trim();
+  if (expected) {
+    const provided = params.upstreamBearer?.trim() ?? "";
+    const token = provided.toLowerCase().startsWith("bearer ")
+      ? provided.slice(7).trim()
+      : provided;
+    if (token !== expected) {
+      throw new UpstreamError("First-party agent bearer mismatch");
+    }
+  }
+
+  const result = await runDemoBriefAgent(params.prompt);
+  return { text: result.text };
+}
+
 export async function callSellerUpstream(
   params: UpstreamCallParams,
 ): Promise<{ text: string }> {
+  const firstParty = await tryFirstPartyAgent(params);
+  if (firstParty) return firstParty;
+
   const url = await assertSafeUpstreamUrl(params.upstreamUrl);
 
   const body = JSON.stringify({
@@ -160,27 +240,5 @@ export async function callSellerUpstream(
     throw new UpstreamError("Upstream response must be JSON");
   }
 
-  if (!json || typeof json !== "object") {
-    throw new UpstreamError("Upstream response must be a JSON object");
-  }
-  const obj = json as Record<string, unknown>;
-  if (typeof obj.text === "string") {
-    return { text: obj.text };
-  }
-  if (typeof obj.result === "string") {
-    return { text: obj.result };
-  }
-  throw new UpstreamError(
-    'Upstream JSON must include string field "text" or "result"',
-  );
-}
-
-/** Validate URL shape for create/update (DNS check deferred to fulfill). */
-export function isValidUpstreamUrlShape(raw: string): boolean {
-  try {
-    const url = new URL(raw.trim());
-    return url.protocol === "https:" && !url.username && !url.password;
-  } catch {
-    return false;
-  }
+  return { text: parseUpstreamText(json) };
 }

@@ -18,10 +18,9 @@ import {
   getAuthChallengeText,
 } from "@/lib/agent/client";
 import { makePaymentId } from "@/lib/agent/paymentId";
-import { promptGatewayAbi } from "@/lib/arc/constants";
+import { ARC, promptGatewayAbi } from "@/lib/arc/constants";
 import { getToolMeta, resolveToolImage } from "@/lib/explore/toolMeta";
-import { ARC_CHAIN_ID } from "@/lib/types/gateway";
-import { arcMainnet } from "@/lib/wallet/arcChain";
+import { getActiveArcChain } from "@/lib/wallet/arcChain";
 
 type UnlockStep = "idle" | "pay" | "confirm" | "unlock" | "done" | "error";
 
@@ -71,8 +70,7 @@ export default function ServiceDetailPage() {
   const { signMessageAsync } = useSignMessage();
   const { writeContractAsync } = useWriteContract();
 
-  const gateway = (process.env.NEXT_PUBLIC_PROMPT_GATEWAY_ADDRESS ||
-    "") as `0x${string}`;
+  const gateway = (ARC.gatewayAddress || "") as `0x${string}`;
 
   useEffect(() => {
     let cancelled = false;
@@ -126,12 +124,16 @@ export default function ServiceDetailPage() {
     setStatus("Confirm the payment in your wallet…");
 
     try {
-      if (chainId !== ARC_CHAIN_ID) {
+      if (chainId !== ARC.chainId) {
         try {
-          await switchChainAsync({ chainId: ARC_CHAIN_ID });
+          await switchChainAsync({ chainId: ARC.chainId });
         } catch {
           setStep("error");
-          setStatus("Switch your wallet to Arc Mainnet to continue.");
+          setStatus(
+            ARC.network === "testnet"
+              ? "Switch your wallet to Arc Testnet to continue."
+              : "Switch your wallet to Arc Mainnet to continue.",
+          );
           return;
         }
       }
@@ -148,17 +150,15 @@ export default function ServiceDetailPage() {
         functionName: "depositPayment",
         args: [paymentId, sellerAddress as `0x${string}`],
         value: priceWei,
-        chainId: ARC_CHAIN_ID,
+        chainId: ARC.chainId,
       });
       setTxHash(hash);
       setStep("confirm");
       setStatus("Waiting for confirmation on Arc…");
 
       const client = createPublicClient({
-        chain: arcMainnet,
-        transport: http(
-          process.env.NEXT_PUBLIC_ARC_RPC_URL ?? "https://rpc.mainnet.arc.io",
-        ),
+        chain: getActiveArcChain(),
+        transport: http(ARC.rpcUrl),
       });
       await client.waitForTransactionReceipt({ hash });
 
@@ -391,7 +391,7 @@ export default function ServiceDetailPage() {
             <p className="text-xs text-muted">
               <a
                 className="underline"
-                href={`https://explorer.arc.io/tx/${txHash}`}
+                href={`${ARC.explorerTxBase}${txHash}`}
                 target="_blank"
                 rel="noreferrer"
               >

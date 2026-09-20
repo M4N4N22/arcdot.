@@ -27,7 +27,8 @@ arcdot wallet create
 # 1) Create a dedicated agent wallet (saved to ~/.arcdot/wallet.json)
 npx --yes @arcdot/agent wallet create
 
-# 2) Fund the printed address with native USDC on Arc Mainnet (chain 5042)
+# 2) Fund the printed address with native USDC on Arc (see Hub → Agent wallet for QR)
+npx --yes @arcdot/agent wallet status
 
 # 3a) Cursor / IDE — local MCP proxy (auto-pays on tool calls)
 # mcp.json:
@@ -39,6 +40,7 @@ npx --yes @arcdot/agent wallet create
 #     }
 #   }
 # }
+# Local tool arcdot_wallet reports balance / fund hints without leaving your machine.
 
 # 3b) Or unlock from the CLI
 npx --yes @arcdot/agent unlock \
@@ -52,7 +54,11 @@ import { createArcdotAgent } from "@arcdot/agent";
 
 const agent = await createArcdotAgent({ origin: "https://YOUR_HOST" });
 await agent.unlock({ service: "quick-brief", input: { prompt: "Hi" } });
-await agent.callMcpTool("arcdot_quick_brief", { prompt: "Hi" });
+await agent.callMcpTool("arcdot_unlock", {
+  service: "quick-brief",
+  prompt: "Hi",
+});
+// Discover first: await agent.callMcpTool("arcdot_discover", {});
 ```
 
 ## Env
@@ -65,3 +71,5 @@ await agent.callMcpTool("arcdot_quick_brief", { prompt: "Hi" });
 | `ARC_RPC_URL` | Arc RPC |
 | `ARCDOT_GATEWAY` | Gateway address override |
 | `ARCDOT_HOME` | Config directory (default `~/.arcdot`) |
+| `ARC_NETWORK` | `mainnet` (default) or `testnet` |
+| `ARCDOT_LOW_BALANCE_USDC` | Low-balance alert threshold (default `0.05`) |

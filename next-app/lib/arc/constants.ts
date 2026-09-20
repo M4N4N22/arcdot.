@@ -1,20 +1,31 @@
 import {
-  ARC_CHAIN_ID,
-  ARC_RPC_URL_DEFAULT,
   GATEWAY_FEE_USDC,
   GATEWAY_FEE_WEI_DEFAULT,
 } from "@/lib/types/gateway";
+import {
+  getArcChainId,
+  getArcExplorerTxBase,
+  getArcNetwork,
+  getArcRpcUrl,
+  getPromptGatewayAddress,
+} from "@/lib/arc/network";
 
 export const ARC = {
-  chainId: ARC_CHAIN_ID,
-  rpcUrl:
-    process.env.ARC_RPC_URL ??
-    process.env.NEXT_PUBLIC_ARC_RPC_URL ??
-    ARC_RPC_URL_DEFAULT,
-  explorerTxBase: "https://explorer.arc.io/tx/",
-  gatewayAddress: (process.env.PROMPT_GATEWAY_ADDRESS ||
-    process.env.NEXT_PUBLIC_PROMPT_GATEWAY_ADDRESS ||
-    "") as `0x${string}`,
+  get network() {
+    return getArcNetwork();
+  },
+  get chainId() {
+    return getArcChainId();
+  },
+  get rpcUrl() {
+    return getArcRpcUrl();
+  },
+  get explorerTxBase() {
+    return getArcExplorerTxBase();
+  },
+  get gatewayAddress() {
+    return getPromptGatewayAddress();
+  },
   feeWei: BigInt(
     process.env.GATEWAY_FEE_WEI ??
       process.env.NEXT_PUBLIC_GATEWAY_MIN_FEE_WEI ??
@@ -22,7 +33,7 @@ export const ARC = {
   ),
   feeUsdc: GATEWAY_FEE_USDC,
   platformFeeBps: Number(process.env.PLATFORM_FEE_BPS ?? "1000"),
-} as const;
+};
 
 /** PromptGateway V3 ABI (depositPayment signature unchanged from V2) */
 export const promptGatewayAbi = [
