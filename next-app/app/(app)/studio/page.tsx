@@ -41,13 +41,16 @@ export default function StudioPage() {
   const [sales, setSales] = useState<RequestRow[]>([]);
   const gateway = ARC.gatewayAddress;
 
+  const gatewayAddr =
+    gateway && gateway.length === 42 ? gateway : undefined;
+
   const { data: pending, refetch, isError: pendingError } = useReadContract({
-    address: gateway?.length === 42 ? gateway : undefined,
+    address: gatewayAddr,
     abi: promptGatewayAbi,
     functionName: "pendingSeller",
     args: address ? [address] : undefined,
     chainId: ARC.chainId,
-    query: { enabled: Boolean(address && gateway?.length === 42) },
+    query: { enabled: Boolean(address && gatewayAddr) },
   });
 
   const { writeContractAsync, data: withdrawHash, isPending } =
@@ -91,9 +94,9 @@ export default function StudioPage() {
   }, [withdrawn, refetch]);
 
   async function onWithdraw() {
-    if (!gateway || gateway.length !== 42) return;
+    if (!gatewayAddr) return;
     await writeContractAsync({
-      address: gateway,
+      address: gatewayAddr,
       abi: promptGatewayAbi,
       chainId: ARC.chainId,
       functionName: "withdrawSeller",
@@ -126,7 +129,7 @@ export default function StudioPage() {
   );
   const recent = sales.slice(0, 5);
   const shortAddr = `${address.slice(0, 6)}…${address.slice(-4)}`;
-  const gatewayReady = Boolean(gateway && gateway.length === 42);
+  const gatewayReady = Boolean(gatewayAddr);
 
   return (
     <main className="mx-auto w-full max-w-5xl px-6 pb-16 pt-6 md:px-8">
