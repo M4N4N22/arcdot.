@@ -1,6 +1,6 @@
 {
   "name": "@arcdot/agent",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Buyer agent client for arcdot. — local wallet (create or import), auto-settle on Arc, MCP proxy for IDEs.",
   "type": "module",
   "main": "./dist/index.cjs",
@@ -14,7 +14,7 @@
     }
   },
   "bin": {
-    "arcdot": "./bin/arcdot.mjs"
+    "arcdot": "bin/arcdot.mjs"
   },
   "files": [
     "dist",
