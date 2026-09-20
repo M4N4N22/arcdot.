@@ -22,15 +22,16 @@ export default function DocsCliPage() {
       eyebrow="Tools"
       description="@arcdot/agent on npm — wallet, unlock, and MCP proxy from any machine."
     >
-      <DocsCallout title="Create a wallet first">
-        Run{" "}
-        <code>{agentInstallCommands.npxWalletCreate}</code> once (no project{" "}
-        <code>npm install</code>), then fund the printed address with USDC on Arc
-        on{" "}
+      <DocsCallout title="Wallet first">
+        <strong className="font-medium text-foreground">New:</strong>{" "}
+        <code>{agentInstallCommands.npxWalletCreate}</code>.{" "}
+        <strong className="font-medium text-foreground">Existing key:</strong>{" "}
+        <code>wallet import --key 0x…</code> in your own terminal (never in
+        chat), then fund with USDC on Arc on{" "}
         <Link href="/fund" className="underline underline-offset-4">
           /fund
-        </Link>
-        .
+        </Link>{" "}
+        if needed.
       </DocsCallout>
 
       <DocsH2>Buyer client</DocsH2>
@@ -41,6 +42,8 @@ export default function DocsCliPage() {
       <CodeBlock
         title="bash"
         code={`${agentInstallCommands.npxWalletCreate}
+# or: ${agentInstallCommands.npxWalletImport}
+
 npx --yes ${AGENT_NPM_PACKAGE} wallet address
 npx --yes ${AGENT_NPM_PACKAGE} wallet balance
 

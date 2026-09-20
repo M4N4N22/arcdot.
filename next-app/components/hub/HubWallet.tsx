@@ -23,22 +23,23 @@ export function HubWallet() {
     <HubShell
       showBack
       title="Wallet help"
-      description="Create → fund with USDC on Arc → connect. Same wallet the MCP proxy uses to pay — arcdot. never holds your key."
+      description="Create or import → fund with USDC on Arc → connect. Same wallet the MCP proxy uses to pay — arcdot. never holds your key."
     >
       <HubCallout title="Prefer the short links?">
         Day-to-day top-ups: <Link href="/fund">/fund</Link>. Full path from
         zero: <Link href="/hub">Get started</Link>.
       </HubCallout>
 
-      <HubH2 id="create">1. Create (if you don’t have one)</HubH2>
+      <HubH2 id="create">1. Create or import</HubH2>
       <HubP>
-        One command. No <code>npm install</code> required. Save the recovery
-        key it prints.
+        New to arcdot.? Create a wallet (no <code>npm install</code>). Already
+        have a funded agent key? Import it locally — never paste the key into
+        chat or this website.
       </HubP>
       <HubCodePanel
         title="bash"
         filename="wallet.sh"
-        code={`# create (once)\n${agentInstallCommands.npxWalletCreate}\n\n# check anytime\n${agentInstallCommands.npxWalletStatus}`}
+        code={`# A) create (once)\n${agentInstallCommands.npxWalletCreate}\n\n# B) import a key you already own (local terminal only)\n${agentInstallCommands.npxWalletImport}\n# or: set ARCDOT_PRIVATE_KEY then\n${agentInstallCommands.npxWalletImportFromEnv}\n\n# check anytime\n${agentInstallCommands.npxWalletStatus}`}
         accentCopy
       />
       <div className="flex flex-wrap gap-2">
@@ -46,6 +47,12 @@ export function HubWallet() {
           value={agentInstallCommands.npxWalletCreate}
           label="Copy create"
           variant="primary"
+          className="h-9 rounded-lg px-4 text-sm"
+        />
+        <CopyButton
+          value={agentInstallCommands.npxWalletImport}
+          label="Copy import"
+          variant="soft"
           className="h-9 rounded-lg px-4 text-sm"
         />
         <CopyButton

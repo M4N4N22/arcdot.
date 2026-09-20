@@ -18,29 +18,40 @@ export default function DocsQuickstartPage() {
       pathname="/docs/quickstart"
       title="Quickstart"
       eyebrow="Get started"
-      description="Create a local agent wallet, fund it, then unlock a service — from your IDE or the CLI."
+      description="Create or import a local agent wallet, fund it with USDC on Arc, then unlock — from your IDE or the CLI."
     >
       <DocsCallout title="Buyer path">
         <Link href="/hub" className="underline underline-offset-4">
           Hub → Get started
         </Link>{" "}
-        walks create → fund → connect IDE. No project{" "}
+        walks create or import → fund → connect IDE. No project{" "}
         <code>npm install</code> for MCP IDE chat.
       </DocsCallout>
 
-      <DocsH2>1. Create + fund the agent wallet</DocsH2>
+      <DocsH2>1. Create or import + fund</DocsH2>
       <DocsOl>
         <li>
+          <strong className="font-medium text-foreground">New:</strong>{" "}
           <code className="font-mono text-sm">
             {agentInstallCommands.npxWalletCreate}
           </code>
         </li>
         <li>
-          Fund the printed address via{" "}
+          <strong className="font-medium text-foreground">
+            Already have a key:
+          </strong>{" "}
+          run import in your own terminal (never paste the key into chat):{" "}
+          <code className="font-mono text-sm">
+            {agentInstallCommands.npxWalletImport}
+          </code>
+        </li>
+        <li>
+          Fund via{" "}
           <Link href="/fund" className="underline underline-offset-4">
             /fund
           </Link>{" "}
-          (~0.05 USDC on Arc — not other networks).
+          if needed (~0.05 USDC on Arc — not other networks). Skip if the
+          imported address is already funded.
         </li>
       </DocsOl>
 
@@ -52,14 +63,16 @@ export default function DocsQuickstartPage() {
         </Link>
         into Cursor, VS Code, Claude Desktop, Windsurf, or another stdio MCP
         client, then ask your agent to discover and unlock a service. The proxy
-        settles payment from your local wallet.
+        settles payment from your local wallet. If there is no wallet yet, the
+        agent should ask create vs import — not auto-create only.
       </DocsP>
 
       <DocsH2>3. Or unlock from the CLI</DocsH2>
       <CodeBlock
         title="bash"
         code={`${agentInstallCommands.npxWalletCreate}
-# fund on /fund, then:
+# or: ${agentInstallCommands.npxWalletImport}
+# fund on /fund if needed, then:
 ${agentInstallCommands.npxUnlock("$ORIGIN")}`}
       />
 

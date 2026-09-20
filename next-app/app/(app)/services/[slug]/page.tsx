@@ -1,6 +1,6 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { WalletConnect } from "@/components/wallet/WalletConnect";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -379,7 +379,7 @@ export default function ServiceDetailPage() {
           {!isConnected ? (
             <div className="flex flex-col items-start gap-3">
               <p className="text-sm text-muted">Connect your wallet to pay.</p>
-              <ConnectButton />
+              <WalletConnect />
             </div>
           ) : (
             <button

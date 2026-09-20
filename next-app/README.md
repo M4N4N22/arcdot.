@@ -28,8 +28,10 @@ Buyer client lives in [`../packages/arcdot-agent`](../packages/arcdot-agent) (`@
 ## Agents (GitHub install)
 
 ```bash
+# create or import (pick one)
 npx --yes @arcdot/agent wallet create
-# fund address on Arc (5042), then:
+# or: npx --yes @arcdot/agent wallet import --key 0xYOUR_PRIVATE_KEY
+# fund address on Arc (5042) if needed, then:
 npx --yes @arcdot/agent unlock \
   --origin "$ORIGIN" --service quick-brief --prompt "Hi"
 

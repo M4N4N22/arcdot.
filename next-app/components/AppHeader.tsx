@@ -1,6 +1,6 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { WalletConnect } from "@/components/wallet/WalletConnect";
 import { usePathname } from "next/navigation";
 
 function titleForPath(pathname: string): string {
@@ -38,7 +38,7 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
   const title = titleForPath(pathname);
 
   return (
-    <header className="flex h-14 shrink-0 items-center justify-between gap-4 border-b border-line bg-surface/90 px-4 backdrop-blur-sm md:h-16 md:px-6">
+    <header className="flex min-h-14 shrink-0 items-center justify-between gap-3 border-b border-line bg-surface/90 px-4 py-2 backdrop-blur-sm md:min-h-16 md:px-6">
       <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"
@@ -66,11 +66,7 @@ export function AppHeader({ onMenuClick }: AppHeaderProps) {
           {title}
         </p>
       </div>
-      <ConnectButton
-        accountStatus="address"
-        chainStatus="icon"
-        showBalance={false}
-      />
+      <WalletConnect compact />
     </header>
   );
 }

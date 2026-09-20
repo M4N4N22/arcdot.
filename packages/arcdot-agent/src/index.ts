@@ -5,10 +5,12 @@ export type { PaymentProof, GatewayAuthMessage } from "./constants.js";
 
 export {
   createWallet,
+  importWallet,
   loadWallet,
   resolvePrivateKey,
   walletPath,
   walletAccountFromKey,
+  isHexPrivateKey,
   NoWalletError,
 } from "./wallet/store.js";
 export type { StoredWallet } from "./wallet/store.js";
@@ -27,7 +29,10 @@ export {
   formatNoWalletGuide,
   fundUrlFor,
   hostAgentShellDirective,
+  hostAgentCreateShellDirective,
   WALLET_CREATE_CMD,
+  WALLET_IMPORT_CMD,
+  WALLET_IMPORT_FROM_ENV_CMD,
   WALLET_STATUS_CMD,
 } from "./wallet/guide.js";
 

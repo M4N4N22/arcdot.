@@ -26,7 +26,8 @@ export function HubEditors() {
     >
       <HubCallout title="Before this step">
         You need a funded agent wallet.{" "}
-        <Link href="/hub">Create</Link> → <Link href="/fund">Fund</Link>.
+        <Link href="/hub">Create or import</Link> →{" "}
+        <Link href="/fund">Fund</Link>.
         Without USDC on Arc, unlocks will ask you to top up.
       </HubCallout>
 
@@ -77,7 +78,7 @@ export function HubEditors() {
           {
             href: "/hub",
             title: "Get started",
-            description: "Create wallet if you skipped it.",
+            description: "Create or import a wallet if you skipped it.",
           },
           {
             href: "/fund",

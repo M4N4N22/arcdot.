@@ -6,9 +6,6 @@ import {
   ARC_TESTNET_CHAIN_ID,
   ARC_TESTNET_EXPLORER,
   ARC_TESTNET_RPC_DEFAULT,
-  getArcNetwork,
-  getArcRpcUrl,
-  getArcExplorerBase,
 } from "@/lib/arc/network";
 
 export const arcMainnet = defineChain({
@@ -54,18 +51,27 @@ export const arcTestnet = defineChain({
   testnet: true,
 });
 
-/** Active chain for wallets / wagmi — follows NEXT_PUBLIC_ARC_NETWORK. */
+/**
+ * Wallet / wagmi chain — Arc Mainnet only.
+ * Testnet is not offered in WalletConnect (production is mainnet-only).
+ */
 export function getActiveArcChain() {
-  return getArcNetwork() === "testnet" ? arcTestnet : arcMainnet;
+  return arcMainnet;
 }
 
 /** @deprecated Use getActiveArcChain() */
-export const arcActive = getActiveArcChain();
+export const arcActive = arcMainnet;
 
 export function activeArcRpcUrl(): string {
-  return getArcRpcUrl();
+  return (
+    process.env.NEXT_PUBLIC_ARC_MAINNET_RPC_URL?.trim() ||
+    process.env.NEXT_PUBLIC_ARC_RPC_URL?.trim() ||
+    ARC_MAINNET_RPC_DEFAULT
+  );
 }
 
 export function activeArcExplorerBase(): string {
-  return getArcExplorerBase();
+  return (
+    process.env.NEXT_PUBLIC_ARC_MAINNET_EXPLORER?.trim() || ARC_MAINNET_EXPLORER
+  );
 }

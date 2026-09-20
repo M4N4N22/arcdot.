@@ -11,7 +11,7 @@ const cards = [
   {
     href: "/hub",
     title: "Get started (Hub)",
-    body: "Create wallet → fund → connect IDE. True MCP IDE path — no project npm install.",
+    body: "Create or import wallet → fund → connect IDE. True MCP IDE path — no project npm install.",
   },
   {
     href: "/docs/quickstart",
@@ -60,7 +60,7 @@ export default function DocsHubPage() {
 
       <ol className="mt-10 grid gap-3 sm:grid-cols-3">
         {[
-          { n: "1", t: "Create wallet", d: "npx … wallet create" },
+          { n: "1", t: "Create or import", d: "wallet create / import" },
           { n: "2", t: "Fund", d: "~0.05 USDC on Arc" },
           { n: "3", t: "Connect / unlock", d: "IDE proxy or CLI" },
         ].map((s) => (

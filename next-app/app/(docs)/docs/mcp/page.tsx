@@ -41,16 +41,22 @@ export default function DocsMcpPage() {
       <DocsH2>Buyer setup (auto-pay)</DocsH2>
       <DocsOl>
         <li>
-          Create wallet:{" "}
+          Create or import a wallet:{" "}
           <code className="font-mono text-sm">
             {agentInstallCommands.npxWalletCreate}
-          </code>
+          </code>{" "}
+          or{" "}
+          <code className="font-mono text-sm">
+            {agentInstallCommands.npxWalletImport}
+          </code>{" "}
+          (import in your own terminal — never paste the key into chat)
         </li>
         <li>
           Fund with USDC on Arc on{" "}
           <Link href="/fund" className="underline underline-offset-4">
             /fund
-          </Link>
+          </Link>{" "}
+          if the balance is low
         </li>
         <li>
           Paste the local proxy into your IDE’s MCP settings (see{" "}

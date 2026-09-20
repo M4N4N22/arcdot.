@@ -66,7 +66,7 @@ export function HubConfig() {
           {
             href: "/hub",
             title: "Get started",
-            description: "Create → fund → connect.",
+            description: "Create or import → fund → connect.",
           },
         ]}
       />

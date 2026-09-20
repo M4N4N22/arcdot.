@@ -38,12 +38,28 @@ export default function DocsAgentClientPage() {
         .
       </DocsCallout>
 
-      <DocsH2>1. Create a wallet</DocsH2>
+      <DocsH2>1. Create or import a wallet</DocsH2>
       <DocsP>
-        One command. Saves to <code className="font-mono text-sm">~/.arcdot/wallet.json</code>.
-        Back up the recovery key it prints.
+        <strong className="font-medium text-foreground">New:</strong> create
+        once. Saves to{" "}
+        <code className="font-mono text-sm">~/.arcdot/wallet.json</code>. Back
+        up the recovery key it prints.
       </DocsP>
       <CodeBlock title="bash" code={agentInstallCommands.npxWalletCreate} />
+      <DocsP>
+        <strong className="font-medium text-foreground">
+          Already have a key:
+        </strong>{" "}
+        import locally (never paste the key into chat or the website):
+      </DocsP>
+      <CodeBlock
+        title="bash"
+        code={`# in your own terminal — replace with your 0x key
+${agentInstallCommands.npxWalletImport}
+
+# or set ARCDOT_PRIVATE_KEY in the shell / MCP env, then:
+${agentInstallCommands.npxWalletImportFromEnv}`}
+      />
 
       <DocsH2>2. Fund</DocsH2>
       <DocsOl>

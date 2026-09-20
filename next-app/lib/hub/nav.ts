@@ -14,9 +14,9 @@ export type HubNavHref = (typeof HUB_NAV)[number]["href"];
 export const BUYER_STEPS = [
   {
     n: "1",
-    title: "Create a wallet",
-    body: "One command on your machine. No npm install required for IDE MCP.",
-    href: "/hub",
+    title: "Create or import",
+    body: "New key via create, or import one you already own. No npm install for IDE MCP.",
+    href: "/hub/wallet",
   },
   {
     n: "2",

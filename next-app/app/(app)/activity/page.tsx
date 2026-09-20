@@ -1,6 +1,6 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { WalletConnect } from "@/components/wallet/WalletConnect";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAccount, useSignMessage } from "wagmi";
@@ -85,7 +85,7 @@ export default function ActivityPage() {
       {!isConnected ? (
         <div className="mt-12 flex flex-col items-start gap-3">
           <p className="text-muted">Connect your wallet to see your history.</p>
-          <ConnectButton />
+          <WalletConnect />
         </div>
       ) : loading ? (
         <p className="mt-12 text-muted">Loading…</p>

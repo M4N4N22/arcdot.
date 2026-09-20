@@ -51,7 +51,7 @@ curl -s "$ORIGIN/.well-known/ai-plugin.json" | jq .`}
         <Link href="/hub" className="underline underline-offset-4 text-foreground">
           Hub
         </Link>{" "}
-        (create → fund → Connect IDE); protocol detail is in the{" "}
+        (create or import → fund → Connect IDE); protocol detail is in the{" "}
         <Link
           href="/docs/mcp"
           className="underline underline-offset-4 text-foreground"

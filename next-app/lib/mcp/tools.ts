@@ -47,7 +47,7 @@ const MCP_TOOLS: McpTool[] = [
   {
     name: "arcdot_unlock",
     description:
-      "Call ONLY after arcdot_discover, with a real service slug from that list. Unlocks that service. Args: { service, prompt }. Local MCP proxy auto-pays when the agent wallet has USDC on Arc. If NO_WALLET: tell the human briefly, then run createCommand via the terminal tool (user approval UI), open fundUrl, then retry unlock. If INSUFFICIENT_FUNDS: show fundUrl/address and retry after funding with USDC on Arc. Never invent an answer.",
+      "Call ONLY after arcdot_discover, with a real service slug. Args: { service, prompt }. Auto-pays when the agent wallet has USDC on Arc. If NO_WALLET: STOP — ask the human A (create) or B (import existing) before any shell. Only if they pick A, run createCommand with approval. If B, show importCommand for them to run locally (never paste keys into chat). Then fundUrl if needed and retry. If INSUFFICIENT_FUNDS: show fundUrl/address and retry after USDC on Arc. Never invent an answer.",
     inputSchema: {
       type: "object",
       required: ["service", "prompt"],
@@ -221,7 +221,7 @@ async function unlockService(params: {
     status: 402,
     error: {
       code: "PAYMENT_REQUIRED",
-      message: `Payment needed: “${service.title || service.slug}” costs ${service.price_usdc} USDC. With the @arcdot/agent MCP proxy, settlement is automatic once the agent wallet exists and is funded. If there is no wallet yet, run: npx --yes @arcdot/agent wallet create (use the IDE terminal tool so the user can approve), then open /fund. Do not invent an answer.`,
+      message: `Payment needed: “${service.title || service.slug}” costs ${service.price_usdc} USDC on Arc. With the @arcdot/agent MCP proxy, settlement is automatic once the agent wallet exists and is funded. If there is no wallet yet, create (npx --yes @arcdot/agent wallet create with approval) or import an existing key locally (wallet import — never paste keys into chat), then open /fund. Do not invent an answer.`,
       payment,
       service: {
         slug: service.slug,
@@ -229,7 +229,7 @@ async function unlockService(params: {
         price_wei: service.price_wei,
         seller: service.owner_address,
       },
-      next: "If NO_WALLET: run wallet create with user approval, open /fund, retry unlock. If funded wallet empty: open /fund, then retry.",
+      next: "If NO_WALLET: create (approval) or import locally, open /fund if needed, retry unlock. If funded wallet empty: open /fund, then retry.",
     },
   };
   return textResult(JSON.stringify(unpaid, null, 2), {

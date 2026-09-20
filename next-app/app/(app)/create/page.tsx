@@ -1,6 +1,6 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { WalletConnect } from "@/components/wallet/WalletConnect";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -132,7 +132,7 @@ export default function CreateServicePage() {
         <div className="mt-10 max-w-xl rounded-2xl border border-line bg-surface/80 px-5 py-6">
           <p className="text-sm text-muted">Connect your wallet to continue.</p>
           <div className="mt-4">
-            <ConnectButton />
+            <WalletConnect />
           </div>
         </div>
       ) : (

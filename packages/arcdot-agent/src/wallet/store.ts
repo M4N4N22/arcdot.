@@ -16,7 +16,7 @@ export class NoWalletError extends Error {
   constructor(message?: string) {
     super(
       message ??
-        "No agent wallet found. Run: npx --yes @arcdot/agent wallet create",
+        "No agent wallet found. Run: npx --yes @arcdot/agent wallet create   OR   wallet import --key 0x… / --from-env",
     );
     this.name = "NoWalletError";
   }
@@ -30,7 +30,7 @@ export function walletPath(): string {
   return join(walletDir(), "wallet.json");
 }
 
-function isHexKey(key: string): key is Hex {
+export function isHexPrivateKey(key: string): key is Hex {
   return /^0x[a-fA-F0-9]{64}$/.test(key);
 }
 
@@ -40,7 +40,7 @@ export function resolvePrivateKey(): Hex {
     process.env.ARCDOT_PRIVATE_KEY?.trim() ||
     process.env.AGENT_PRIVATE_KEY?.trim();
   if (fromEnv) {
-    if (!isHexKey(fromEnv)) {
+    if (!isHexPrivateKey(fromEnv)) {
       throw new Error(
         "ARCDOT_PRIVATE_KEY / AGENT_PRIVATE_KEY must be a 0x-prefixed 32-byte hex key.",
       );
@@ -67,12 +67,11 @@ export function loadWallet(): StoredWallet | null {
     text = readFileSync(path, "utf8").trim();
   } catch {
     throw new NoWalletError(
-      `Could not read agent wallet at ${path}. Re-create with: npx --yes @arcdot/agent wallet create`,
+      `Could not read agent wallet at ${path}. Re-create with wallet create, or wallet import.`,
     );
   }
 
   if (!text) {
-    // Empty file after a wipe — treat as missing, not a parse crash.
     return null;
   }
 
@@ -81,50 +80,46 @@ export function loadWallet(): StoredWallet | null {
     raw = JSON.parse(text) as StoredWallet;
   } catch {
     throw new NoWalletError(
-      `Agent wallet file is corrupt at ${path}. Delete it and run: npx --yes @arcdot/agent wallet create`,
+      `Agent wallet file is corrupt at ${path}. Delete it and run wallet create or wallet import --force.`,
     );
   }
 
-  if (!raw.address || !isHexKey(raw.privateKey)) {
+  if (!raw.address || !isHexPrivateKey(raw.privateKey)) {
     throw new NoWalletError(
-      `Agent wallet file is invalid at ${path}. Delete it and run: npx --yes @arcdot/agent wallet create`,
+      `Agent wallet file is invalid at ${path}. Delete it and run wallet create or wallet import --force.`,
     );
   }
   return raw;
 }
 
-export function createWallet(opts?: { force?: boolean }): StoredWallet {
+/** Refuse overwrite unless force, empty file, or missing. */
+function assertCanWriteWallet(opts?: { force?: boolean }) {
   const path = walletPath();
-  if (existsSync(path) && !opts?.force) {
-    const existing = (() => {
-      try {
-        return loadWallet();
-      } catch {
-        return null;
-      }
-    })();
-    // Allow recreate when the file is empty/corrupt without requiring --force
-    // only if load returned null (empty). Corrupt throws — user can --force.
-    if (existing) {
-      throw new Error(
-        `Wallet already exists at ${path}. Pass --force to overwrite, or use wallet address.`,
-      );
+  if (!existsSync(path) || opts?.force) return;
+
+  const existing = (() => {
+    try {
+      return loadWallet();
+    } catch {
+      return null;
     }
-    const size = existsSync(path) ? readFileSync(path).length : 0;
-    if (size > 0) {
-      throw new Error(
-        `Wallet file exists but is unreadable at ${path}. Pass --force to overwrite.`,
-      );
-    }
+  })();
+  if (existing) {
+    throw new Error(
+      `Wallet already exists at ${path}. Pass --force to overwrite, or use wallet address / status.`,
+    );
   }
+  const size = readFileSync(path).length;
+  if (size > 0) {
+    throw new Error(
+      `Wallet file exists but is unreadable at ${path}. Pass --force to overwrite.`,
+    );
+  }
+}
+
+function writeWalletFile(wallet: StoredWallet): void {
+  const path = walletPath();
   mkdirSync(walletDir(), { recursive: true });
-  const privateKey = generatePrivateKey();
-  const account = privateKeyToAccount(privateKey);
-  const wallet: StoredWallet = {
-    address: account.address,
-    privateKey,
-    createdAt: new Date().toISOString(),
-  };
   writeFileSync(path, JSON.stringify(wallet, null, 2) + "\n", {
     encoding: "utf8",
     mode: 0o600,
@@ -134,6 +129,43 @@ export function createWallet(opts?: { force?: boolean }): StoredWallet {
   } catch {
     // Windows may ignore mode; best-effort
   }
+}
+
+export function createWallet(opts?: { force?: boolean }): StoredWallet {
+  assertCanWriteWallet(opts);
+  const privateKey = generatePrivateKey();
+  const account = privateKeyToAccount(privateKey);
+  const wallet: StoredWallet = {
+    address: account.address,
+    privateKey,
+    createdAt: new Date().toISOString(),
+  };
+  writeWalletFile(wallet);
+  return wallet;
+}
+
+/**
+ * Save an existing key to ~/.arcdot/wallet.json (local only).
+ * Never paste keys into chat or arcdot. websites.
+ */
+export function importWallet(
+  privateKeyInput: string,
+  opts?: { force?: boolean },
+): StoredWallet {
+  const privateKey = privateKeyInput.trim();
+  if (!isHexPrivateKey(privateKey)) {
+    throw new Error(
+      "Private key must be a 0x-prefixed 32-byte hex string (66 characters).",
+    );
+  }
+  assertCanWriteWallet(opts);
+  const account = privateKeyToAccount(privateKey);
+  const wallet: StoredWallet = {
+    address: account.address,
+    privateKey,
+    createdAt: new Date().toISOString(),
+  };
+  writeWalletFile(wallet);
   return wallet;
 }
 

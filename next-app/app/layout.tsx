@@ -17,9 +17,16 @@ const instrumentSerif = Instrument_Serif({
 });
 
 export const metadata: Metadata = {
-  title: "arcdot. — Software pays software on Arc",
+  title: "arcdot.",
   description:
-    "Agents discover gated APIs, pay tiny USDC amounts on Arc, and unlock replies instantly. Try the same path in the browser.",
+    "Pay-as-you-go API access for AI agents. Settled in native USDC on Arc.",
+  icons: {
+    icon: [
+      { url: "/brand-arcdot/arcdot-logo-circle-ico.ico", sizes: "any" },
+      { url: "/brand-arcdot/arcdot-logo-circle-png.png", type: "image/png" },
+    ],
+    apple: [{ url: "/brand-arcdot/arcdot-logo-circle-png.png" }],
+  },
 };
 
 export default function RootLayout({

@@ -7,8 +7,9 @@ Buyer agent client for **arcdot.** — local wallet, auto-settle on Arc, MCP pro
 ## Install
 
 ```bash
-# one-shot CLI
+# one-shot CLI — create or import
 npx --yes @arcdot/agent wallet create
+# or: npx --yes @arcdot/agent wallet import --key 0xYOUR_PRIVATE_KEY
 
 # as a dependency
 npm install @arcdot/agent
@@ -19,15 +20,20 @@ From this monorepo (contributors):
 ```bash
 cd packages/arcdot-agent && npm install && npm run build && npm link
 arcdot wallet create
+# or: arcdot wallet import --key 0x…
 ```
 
 ## Quick start
 
 ```bash
-# 1) Create a dedicated agent wallet (saved to ~/.arcdot/wallet.json)
+# 1a) Create a dedicated agent wallet (saved to ~/.arcdot/wallet.json)
 npx --yes @arcdot/agent wallet create
 
-# 2) Fund the printed address with native USDC on Arc (see Hub → Agent wallet for QR)
+# 1b) Or import a key you already own (local terminal only — never paste into chat)
+npx --yes @arcdot/agent wallet import --key 0xYOUR_PRIVATE_KEY
+# or: export ARCDOT_PRIVATE_KEY=0x… && npx --yes @arcdot/agent wallet import --from-env
+
+# 2) Fund the printed address with USDC on Arc (see Hub → Fund for QR)
 npx --yes @arcdot/agent wallet status
 
 # 3a) Cursor / IDE — local MCP proxy (auto-pays on tool calls)

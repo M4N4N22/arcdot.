@@ -46,12 +46,13 @@ function FundPageInner() {
 
       <HubH2>No wallet yet?</HubH2>
       <HubP>
-        Create one first (step 1), then paste the address above.
+        Create one, or import a key you already own (local terminal only), then
+        paste the address above.
       </HubP>
       <HubCodePanel
         title="bash"
         filename="wallet.sh"
-        code={`# create (once)\n${agentInstallCommands.npxWalletCreate}\n\n# check funds\n${agentInstallCommands.npxWalletStatus}`}
+        code={`# create (once)\n${agentInstallCommands.npxWalletCreate}\n\n# or import existing key (never paste into chat)\n${agentInstallCommands.npxWalletImport}\n\n# check funds\n${agentInstallCommands.npxWalletStatus}`}
         accentCopy
       />
       <div className="flex flex-wrap gap-2">
@@ -59,6 +60,12 @@ function FundPageInner() {
           value={agentInstallCommands.npxWalletCreate}
           label="Copy create"
           variant="primary"
+          className="h-9 rounded-lg px-4 text-sm"
+        />
+        <CopyButton
+          value={agentInstallCommands.npxWalletImport}
+          label="Copy import"
+          variant="soft"
           className="h-9 rounded-lg px-4 text-sm"
         />
         <CopyButton

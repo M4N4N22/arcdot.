@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { UsdcOnArcMark } from "@/components/brand/UsdcOnArcMark";
 import { CopyButton } from "@/components/hub/CopyButton";
 import { HubCodePanel } from "@/components/hub/HubCodePanel";
 import {
@@ -11,13 +12,23 @@ import {
 } from "@/components/hub/HubProse";
 import { HubShell } from "@/components/hub/HubShell";
 import { useHubOrigin } from "@/components/hub/useHubOrigin";
-import { UsdcOnArcMark } from "@/components/brand/UsdcOnArcMark";
 import {
   AGENT_GITHUB_URL,
   agentInstallCommands,
   agentMcpProxyConfig,
 } from "@/lib/agent/install";
 import { BUYER_STEPS } from "@/lib/hub/nav";
+
+const WALLET_SETUP_SH = `# A) new wallet (once)
+${agentInstallCommands.npxWalletCreate}
+
+# B) already have a key — local terminal only (never paste into chat)
+${agentInstallCommands.npxWalletImport}
+# or: set ARCDOT_PRIVATE_KEY then
+${agentInstallCommands.npxWalletImportFromEnv}
+
+# check
+${agentInstallCommands.npxWalletStatus}`;
 
 export function HubInstall() {
   const origin = useHubOrigin();
@@ -26,11 +37,12 @@ export function HubInstall() {
   return (
     <HubShell
       title="Get started with arcdot."
-      description="Three steps: create a local agent wallet, fund it, connect your IDE. No project install needed for MCP clients."
+      description="Three steps: create or import a local agent wallet, fund it with USDC on Arc, connect your IDE. No project install needed for MCP clients."
     >
       <HubCallout title="True path for IDEs">
-        <code>npx</code> creates the wallet and runs the MCP proxy. Works in
-        Cursor, VS Code, Claude Desktop, Windsurf, and other stdio MCP hosts.{" "}
+        <code>npx</code> creates/imports the wallet and runs the MCP proxy.
+        Works in Cursor, VS Code, Claude Desktop, Windsurf, and other stdio MCP
+        hosts.{" "}
         <strong className="font-medium text-foreground">
           npm install is only for Frameworks / SDK code
         </strong>
@@ -64,8 +76,14 @@ export function HubInstall() {
       <div className="mt-8 flex flex-wrap items-center gap-2.5">
         <CopyButton
           value={agentInstallCommands.npxWalletCreate}
-          label="Copy: create wallet"
+          label="Copy: create"
           variant="primary"
+          className="h-10 rounded-lg px-5 text-sm"
+        />
+        <CopyButton
+          value={agentInstallCommands.npxWalletImport}
+          label="Copy: import"
+          variant="soft"
           className="h-10 rounded-lg px-5 text-sm"
         />
         <Link
@@ -90,16 +108,17 @@ export function HubInstall() {
         </a>
       </div>
 
-      <HubH2>1. Create a wallet</HubH2>
+      <HubH2>1. Create or import a wallet</HubH2>
       <HubP>
-        Runs via npx — downloads the buyer client for this command only. Saves
-        to <code>~/.arcdot/wallet.json</code> on your machine. Back up the
-        recovery key it prints.
+        Pick one. Both save to <code>~/.arcdot/wallet.json</code> on your
+        machine. Back up create’s recovery key. Import runs in your own
+        terminal — never paste a private key into chat or this site. More
+        detail: <Link href="/hub/wallet">Wallet help</Link>.
       </HubP>
       <HubCodePanel
         title="bash"
-        filename="create-wallet.sh"
-        code={`# once per machine\n${agentInstallCommands.npxWalletCreate}`}
+        filename="wallet-setup.sh"
+        code={WALLET_SETUP_SH}
         accentCopy
       />
 
@@ -108,10 +127,10 @@ export function HubInstall() {
         <UsdcOnArcMark size="sm" />
       </div>
       <HubP>
-        Paste the printed address on{" "}
-        <Link href="/fund">/fund</Link>, send about{" "}
+        Paste the wallet address on <Link href="/fund">/fund</Link>, send about{" "}
         <strong className="font-medium text-foreground">0.05 USDC on Arc</strong>
         , then refresh balance. Other networks will not credit this wallet.
+        Skip if you imported an already-funded address.
       </HubP>
 
       <HubH2>3. Connect your IDE</HubH2>
@@ -143,6 +162,11 @@ export function HubInstall() {
       <HubContinue
         links={[
           {
+            href: "/hub/wallet",
+            title: "Wallet help",
+            description: "Create, import, fund, and backup.",
+          },
+          {
             href: "/fund",
             title: "Fund",
             description: "QR, live balance, backup reminder.",
@@ -151,11 +175,6 @@ export function HubInstall() {
             href: "/hub/editors",
             title: "Connect IDE",
             description: "Paste the stdio MCP proxy into your IDE.",
-          },
-          {
-            href: "/docs/agents/client",
-            title: "Agent client docs",
-            description: "CLI, MCP proxy, and SDK reference.",
           },
         ]}
       />

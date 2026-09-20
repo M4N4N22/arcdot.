@@ -92,7 +92,7 @@ export function AgentFundPanel({ initialAddress }: AgentFundPanelProps) {
     const next = addressInput.trim();
     if (!isAddress(next)) {
       setLoadError(
-        "Enter a valid address from wallet create or wallet address.",
+        "Enter a valid address from wallet create, import, or wallet address.",
       );
       return;
     }

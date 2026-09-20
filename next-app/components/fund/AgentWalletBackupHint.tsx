@@ -33,20 +33,21 @@ export function AgentWalletBackupHint({
             Or copy the file <code>~/.arcdot/wallet.json</code> to a safe place.
           </li>
           <li>
-            New machine: restore that file, or set{" "}
-            <code>ARCDOT_PRIVATE_KEY</code> in your MCP / agent env — never
-            paste it into arcdot. websites.
+            New machine: restore that file, run{" "}
+            <code>wallet import --key 0x…</code> in your own terminal, or set{" "}
+            <code>ARCDOT_PRIVATE_KEY</code> in MCP env — never paste it into
+            arcdot. websites or IDE chat.
           </li>
         </ul>
         <p>
-          Need a fresh wallet?{" "}
+          Need a fresh wallet or to restore one?{" "}
           <Link
-            href="/hub"
+            href="/hub/wallet"
             className="text-foreground underline underline-offset-4"
           >
-            Hub → Get started
+            Hub → Wallet help
           </Link>{" "}
-          has the create command.
+          has create and import commands.
         </p>
       </div>
     </aside>

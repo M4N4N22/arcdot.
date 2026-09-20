@@ -10,20 +10,19 @@ import {
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { type ReactNode, useState } from "react";
 import { http, WagmiProvider } from "wagmi";
-import { getActiveArcChain } from "@/lib/wallet/arcChain";
+import { arcMainnet } from "@/lib/wallet/arcChain";
 
 const projectId =
   process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID ||
   "arcdot_local_dev_placeholder";
 
-const activeChain = getActiveArcChain();
-
+/** Wallet connect is Arc Mainnet only — no testnet in the picker. */
 const config = getDefaultConfig({
   appName: "arcdot.",
   projectId,
-  chains: [activeChain],
+  chains: [arcMainnet],
   transports: {
-    [activeChain.id]: http(activeChain.rpcUrls.default.http[0]),
+    [arcMainnet.id]: http(arcMainnet.rpcUrls.default.http[0]),
   },
   ssr: true,
 });
@@ -31,7 +30,7 @@ const config = getDefaultConfig({
 const rkTheme = lightTheme({
   accentColor: "#1a1a1a",
   accentColorForeground: "#faf9f6",
-  borderRadius: "small",
+  borderRadius: "medium",
   fontStack: "system",
   overlayBlur: "small",
 });
@@ -45,7 +44,8 @@ export function Providers({ children }: { children: ReactNode }) {
         <RainbowKitProvider
           theme={rkTheme}
           modalSize="compact"
-          initialChain={activeChain}
+          initialChain={arcMainnet}
+          coolMode={false}
           appInfo={{
             appName: "arcdot.",
             learnMoreUrl: "https://docs.arc.io",

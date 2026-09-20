@@ -15,6 +15,8 @@ export const AGENT_PACKAGE_PATH = "packages/arcdot-agent";
 export const agentInstallCommands = {
   /** One-shot CLI via npx */
   npxWalletCreate: `npx --yes ${AGENT_NPM_PACKAGE} wallet create`,
+  npxWalletImport: `npx --yes ${AGENT_NPM_PACKAGE} wallet import --key 0xYOUR_PRIVATE_KEY`,
+  npxWalletImportFromEnv: `npx --yes ${AGENT_NPM_PACKAGE} wallet import --from-env`,
   npxWalletStatus: `npx --yes ${AGENT_NPM_PACKAGE} wallet status`,
   npxUnlock: (origin: string) =>
     `npx --yes ${AGENT_NPM_PACKAGE} unlock --origin ${origin} --service quick-brief --prompt "Hi"`,
@@ -27,7 +29,8 @@ export const agentInstallCommands = {
 git clone ${AGENT_GITHUB_URL}.git
 cd arcdot./${AGENT_PACKAGE_PATH}
 npm install && npm run build && npm link
-arcdot wallet create`,
+arcdot wallet create
+# or: arcdot wallet import --key 0x…`,
 } as const;
 
 /** Cursor mcp.json using npm-backed npx */

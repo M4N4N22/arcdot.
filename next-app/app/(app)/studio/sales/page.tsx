@@ -1,6 +1,6 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { WalletConnect } from "@/components/wallet/WalletConnect";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { useAccount, useSignMessage } from "wagmi";
@@ -61,7 +61,7 @@ export default function StudioSalesPage() {
   if (!isConnected) {
     return (
       <main className="mx-auto max-w-5xl px-6 py-10 md:px-8">
-        <ConnectButton />
+        <WalletConnect />
       </main>
     );
   }

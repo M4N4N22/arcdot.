@@ -1,6 +1,6 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { WalletConnect } from "@/components/wallet/WalletConnect";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -214,7 +214,7 @@ export default function StudioProfilePage() {
         <h1 className="mt-3 font-display text-3xl tracking-tight">Profile</h1>
         <p className="mt-2 text-muted">Connect your wallet to edit your profile.</p>
         <div className="mt-6">
-          <ConnectButton />
+          <WalletConnect />
         </div>
       </main>
     );

@@ -65,7 +65,7 @@ export function HubFrameworks() {
       <HubCodePanel
         title="bash"
         filename="sdk.sh"
-        code={`# create + fund first if needed\n${agentInstallCommands.npxWalletCreate}\n# then in your app:\n${agentInstallCommands.npmInstall}`}
+        code={`# create or import + fund first if needed\n${agentInstallCommands.npxWalletCreate}\n# or: ${agentInstallCommands.npxWalletImport}\n# then in your app:\n${agentInstallCommands.npmInstall}`}
         accentCopy
       />
 

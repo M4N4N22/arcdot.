@@ -7,7 +7,10 @@
 import { createInterface } from "node:readline";
 import { callMcpToolWithAutoSettle, mcpRpc } from "../client/mcp.js";
 import { formatFundsNeededMessage } from "../wallet/fundsNeeded.js";
-import { formatNoWalletGuide } from "../wallet/guide.js";
+import {
+  formatNoWalletGuide,
+  WALLET_CREATE_CMD,
+} from "../wallet/guide.js";
 import { getWalletStatus } from "../wallet/status.js";
 
 type JsonRpcMsg = {
@@ -146,12 +149,26 @@ export async function runMcpProxy(origin: string) {
         if (remote.error) {
           fail(id, remote.error.code, remote.error.message);
         } else {
-          const result = remote.result as Record<string, unknown> | undefined;
-          ok(id, result ?? {
+          const result = (remote.result ?? {
             protocolVersion: "2024-11-05",
             capabilities: { tools: {} },
             serverInfo: { name: "arcdot-proxy", version: "0.1.0" },
-          });
+          }) as Record<string, unknown>;
+          // Local settle proxy owns wallet UX — force ask-first create vs import.
+          const remoteInstructions =
+            typeof result.instructions === "string" ? result.instructions : "";
+          result.instructions = [
+            "LOCAL SETTLE PROXY — wallet rules (override):",
+            "If unlock / tools return NO_WALLET: STOP. Ask the human A or B before any shell.",
+            `A) New wallet — only after they choose A, propose: ${WALLET_CREATE_CMD}`,
+            "B) Existing key — show import command; they run it locally. Never paste a private key into chat.",
+            "Then fundUrl if balance low (~0.05 USDC on Arc), retry unlock. Never invent answers.",
+            "",
+            remoteInstructions,
+          ]
+            .filter(Boolean)
+            .join(" ");
+          ok(id, result);
         }
         continue;
       }

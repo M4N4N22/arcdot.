@@ -7,6 +7,7 @@ import { PublishEarn } from "@/components/marketing/PublishEarn";
 import { SeeItSettle } from "@/components/marketing/SeeItSettle";
 import { TrustedRails } from "@/components/marketing/TrustedRails";
 import { WhatYouGet } from "@/components/marketing/WhatYouGet";
+import {UsdcOnArcMark} from "@/components/brand/UsdcOnArcMark";
 
 export default function Home() {
   return (
@@ -17,28 +18,30 @@ export default function Home() {
             arcdot.
           </p>
           <h1 className="mt-6 max-w-xl text-2xl font-medium leading-snug tracking-tight text-foreground md:mt-8 md:text-3xl">
-            Software pays software. Instant USDC unlocks on Arc.
+            Pay-as-you-go API access for AI agents. <br />Settled in native <UsdcOnArcMark size="lg" showLabel = {false} /> USDC on Arc.
           </h1>
-          <p className="mt-5 max-w-md text-base leading-relaxed text-muted md:text-lg">
-            Agents discover gated APIs, pay a few cents in USDC on Arc, and get
-            a reply — no accounts, no API keys, no invoices.
-          </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <Link
               href="/hub"
-              className="inline-flex h-11 items-center justify-center bg-accent px-5 text-sm font-medium text-surface transition-opacity hover:opacity-90"
+              className="inline-flex h-11 items-center justify-center rounded-full bg-accent px-5 text-sm font-medium text-surface transition-opacity hover:opacity-90"
             >
               Connect MCP
             </Link>
             <Link
               href="/services"
-              className="inline-flex h-11 items-center justify-center border border-line bg-surface/70 px-5 text-sm font-medium text-foreground backdrop-blur-sm transition-colors hover:bg-surface"
+              className="inline-flex h-11 items-center justify-center rounded-full border border-line bg-surface/70 px-5 text-sm font-medium text-foreground backdrop-blur-sm transition-colors hover:bg-surface"
             >
               Explore tools
             </Link>
             <Link
+              href="/create"
+              className="inline-flex h-11 items-center justify-center rounded-full border border-line bg-surface/70 px-5 text-sm font-medium text-foreground backdrop-blur-sm transition-colors hover:bg-surface"
+            >
+              Publish your tool
+            </Link>
+            <Link
               href="/docs"
-              className="inline-flex h-11 items-center justify-center px-2 text-sm font-medium text-muted underline-offset-4 transition-colors hover:text-foreground hover:underline"
+              className="inline-flex h-11 items-center justify-center rounded-full px-3 text-sm font-medium text-muted underline-offset-4 transition-colors hover:text-foreground hover:underline"
             >
               Documentation
             </Link>

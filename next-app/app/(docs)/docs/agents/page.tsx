@@ -27,7 +27,7 @@ export default function DocsAgentsPage() {
       <DocsCallout title="Skip the hand-roll">
         Prefer the Hub path:{" "}
         <Link href="/hub" className="underline underline-offset-4">
-          create → fund → connect IDE
+          create or import → fund → connect IDE
         </Link>
         . Or use{" "}
         <Link href="/docs/agents/client" className="underline underline-offset-4">
@@ -114,12 +114,13 @@ export default function DocsAgentsPage() {
       <DocsH2>Recommended: @arcdot/agent</DocsH2>
       <DocsP>
         Buyer client on npm — local wallet, auto-settle, MCP proxy for IDEs.
-        Keys never touch the arcdot. server. Create → fund → connect (no project
-        install for IDE chat):
+        Keys never touch the arcdot. server. Create or import → fund → connect
+        (no project install for IDE chat):
       </DocsP>
       <CodeBlock
         title="bash"
         code={`${agentInstallCommands.npxWalletCreate}
+# or: ${agentInstallCommands.npxWalletImport}
 npx --yes ${AGENT_NPM_PACKAGE} unlock --origin "$ORIGIN" --service <slug> --prompt "Your prompt"
 
 # Cursor mcp.json — local proxy (auto-pays):

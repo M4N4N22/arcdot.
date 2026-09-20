@@ -1,6 +1,6 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { WalletConnect } from "@/components/wallet/WalletConnect";
 import Link from "next/link";
 import { useCallback, useEffect, useState } from "react";
 import {
@@ -113,7 +113,7 @@ export default function StudioPage() {
           withdraw earnings.
         </p>
         <div className="mt-6">
-          <ConnectButton />
+          <WalletConnect />
         </div>
       </main>
     );

@@ -52,9 +52,10 @@ export function universalMcpConfig(origin: string): string {
 
 export function pythonHttpSnippet(origin: string): string {
   const host = origin.replace(/\/$/, "");
-  return `# Prefer the buyer client — create + fund first, then install only if you import
+  return `# Prefer the buyer client — create or import + fund first, then install only if you import
 #
 #   ${agentInstallCommands.npxWalletCreate}
+#   # or: ${agentInstallCommands.npxWalletImport}
 #   # fund on /fund, then for SDK imports:
 #
 #   ${agentInstallCommands.npmInstall}
@@ -72,7 +73,8 @@ export function langchainStyleSnippet(origin: string): string {
   return `# Buyer agent — keys stay on YOUR machine (never on arcdot. server)
 #
 # 1) ${agentInstallCommands.npxWalletCreate}
-# 2) Fund the printed address with USDC on Arc (not other networks)
+#    or: ${agentInstallCommands.npxWalletImport}
+# 2) Fund the printed address with USDC on Arc
 # 3) Use the SDK or CLI (auto-settle)
 
 # Node:

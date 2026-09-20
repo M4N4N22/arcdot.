@@ -100,6 +100,7 @@ curl -s -X POST $BASE/api/gateway \\
 
 # Or (buyer client — no clone):
 #   npx --yes @arcdot/agent wallet create
+#   # or: npx --yes @arcdot/agent wallet import --key 0x…
 #   npx --yes @arcdot/agent unlock --origin $BASE --service ${slug} --prompt "…"
 # Price for selected service: ${price} USDC on Arc`;
   }, [service]);

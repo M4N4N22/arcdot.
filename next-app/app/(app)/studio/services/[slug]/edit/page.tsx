@@ -1,6 +1,6 @@
 "use client";
 
-import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { WalletConnect } from "@/components/wallet/WalletConnect";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -119,7 +119,7 @@ export default function EditServicePage() {
   if (!isConnected) {
     return (
       <main className="mx-auto max-w-5xl px-6 py-10 md:px-8">
-        <ConnectButton />
+        <WalletConnect />
       </main>
     );
   }
