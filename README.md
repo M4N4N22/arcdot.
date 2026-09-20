@@ -2,98 +2,154 @@
 
 **Pay-as-you-go API access for AI agents — settled in native USDC on [Arc](https://www.arc.network).**
 
+[![Live](https://img.shields.io/badge/live-arcdot--5cpk--xi.vercel.app-111111?style=flat-square)](https://arcdot-5cpk-xi.vercel.app)
 [![Arc Mainnet](https://img.shields.io/badge/Arc-Mainnet%205042-111111?style=flat-square)](https://docs.arc.network)
+[![Contract](https://img.shields.io/badge/PromptGateway-0x3E83…C56f-0a7a3e?style=flat-square)](https://explorer.arc.io/address/0x3E83ecb3Ef02CbFc67Ad42598A2B18f4510aC56f)
+[![npm](https://img.shields.io/badge/%40arcdot%2Fagent-npm-cb3837?style=flat-square)](https://www.npmjs.com/package/@arcdot/agent)
 [![License](https://img.shields.io/badge/license-MIT-5c5c5c?style=flat-square)](#license)
 
-arcdot. turns ordinary API endpoints into **machine-payable services**. An agent (or app) pays a few cents in USDC on Arc, proves the payment, and instantly unlocks a gated model or data response — no accounts, no invoices, no human checkout.
+arcdot. is an **API monetization gateway** for the agentic economy. It turns ordinary HTTPS endpoints into **machine-payable services**: an agent discovers a tool, pays a few cents in USDC on Arc, proves the payment, and unlocks a reply — no accounts, no invoices, no human checkout.
 
 | | |
 |---|---|
-| **Live app** | _Coming soon — Vercel URL_ |
-| **Contract** | _Coming soon — Arc explorer link_ |
-| **Network** | [Arc Mainnet](https://docs.arc.network) · Chain ID `5042` |
-| **Explorer** | [explorer.arc.network](https://explorer.arc.network) / [explorer.arc.io](https://explorer.arc.io) |
+| **Live app** | [arcdot-5cpk-xi.vercel.app](https://arcdot-5cpk-xi.vercel.app) |
+| **Docs** | [Docs home](https://arcdot-5cpk-xi.vercel.app/docs) · [Quickstart](https://arcdot-5cpk-xi.vercel.app/docs/quickstart) · [Agents](https://arcdot-5cpk-xi.vercel.app/docs/agents) · [Sellers](https://arcdot-5cpk-xi.vercel.app/docs/sellers) · [Gateway API](https://arcdot-5cpk-xi.vercel.app/docs/api/gateway) · [MCP](https://arcdot-5cpk-xi.vercel.app/docs/mcp) · [Payment](https://arcdot-5cpk-xi.vercel.app/docs/payment) |
+| **Hub (agent setup)** | [Create / import wallet → fund → IDE](https://arcdot-5cpk-xi.vercel.app/hub) |
+| **Contract** | [`PromptGateway` on Arc Mainnet](https://explorer.arc.io/address/0x3E83ecb3Ef02CbFc67Ad42598A2B18f4510aC56f) — `0x3E83ecb3Ef02CbFc67Ad42598A2B18f4510aC56f` |
+| **Network** | [Arc Mainnet](https://docs.arc.network) · Chain ID `5042` · RPC `https://rpc.mainnet.arc.io` |
+| **Explorer** | [explorer.arc.io](https://explorer.arc.io) |
+| **Agent client** | [`@arcdot/agent`](https://www.npmjs.com/package/@arcdot/agent) on npm |
 | **Repo** | [github.com/M4N4N22/arcdot.](https://github.com/M4N4N22/arcdot.) |
 
 ---
 
-## What problem we solve
+## Demo video
 
-AI agents can already call APIs. They still cannot **pay for them** in a way that is:
+End-to-end walkthrough on **Arc Mainnet**: publish a tool → wire Cursor MCP → agent pays USDC → unlock reply → seller withdraws.
 
-- **Tiny** — fractions of a dollar per call (micropayments)
-- **Instant** — no waiting on cards, invoices, or API-key provisioning
-- **Dollar-native** — costs and gas denominated in USDC, not a volatile gas token
-- **Autonomous** — the agent pays, proves, and continues without a human in the loop
+[![arcdot. walkthrough demo](https://img.youtube.com/vi/DEnLHr2haNo/maxresdefault.jpg)](https://youtu.be/DEnLHr2haNo)
 
-Today, premium models and data APIs are gated by API keys and human billing. That breaks agent workflows. arcdot. adds a thin economic layer: **pay → verify on Arc → unlock → respond**.
+<iframe width="720" height="405" src="https://www.youtube.com/embed/DEnLHr2haNo" title="arcdot. walkthrough demo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+
+**Watch:** [https://youtu.be/DEnLHr2haNo](https://youtu.be/DEnLHr2haNo)
+
+### What happens in the video
+
+1. **Publish a tool on Arc** — In Studio we publish a briefing tool (`demo-brief` / `demo-test-tool`) that summarizes a long thread. It goes live on the arcdot. catalog with an HTTPS agent endpoint and a USDC-on-Arc price.
+2. **Configure MCP in Cursor** — We point Cursor at `@arcdot/agent` with origin `https://arcdot-5cpk-xi.vercel.app`. The arcdot MCP server comes up (`arcdot_discover`, `arcdot_unlock`, `arcdot_health`).
+3. **Strict agent prompt** — We give Cursor a forced-MCP prompt so the model cannot answer from its own knowledge or skip payment:
+
+   > You have MCP tools from the "arcdot" server. You MUST call them — do not answer from knowledge.
+   >
+   > 1. Call `arcdot_discover` with query `"demo-test-tool"`
+   > 2. Call `arcdot_unlock` with service `"demo-test-tool"` and prompt:  
+   >    `"Reply in exactly two short sentences: what is arcdot and why do agents pay per request?"`
+   > 3. Return only the unlocked service text, plus one line listing the MCP tools you called in order.
+
+   The specificity matters: a simple question like this is easy for any LLM/IDE to invent. The prompt forces discover → unlock through arcdot. so settlement is real.
+4. **Create agent wallet** — Unlock needs a local buyer wallet. Cursor offers **create** or **import**; we approve **create**. `@arcdot/agent` writes `~/.arcdot/wallet.json` and returns a [fund link](https://arcdot-5cpk-xi.vercel.app/fund).
+5. **Fund with 0.5 USDC on Arc** — We send ~0.5 USDC to the new agent address, then tell Cursor the wallet is funded and to **retry**.
+6. **Paid unlock succeeds** — The agent settles on `PromptGateway`, redeems via the gateway, and returns the unlocked service text, e.g.:
+
+   > arcdot. lets agents pay a few cents in USDC on Arc, reach gated APIs instantly, and keep going without human checkout friction.
+   >
+   > MCP tools called: arcdot_unlock
+
+7. **Seller sales** — Back in the app, Activity / Studio shows the sale for `demo-test-tool`: **Delivered**, prompt echoed, **0.0090 USDC on Arc** credited to the seller (90% after the 10% platform cut).
+8. **Withdraw on mainnet** — From `/studio` we click **Withdraw**. Seller balance pulls on-chain (`withdrawSeller`). Example mainnet withdraw receiving **0.036 USDC**:  
+   [`0x629cbd40d036599fa0a1ac3fdc458dbd2571e63827140b39c8b3255b9f09f3d9`](https://explorer.arc.io/tx/0x629cbd40d036599fa0a1ac3fdc458dbd2571e63827140b39c8b3255b9f09f3d9)
 
 ---
 
-## Why Arc
+## What is arcdot.?
 
-arcdot. is designed around Arc’s stablecoin-native L1 — not bolted onto a chain that uses a separate gas token.
+AI agents can already call APIs. They still cannot **pay for them** in a way that is tiny, instant, dollar-denominated, and autonomous.
+
+Today’s premium models and data APIs are gated by API keys and human billing. That breaks agent workflows: someone has to open a dashboard, enter a card, copy a key, and rotate secrets. arcdot. adds a thin economic layer on Arc:
+
+**discover → pay native USDC on Arc → verify on-chain → unlock → respond**
+
+### Deep product model
+
+| Actor | What they do |
+|---|---|
+| **Buyers / agents** | Discover a service slug, settle `depositPayment` on `PromptGateway`, call `POST /api/gateway` (or MCP `arcdot_unlock`) with proof + signature, receive the upstream result |
+| **Sellers** | Publish an HTTPS **agent endpoint** in Studio, set a price (≥ platform floor), earn pending USDC on Arc, withdraw with `withdrawSeller` |
+| **Platform** | Hosts catalog + settlement API, takes a constructor-locked platform cut (`platformFeeBps`), withdraws with `withdrawPlatform` |
+| **Arc** | Stablecoin-native L1: USDC is gas **and** micropayment asset — one balance for fees and unlocks |
+
+arcdot. is a **payable API gateway / catalog**, not an agent marketplace. Sellers bring their own upstream. Platform demo tools may be fulfilled by Gemini Flash; **seller-published tools always POST to the seller’s HTTPS endpoint** after payment — no Gemini fallback for sellers.
+
+### Why Arc
 
 | Arc capability | How arcdot. uses it |
 |---|---|
 | **USDC as native gas** | Agents hold one asset for fees and micropayments |
-| **Predictable dollar fees** | Gateway price is fixed at **0.01 USDC** per request |
-| **EVM + fast finality** | Standard Solidity escrow + quick settlement checks via RPC |
-| **Agent-ready money rails** | Fits Circle’s agentic / machine-commerce direction |
+| **Predictable dollar fees** | Floor **0.01 USDC** per request (`1e16` wei); catalog prices may be higher |
+| **EVM + fast finality** | Standard Solidity escrow + quick receipt checks via RPC |
+| **Agent-ready money rails** | Fits machine-commerce: pay, prove, continue |
 
-**Important (Arc USDC decimals):** native transfers and `msg.value` use **18 decimals**. `0.01 USDC` = `10000000000000000` (`1e16`) wei. The ERC-20 USDC view uses 6 decimals — arcdot. deposits use **native payable** transfers only. See [Arc stablecoin-native model](https://docs.arc.io/arc/concepts/stablecoin-native-model).
-
-Docs: [Arc documentation](https://docs.arc.io) · [Gas & fees](https://docs.arc.io/arc/references/gas-and-fees) · [Developer portal](https://www.arc.network)
+**Decimals (critical):** native USDC (`msg.value`, balances) uses **18 decimals**. `0.01 USDC` = `10000000000000000` (`1e16`) wei. The ERC-20 USDC view at Arc’s system address uses 6 decimals — arcdot. deposits use **native payable** transfers only. See [Arc stablecoin-native model](https://docs.arc.io/arc/concepts/stablecoin-native-model).
 
 ---
 
-## How it works
+## What we built
 
-### For humans (platform)
+A full stack for machine-payable APIs on Arc Mainnet:
 
-1. **Browse** published services or **Create** your own (wallet-signed).
-2. **Connect** an Arc wallet and **pay** the service price in native USDC.
-3. arcdot. **verifies** the payment on Arc, runs the service, and shows the reply.
-4. **Activity** lists your recent unlocks (stored in Supabase when configured).
+1. **`PromptGateway` (Solidity / Hardhat)** — immutable escrow: `depositPayment(paymentId, seller)` with `minFee` / `maxFee`, unique `paymentId`, seller/platform split, pull withdrawals (`withdrawSeller`, `withdrawPlatform`).
+2. **Settlement API (`POST /api/gateway`)** — EIP-191 signature check, Arc receipt + event decode, exact price enforcement, durable spent-tx map, then proxy to seller upstream (or Gemini / mock for platform demos). Missing payment → **HTTP 402** with machine-readable checkout instructions.
+3. **Product UI** — landing, Explore catalog, Studio (publish / earnings), Activity, Hub (wallet + MCP install), Console, Fund, Docs.
+4. **`@arcdot/agent`** — local buyer wallet (`~/.arcdot`), CLI unlock, Cursor MCP proxy that auto-settles on Arc when the agent wallet has USDC. **Buyer keys never leave the machine.**
+5. **Discovery** — `GET /api/services`, `/.well-known/arcdot.json`, MCP `arcdot_discover` / `arcdot_unlock` / `arcdot_health`.
+6. **Persistence** — Supabase for profiles, services, and request history (secrets stay in env).
 
-### For agents (machine)
+---
 
-1. Discover a service via `GET /api/services` or `GET /api/services/:slug`.
-2. Call `depositPayment(paymentId)` on `PromptGateway` with `msg.value` equal to the service `price_wei` (must be ≥ platform `minFee` of **0.01 USDC** / `1e16` wei).
-3. `POST /api/gateway` with payment confirmation headers + EIP-191 signature.
-4. On failure, read **HTTP 402** payment instructions and retry.
+## Live on Arc Mainnet
+
+### Deployed contract
+
+| Field | Value |
+|---|---|
+| Address | [`0x3E83ecb3Ef02CbFc67Ad42598A2B18f4510aC56f`](https://explorer.arc.io/address/0x3E83ecb3Ef02CbFc67Ad42598A2B18f4510aC56f) |
+| Network | Arc Mainnet · chain ID `5042` |
+| Owner / treasury | `0xF4C271b25D006B453BD26d1470c386Eb739fb692` |
+| `minFee` | `10000000000000000` (0.01 USDC native) |
+| `platformFeeBps` | `1000` (10% platform / 90% seller) |
+
+### Deploy proof (terminal)
+
+![Arc Mainnet PromptGateway deploy proof](next-app/public/mainnet-proof/mainnet-deployment-proof.png)
+
+### On-chain activity (verified)
+
+Agent wallet created via `@arcdot/agent` (`0x3d6FA84a5237d77313248E30573C2eF6C68bdAee`) unlocked a **published** arcdot. service by paying **0.01 USDC** on Arc into `PromptGateway`. Seller later withdrew accrued USDC after sales.
+
+| Role | Tx | Explorer |
+|---|---|---|
+| Agent unlock (`depositPayment`, 0.01 USDC) | `0xc22ad0b3bc5115e542b6c3b1b42496e3de0082739115960a203b30d8d0a47310` | [view](https://explorer.arc.io/tx/0xc22ad0b3bc5115e542b6c3b1b42496e3de0082739115960a203b30d8d0a47310) |
+| Agent unlock (`depositPayment`, 0.01 USDC) | `0x8707f464c1cc255fb7d650b15bf037073c58aee5ee9564a6e3f85c5b1cb095a7` | [view](https://explorer.arc.io/tx/0x8707f464c1cc255fb7d650b15bf037073c58aee5ee9564a6e3f85c5b1cb095a7) |
+| Seller withdraw (`withdrawSeller`) after sales | `0x629cbd40d036599fa0a1ac3fdc458dbd2571e63827140b39c8b3255b9f09f3d9` | [view](https://explorer.arc.io/tx/0x629cbd40d036599fa0a1ac3fdc458dbd2571e63827140b39c8b3255b9f09f3d9) |
 
 ---
 
 ## Architecture
 
-### Repository layout
-
-```text
-arcdot./
-├── README.md
-├── contracts/                 # Hardhat — PromptGateway.sol (minFee)
-└── next-app/
-    ├── app/
-    │   ├── services/          # Catalog + pay UI
-    │   ├── create/            # Publish a service
-    │   ├── activity/          # Request history
-    │   └── api/
-    │       ├── gateway/       # Pay → verify → Gemini
-    │       ├── services/      # Catalog CRUD API
-    │       └── me/requests/   # Activity API
-    ├── lib/                   # Arc, catalog, supabase, agent helpers
-    └── supabase/schema.sql    # Run in Supabase SQL editor
-```
-
-### System diagram
+### High-level system
 
 ```mermaid
 flowchart TB
-  subgraph Humans["Web app"]
-    Browse[Browse / Create]
-    PayUI[Wallet pay on Arc]
-    Activity[Activity history]
+  subgraph Clients["Clients"]
+    Human["Browser UI<br/>Explore · Studio · Activity · Hub"]
+    Agent["AI agent / IDE<br/>@arcdot/agent MCP + CLI"]
+  end
+
+  subgraph Vercel["arcdot. on Vercel"]
+    Catalog["GET /api/services<br/>/.well-known/arcdot.json"]
+    Gateway["POST /api/gateway<br/>verify · redeem · unlock"]
+    MCP["POST /api/mcp<br/>discover · unlock · health"]
+    Docs["/docs · /hub · /console"]
   end
 
   subgraph Data["Supabase"]
@@ -102,60 +158,158 @@ flowchart TB
     Requests[(requests)]
   end
 
-  subgraph ArcNet["Arc Mainnet 5042"]
-    W[Wallet USDC]
-    G[PromptGateway minFee]
-    W -->|depositPayment value ge minFee| G
+  subgraph Arc["Arc Mainnet · chainId 5042"]
+    Wallet["Buyer wallet USDC"]
+    GW["PromptGateway<br/>0x3E83…C56f"]
+    SellerBal["pendingSeller"]
+    PlatBal["pendingPlatform"]
+    Wallet -->|"depositPayment(paymentId, seller)<br/>msg.value ≥ minFee"| GW
+    GW --> SellerBal
+    GW --> PlatBal
   end
 
-  subgraph Vercel["API"]
-    API["POST /api/gateway"]
-    LLM[Gemini / mock]
+  subgraph Upstream["Fulfillment"]
+    SellerEP["Seller HTTPS agent endpoint"]
+    Gemini["Gemini Flash<br/>platform demos only"]
+    Mock["MOCK_MODE stream<br/>demos only"]
   end
 
-  Browse --> Services
-  PayUI --> G
-  PayUI --> API
-  API --> G
-  API --> Services
-  API --> LLM
-  API --> Requests
-  Activity --> Requests
-```
-
-### Payment + unlock sequence
-
-```mermaid
-sequenceDiagram
-  participant Agent
-  participant Arc as Arc Mainnet
-  participant GW as PromptGateway
-  participant API as /api/gateway
-  participant Gemini
-
-  Agent->>GW: depositPayment(paymentId) with 0.01 USDC
-  GW-->>Arc: PaymentDeposited(payer, paymentId, amount)
-  Agent->>API: POST + signature + tx confirmation
-  API->>API: Recover EIP-191 signer
-  API->>Arc: Fetch receipt / decode event
-  API->>API: Reject if tx already redeemed
-  alt Valid payment
-    API->>Gemini: Forward prompt
-    Gemini-->>API: Model reply
-    API-->>Agent: 200 + settlement + result
-  else Missing / invalid payment
-    API-->>Agent: 402 + payment instructions
-  end
+  Human --> Catalog
+  Human --> Gateway
+  Agent --> Catalog
+  Agent --> MCP
+  Agent --> Gateway
+  Agent --> Wallet
+  Catalog --> Services
+  Gateway --> GW
+  Gateway --> Services
+  Gateway --> Requests
+  Gateway --> SellerEP
+  Gateway --> Gemini
+  Gateway --> Mock
+  Docs --> Human
 ```
 
 ### Trust boundaries
 
-| Layer | Responsibility |
+```mermaid
+flowchart LR
+  subgraph OnChain["On-chain truth"]
+    A["Exact native USDC deposit"]
+    B["paymentId used once"]
+    C["Seller / platform split locked in constructor"]
+  end
+
+  subgraph OffChain["Off-chain API"]
+    D["EIP-191 personal_sign challenge"]
+    E["Receipt + PaymentDeposited decode"]
+    F["txHash spent map — anti double-redeem"]
+    G["Catalog price_wei enforcement"]
+  end
+
+  subgraph Keys["Key custody"]
+    H["Buyer key stays in ~/.arcdot<br/>never on arcdot. servers"]
+    I["Owner key offline — withdrawals only"]
+    J["Seller upstream URL + optional bearer in Studio"]
+  end
+
+  OnChain --> OffChain
+  OffChain --> Keys
+```
+
+### Payment → unlock sequence
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant Agent as Agent / @arcdot/agent
+  participant Arc as Arc Mainnet
+  participant GW as PromptGateway
+  participant API as POST /api/gateway
+  participant Up as Seller endpoint / Gemini
+
+  Agent->>API: Probe unlock (or MCP arcdot_unlock)
+  API-->>Agent: 402 + payment instructions (if unpaid)
+  Agent->>GW: depositPayment(paymentId, seller) value = price_wei
+  GW-->>Arc: PaymentDeposited(payer, seller, paymentId, amount, …)
+  Agent->>API: POST + X-Arc-Tx-Hash + address + EIP-191 signature
+  API->>API: Recover signer · load service price
+  API->>Arc: Fetch receipt · decode event · check amount
+  API->>API: Mark txHash spent (reject replay)
+  alt Valid settlement
+    API->>Up: POST prompt / input
+    Up-->>API: { text } / stream
+    API-->>Agent: 200 + settlement + result
+  else Missing / invalid payment
+    API-->>Agent: 402 + machine-readable checkout
+  end
+```
+
+### Agent path (Cursor MCP)
+
+```mermaid
+flowchart LR
+  IDE["Cursor / IDE"] -->|"arcdot_discover"| Proxy["Local @arcdot/agent MCP"]
+  IDE -->|"arcdot_unlock"| Proxy
+  Proxy -->|"read ~/.arcdot wallet"| Local["Local USDC on Arc"]
+  Proxy -->|"depositPayment"| Chain["PromptGateway"]
+  Proxy -->|"POST /api/gateway"| Host["arcdot. host"]
+  Host -->|"verify + fulfill"| Result["Unlocked reply"]
+  Result --> Proxy --> IDE
+```
+
+### Repository layout
+
+```text
+Arcdot/
+├── README.md                      # this file
+├── contracts/                     # Hardhat — PromptGateway.sol
+│   ├── contracts/PromptGateway.sol
+│   ├── scripts/deploy.ts
+│   ├── scripts/proof-mainnet.ts
+│   └── test/
+├── packages/
+│   └── arcdot-agent/              # @arcdot/agent — CLI, MCP, SDK
+└── next-app/                      # Next.js App Router (Vercel)
+    ├── app/
+    │   ├── (marketing)/           # Landing
+    │   ├── (app)/                 # Hub, Explore, Studio, Activity, Console, Fund
+    │   ├── (docs)/docs/           # Customer documentation
+    │   ├── api/gateway/           # Settlement unlock
+    │   ├── api/services/          # Catalog
+    │   ├── api/mcp/               # Hosted MCP surface
+    │   └── .well-known/           # Agent discovery manifests
+    ├── lib/                       # Arc verify, auth, catalog, seller upstream
+    ├── public/mainnet-proof/      # Deploy screenshot
+    └── supabase/                  # schema.sql (+ v2 migrations)
+```
+
+---
+
+## How it works
+
+### For humans
+
+1. **Browse** published services on [Explore](https://arcdot-5cpk-xi.vercel.app/services) or **publish** your own in [Studio](https://arcdot-5cpk-xi.vercel.app/studio) (wallet-signed; HTTPS agent endpoint required).
+2. **Connect** an Arc wallet and **pay** the service price in native USDC (or use Hub + `@arcdot/agent`).
+3. arcdot. **verifies** the payment on Arc, runs the service, and shows the reply.
+4. **Activity** lists recent unlocks; sellers withdraw earnings on-chain.
+
+### For agents (machine)
+
+1. Discover via `GET /api/services`, `/.well-known/arcdot.json`, or MCP `arcdot_discover`.
+2. Call `depositPayment(paymentId, seller)` on `PromptGateway` with `msg.value` equal to the service `price_wei` (≥ platform `minFee` of **0.01 USDC** / `1e16` wei).
+3. `POST /api/gateway` with payment confirmation headers + EIP-191 signature — or let `@arcdot/agent` MCP auto-settle.
+4. On failure, read **HTTP 402** payment instructions and retry.
+
+### HTTP contract
+
+| | |
 |---|---|
-| **PromptGateway** | Escrow `msg.value >= minFee`; mark `paymentId` used once; owner withdraws |
-| **API route** | Load service price from catalog; signature + receipt checks; Gemini; persist request |
-| **Supabase** | Public catalog, profiles, request history (no secrets) |
-| **Client** | Connect wallet, pay on Arc, sign challenge |
+| Success | `200` + `settlement` + `result` (or SSE after settlement) |
+| Payment needed | `402` + machine-readable `payment` instructions |
+| Headers | `X-Arc-Tx-Hash`, `X-Arc-Address`, `X-Arc-Signature` |
+| Body | `{ service, input, clientRequestId? }` |
 
 ---
 
@@ -164,24 +318,25 @@ sequenceDiagram
 | Layer | Choice |
 |---|---|
 | App | Next.js (App Router), TypeScript, Tailwind CSS |
-| Chain | Arc Mainnet (`5042`), native USDC |
-| Contracts | Solidity `0.8.28`, Hardhat (`minFee`) |
-| Wallet | RainbowKit + wagmi v2 + viem (Arc custom chain) |
-| Data | Supabase (Postgres) — optional local in-memory seed if unset |
-| RPC / crypto | [viem](https://viem.sh) |
-| LLM | Google [Gemini](https://ai.google.dev) Flash |
-| Hosting | Vercel |
+| Chain | Arc Mainnet (`5042`), native USDC (18 decimals) |
+| Contracts | Solidity `0.8.28`, Hardhat |
+| Wallet (browser) | RainbowKit + wagmi v2 + viem |
+| Agent client | `@arcdot/agent` (viem) — local wallet + MCP |
+| Data | Supabase (Postgres) — optional in-memory seed if unset |
+| LLM | Google Gemini Flash — **platform demos only** |
+| Hosting | Vercel (`next-app/`) |
 
 ---
 
-## Setup
+## Project setup
 
 ### Prerequisites
 
 - Node.js 20+
 - npm
-- An Arc Mainnet wallet funded with **USDC** (gas + deploy + test payments) — required for on-chain deploy, optional for local Activity demo
-- A [Gemini API key](https://aistudio.google.com/apikey) (optional if `MOCK_MODE=true`)
+- Arc wallet funded with USDC (gas + payments) for on-chain work
+- Optional: [Gemini API key](https://aistudio.google.com/apikey) (or `MOCK_MODE=true` for demo tools)
+- Optional: [Supabase](https://supabase.com) project for durable catalog / history
 
 ### 1. Clone
 
@@ -192,51 +347,34 @@ cd arcdot.
 
 ### 2. Smart contract (`contracts/`)
 
-**Testnet first (E2E):**
-
 ```bash
 cd contracts
 cp .env.example .env
-# Set DEPLOYER_PRIVATE_KEY_TESTNET= (funded with Arc Testnet USDC)
+# Set DEPLOYER_PRIVATE_KEY_MAINNET= (funded with Arc Mainnet USDC)
 npm install
 npm test
-npm run deploy:testnet
-```
-
-Paste the printed `PROMPT_GATEWAY_ADDRESS_TESTNET=…` block into `next-app/.env.local` and keep `NEXT_PUBLIC_ARC_NETWORK=testnet`.
-
-**Mainnet (submission):**
-
-```bash
-# Set DEPLOYER_PRIVATE_KEY_MAINNET=
 npm run deploy:arc
 ```
 
-Then set `NEXT_PUBLIC_ARC_NETWORK=mainnet` and the `*_MAINNET` gateway vars.
+Paste the printed `PROMPT_GATEWAY_ADDRESS_MAINNET=…` block into `next-app/.env.local`.
 
-The deploy script prints an explorer link and a ready-to-paste `.env.local` block.
-
-Smoke-test a deposit after deploy:
+Smoke-test:
 
 ```bash
-GATEWAY_ADDRESS=0xYourGateway npm run deposit:arc
+GATEWAY_ADDRESS=0x3E83ecb3Ef02CbFc67Ad42598A2B18f4510aC56f SELLER=0x… npm run deposit:arc
+npx hardhat run scripts/proof-mainnet.ts --network arcMainnet
 ```
 
-Network defaults (see `hardhat.config.ts`):
-
-- RPC: `https://rpc.mainnet.arc.io`
-- Chain ID: `5042`
-- Constructor fee: `10000000000000000` (0.01 USDC native)
+Defaults: RPC `https://rpc.mainnet.arc.io`, chain `5042`, `minFee = 1e16`.
 
 ### 3. Supabase (recommended)
 
 1. Create a project at [supabase.com](https://supabase.com).
-2. Open **SQL Editor** and run [`next-app/supabase/schema.sql`](next-app/supabase/schema.sql) (creates tables + demo services).
-3. Copy Project URL, **publishable** key, and **secret** key into `next-app/.env.local`
-   (Dashboard → Settings → API Keys — prefer these over legacy anon / service_role).
-4. Create a free [WalletConnect Cloud](https://cloud.walletconnect.com) project id → `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` (required for RainbowKit mobile wallets)
+2. Run [`next-app/supabase/schema.sql`](next-app/supabase/schema.sql) (and `schema_v2.sql` if present).
+3. Copy Project URL + **publishable** / **secret** keys into `next-app/.env.local`.
+4. Set `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` from [WalletConnect Cloud](https://cloud.walletconnect.com).
 
-Without Supabase env vars, the app falls back to a built-in in-memory seed catalog so local UI still works.
+Without Supabase env vars, the app falls back to an in-memory seed catalog for local UI.
 
 ### 4. Web app (`next-app/`)
 
@@ -245,146 +383,97 @@ cd ../next-app
 cp .env.example .env.local
 ```
 
-Fill in Arc + Supabase + Gemini:
+Minimum for mainnet:
 
 ```env
+NEXT_PUBLIC_ARC_NETWORK=mainnet
+ARC_NETWORK=mainnet
+PROMPT_GATEWAY_ADDRESS_MAINNET=0x3E83ecb3Ef02CbFc67Ad42598A2B18f4510aC56f
+NEXT_PUBLIC_PROMPT_GATEWAY_ADDRESS_MAINNET=0x3E83ecb3Ef02CbFc67Ad42598A2B18f4510aC56f
+ARC_MAINNET_RPC_URL=https://rpc.mainnet.arc.io
+NEXT_PUBLIC_ARC_MAINNET_RPC_URL=https://rpc.mainnet.arc.io
+GATEWAY_FEE_WEI=10000000000000000
+NEXT_PUBLIC_GATEWAY_MIN_FEE_WEI=10000000000000000
+PLATFORM_FEE_BPS=1000
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
 SUPABASE_SECRET_KEY=
-PROMPT_GATEWAY_ADDRESS=
-NEXT_PUBLIC_PROMPT_GATEWAY_ADDRESS=
-ARC_RPC_URL=https://rpc.mainnet.arc.io
-NEXT_PUBLIC_ARC_RPC_URL=https://rpc.mainnet.arc.io
-GATEWAY_FEE_WEI=10000000000000000
 GEMINI_API_KEY=
 MOCK_MODE=false
-DEMO_AGENT_SECRET=arcdot-demo-local
 ```
-
-> Supabase: use **publishable** + **secret** keys from Dashboard → API Keys.
-> Legacy `anon` / `service_role` still work as fallbacks if set as
-> `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`.
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open:
+Open [http://localhost:3000](http://localhost:3000).
 
-- [http://localhost:3000](http://localhost:3000) — landing  
-- [http://localhost:3000/services](http://localhost:3000/services) — catalog  
-- [http://localhost:3000/create](http://localhost:3000/create) — publish  
-- [http://localhost:3000/studio](http://localhost:3000/studio) — seller earnings & manage  
-- [http://localhost:3000/activity](http://localhost:3000/activity) — buyer history  
-- [http://localhost:3000/api/health](http://localhost:3000/api/health) — ops health  
+### 5. Agent client (`packages/arcdot-agent`)
 
-Connect a wallet on **Arc Mainnet**, open a service, pay, and unlock.
+```bash
+# one-shot from npm (recommended)
+npx --yes @arcdot/agent wallet create
+# fund printed address on Arc, then:
+npx --yes @arcdot/agent unlock \
+  --origin https://arcdot-5cpk-xi.vercel.app \
+  --service <slug> --prompt "Hi"
+```
 
-### 5. Deploy app to Vercel
+Cursor MCP (`~/.cursor/mcp.json`):
 
-From `next-app/`, import the project in [Vercel](https://vercel.com) (root directory = `next-app`), set the same env vars, and deploy.
+```json
+{
+  "mcpServers": {
+    "arcdot": {
+      "command": "npx",
+      "args": [
+        "--yes",
+        "@arcdot/agent",
+        "mcp",
+        "--origin",
+        "https://arcdot-5cpk-xi.vercel.app"
+      ]
+    }
+  }
+}
+```
+
+See [Hub](https://arcdot-5cpk-xi.vercel.app/hub) and [agent docs](https://arcdot-5cpk-xi.vercel.app/docs/agents/client).
+
+### 6. Deploy app to Vercel
+
+Import the repo in [Vercel](https://vercel.com) with **root directory = `next-app`**, set the same env vars, deploy. Live production: [https://arcdot-5cpk-xi.vercel.app](https://arcdot-5cpk-xi.vercel.app).
 
 ---
 
-## Milestones
+## Documentation links
 
-| Milestone | Status | Deliverable |
-|---|---|---|
-| **M1 — Gateway V2** | Code ready · redeploy | Seller/platform split + `minFee` |
-| **M2 — Settlement API** | Done | Price check, durable spent tx, pause, rate limit |
-| **M3 — Platform UI** | Done | Browse / Create / Pay / Activity / Studio |
-| **M4 — Persistence** | Done | Supabase schema + `schema_v2.sql` |
-| **M5 — Live submission** | Next | Arc deploy + Vercel + README live links |
-
-### Production checklist
-
-- [ ] Supabase: run [`schema.sql`](next-app/supabase/schema.sql) then [`schema_v2.sql`](next-app/supabase/schema_v2.sql)
-- [ ] Deploy **PromptGateway V2** (`npm run deploy:arc`) — constructor `(minFee, platformFeeBps)`
-- [ ] Set `PROMPT_GATEWAY_ADDRESS` + `NEXT_PUBLIC_PROMPT_GATEWAY_ADDRESS`
-- [ ] Set `PLATFORM_FEE_BPS` (default `1000` = 10%)
-- [ ] `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` from WalletConnect Cloud
-- [ ] `GEMINI_API_KEY`, `MOCK_MODE=false`
-- [ ] `ALLOW_DEMO_UNLOCK=false` / empty `DEMO_AGENT_SECRET` in production
-- [ ] `GET /api/health` returns `ok: true` on Vercel
-- [ ] Seller can withdraw from **Studio**; platform uses `withdrawPlatform`
-
-### Your next actions (submission)
-
-1. Supabase project → `schema.sql` + `schema_v2.sql` → paste keys  
-2. `cd contracts && npm run deploy:arc` (V2 with fee bps)  
-3. Paste gateway addresses into env  
-4. Gemini key + production flags above  
-5. Deploy `next-app` to Vercel; update README live links  
-6. Submit to [Arc Microgrants](#arc-microgrants--what-you-must-have-to-qualify)
-
-Sellers earn on-chain via `withdrawSeller`. Platform share via `withdrawPlatform` (owner).
-
-## Arc Microgrants — what you must have to qualify
-
-arcdot. is built to meet **[Arc Microgrants](https://www.arc.network)** requirements: a real, working proof on **Arc Mainnet** — not a deck, mockup, or testnet-only demo.
-
-### Official program links
-
-| Resource | Link |
+| Topic | Link |
 |---|---|
-| Arc home / builders | [arc.network](https://www.arc.network) |
-| Request for builders (microgrants + path to grants) | [Blog: Request for Builders](https://www.arc.network/blog/the-unfinished-business-of-finance-machine-commerce-and-global-money) |
-| Arc docs | [docs.arc.io](https://docs.arc.io) |
-| Circle Developer Grants (larger / production path) | [circle.com/grant](https://www.circle.com/grant) |
-| Arc House (community / programs) | [community.arc.io](https://community.arc.io) |
-
-### Submission checklist (must-haves)
-
-Use this before you submit. Every item is required for a complete Microgrant application:
-
-- [ ] **Live deployment on Arc Mainnet** — contract callable on chain `5042` (not testnet-only)
-- [ ] **Openable live product link** — Vercel (or other) URL reviewers can click
-- [ ] **Public GitHub repo** — this repository
-- [ ] **Short description** — what the project does **and** what it uses Arc for (USDC micropayments + gas)
-- [ ] **Public builder profile** — GitHub, X, or Farcaster
-- [ ] **Wallet that can receive USDC on Arc** — for payout if selected
-
-### Explicitly not eligible
-
-- Design mockups / slide decks only  
-- Testnet-only builds  
-- Projects with **no Arc component**  
-- Work already funded by a Circle or Arc program  
-
-### Timing (program window)
-
-- Submissions close **October 14, 2026, 23:59 ET** (confirm on the live program page)  
-- Decisions issued by **October 21, 2026** on a rolling basis — earlier submissions get earlier answers  
-
-### What reviewers look for
-
-Relevance to Arc, technical credibility, quality of what you shipped, and whether it is worth taking further. Promise counts more than traction at the microgrant stage.
-
----
-
-## API sketch
-
-`POST /api/gateway`
-
-**Headers (agent):** payment confirmation, wallet address, EIP-191 signature  
-
-**Body:** `{ "service", "input", "auth": { "issuedAt", "expiresAt" } }`  
-
-**Responses:**
-
-- `200` — settlement proof + model result  
-- `402` — payment required + machine-readable checkout instructions  
-
-`GET /api/gateway` — public fee / chain / gateway metadata  
+| Docs overview | https://arcdot-5cpk-xi.vercel.app/docs |
+| Quickstart | https://arcdot-5cpk-xi.vercel.app/docs/quickstart |
+| For agents | https://arcdot-5cpk-xi.vercel.app/docs/agents |
+| Agent client (`@arcdot/agent`) | https://arcdot-5cpk-xi.vercel.app/docs/agents/client |
+| For sellers | https://arcdot-5cpk-xi.vercel.app/docs/sellers |
+| Payment model | https://arcdot-5cpk-xi.vercel.app/docs/payment |
+| Gateway API | https://arcdot-5cpk-xi.vercel.app/docs/api/gateway |
+| Catalog API | https://arcdot-5cpk-xi.vercel.app/docs/api/catalog |
+| x402 | https://arcdot-5cpk-xi.vercel.app/docs/api/x402 |
+| MCP | https://arcdot-5cpk-xi.vercel.app/docs/mcp |
+| Errors | https://arcdot-5cpk-xi.vercel.app/docs/errors |
+| Arc docs | https://docs.arc.io |
+| Arc gas & fees | https://docs.arc.io/arc/references/gas-and-fees |
 
 ---
 
 ## Security notes
 
-- Never commit `.env`, private keys, or API keys  
-- Gateway owner key is for withdrawals only — keep it offline from the web app  
-- In-memory redeem cache is demo-grade; production should use durable storage  
+- Never commit `.env`, private keys, or API keys.
+- Buyer keys live only in `~/.arcdot` (or local env) — the arcdot. server never auto-pays.
+- Gateway owner key is for withdrawals only — keep it offline from the web app.
+- On-chain replay protection: `usedPaymentId`. Off-chain HTTP replay protection: spent `txHash` map (durable store in production).
+- Production: empty `DEMO_AGENT_SECRET` / `ALLOW_DEMO_UNLOCK=false`.
 
 ---
 
@@ -394,4 +483,4 @@ MIT — see repository license file when added.
 
 ---
 
-Built for the agentic economy on **Arc** · Settled in **USDC**
+Built for the agentic economy on **Arc** · Settled in **USDC** · Live at [arcdot-5cpk-xi.vercel.app](https://arcdot-5cpk-xi.vercel.app)
