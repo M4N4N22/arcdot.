@@ -220,7 +220,8 @@ Network defaults (see `hardhat.config.ts`):
 
 1. Create a project at [supabase.com](https://supabase.com).
 2. Open **SQL Editor** and run [`next-app/supabase/schema.sql`](next-app/supabase/schema.sql) (creates tables + demo services).
-3. Copy Project URL, anon key, and service role into `next-app/.env.local`
+3. Copy Project URL, **publishable** key, and **secret** key into `next-app/.env.local`
+   (Dashboard → Settings → API Keys — prefer these over legacy anon / service_role).
 4. Create a free [WalletConnect Cloud](https://cloud.walletconnect.com) project id → `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` (required for RainbowKit mobile wallets)
 
 Without Supabase env vars, the app falls back to a built-in in-memory seed catalog so local UI still works.
@@ -236,8 +237,8 @@ Fill in Arc + Supabase + Gemini:
 
 ```env
 NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+SUPABASE_SECRET_KEY=
 PROMPT_GATEWAY_ADDRESS=
 NEXT_PUBLIC_PROMPT_GATEWAY_ADDRESS=
 ARC_RPC_URL=https://rpc.mainnet.arc.io
@@ -247,6 +248,10 @@ GEMINI_API_KEY=
 MOCK_MODE=false
 DEMO_AGENT_SECRET=arcdot-demo-local
 ```
+
+> Supabase: use **publishable** + **secret** keys from Dashboard → API Keys.
+> Legacy `anon` / `service_role` still work as fallbacks if set as
+> `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `SUPABASE_SERVICE_ROLE_KEY`.
 
 ```bash
 npm install
